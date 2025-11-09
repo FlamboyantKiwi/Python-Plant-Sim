@@ -1,6 +1,5 @@
 import pygame
-from settings import BLOCK_SIZE, QUAD_SIZE, DIRT_TILE, WATER_TILE
-
+from settings import BLOCK_SIZE, QUAD_SIZE
 
 MARCHING_TILES = {
     # Marching Squares Map Config
@@ -34,7 +33,7 @@ MARCHING_TILES = {
     6: (0, 6), # NE, SW active
     
     # --- Default ---
-    0: (2,3),   # None active (All Dirt) - Fallback
+    0: (0, 0),   # None active (All Dirt) - Fallback
 }
 
 # --- TILE CLASS MODIFICATION ---
@@ -45,34 +44,20 @@ class Tile(pygame.sprite.Sprite):
                 (0, QUAD_SIZE), 
                 (QUAD_SIZE, QUAD_SIZE)]
     
-    def __init__(self, x, y, tile_type, neighbors, tileset, sheet_width = 10):
+    def __init__(self, position, tile_type, neighbors, tileset, sheet_width = 10):
         super().__init__()
         self.tile_type = tile_type
+        self.tileset = tileset
         self.sheet_width = sheet_width
-        self.position = (x, y)
+        self.position = position
         self.obstructed = False # Default unobstructed
 
         #Initialise 64x64 Tile Surface
-        self.image = DIRT_TILE.copy()
-        self.rect = self.image.get_rect(topleft=self.position)
-        # --- WATER OVERRIDE CHECK ---
-        if self.tile_type == "WATER":
-            # Render a solid water block
-            self.image = WATER_TILE.copy() 
-            self.obstructed = True
-            self.tileset = []
-        elif not tileset:
-            # If tileset is None or empty list, assign a distinct failure surface.
-            self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-            self.image.fill((255, 0, 255)) # Magenta failure color
-            self.tileset = [] # Ensure it's not None for safety later
-            print(f"ERROR: Tileset for {tile_type} is missing or empty.")
-        else:
-            if any(neighbors):
-                self.tileset = tileset
-                # create Tile's image (from 4 Sub-Tiles) using Marching Squares logic
-                self.assemble_tile(neighbors)
+        self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE), pygame.SRCALPHA).convert_alpha()
+        self.rect = self.image.get_rect(topleft=position)
 
+        # create Tile's image (from 4 Sub-Tiles) using Marching Squares logic
+        self.assemble_tile(neighbors)
 
     def assemble_tile(self, node):
         # Node List Layout:
@@ -88,42 +73,17 @@ class Tile(pygame.sprite.Sprite):
 
         # Iterate through the four quadrants, calculating the mask, looking up coordinates, and blitting
         for i, inputs in enumerate(quads):
-            # Inputs is a tuple of 4 booleans: (NW, NE, SW, SE)
-            # The bit values are 1, 2, 4, 8. We multiply the boolean (True=1, False=0) by its value.
-            mask = (inputs[0] * 1) + \
-                   (inputs[1] * 2) + \
-                   (inputs[2] * 4) + \
-                   (inputs[3] * 8)
+            # Calculate mask using 4 sets of 4 corners (quads)
+            mask = 0
+            if inputs[0]: mask += 1 # NW
+            if inputs[1]: mask += 2 # NE
+            if inputs[2]: mask += 4 # SW
+            if inputs[3]: mask += 8 # SE
             # Get row, col coords from loopup table
-            row, col = MARCHING_TILES.get(mask, (2,3))
+            row, col = MARCHING_TILES.get(mask, (0,0))
 
             # Calculate linear index
             index = row * self.sheet_width + col
             # Extract + blit sub-tile onto final tile image
             sub_tile_image = self.tileset[index]
             self.image.blit(sub_tile_image, self.BLIT_POS[i])
-
-
-
-"""class Water(Tile):
-    def __init__(self, x, y):
-        super().__init__(x, y, "Water")
-        self.obstructed = True
-
-class Ground(Tile):
-    def __init__(self, x, y):
-        super().__init__(x, y, TileState.UNTILLED)
-        self.state = TileState.UNTILLED
-    def set_state(self, new_state):
-        if new_state in TileState:
-            self.state = new_state
-            self.update_visuals(new_state.name)
-        else:
-            print(f"Warning: Unknown tile state {new_state}")
-"""
-
-
-
-
-
-

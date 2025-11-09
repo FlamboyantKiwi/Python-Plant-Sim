@@ -1,12 +1,13 @@
 # settings.py
 import pygame
-from enum import Enum, auto
 pygame.init()
 
 # Game/Screen Defaults
-BLOCK_SIZE = 40
-WIDTH = 600
-HEIGHT = 600
+BLOCK_SIZE = 64
+SPRITESHEET_SIZE = 16
+QUAD_SIZE = BLOCK_SIZE//2 #32
+WIDTH = 900
+HEIGHT = 900
 FPS = 60
 
 #colours
@@ -31,6 +32,20 @@ DEFAULT_COLOUR = COLOURS["DEBUG"]
 
 IMAGE_LOAD_FAILURES = set()
 
+try:
+    DIRT_TILE = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
+    DIRT_TILE.fill(COLOURS["TILLED"]) 
+    
+    WATER_TILE = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
+    WATER_TILE.fill(COLOURS["WATER"])
+    print("Basic tiles initialized upon settings import.")
+except NameError as e:
+    # This catch handles cases where BLOCK_SIZE or COLOURS might not be defined yet
+    # You might not need this if your settings file is ordered correctly.
+    print(f"Error initializing basic tiles in settings: {e}")
+    DIRT_TILE = pygame.Surface((1, 1)) # Placeholder to prevent crash
+    WATER_TILE = pygame.Surface((1, 1)) # Placeholder to prevent crash
+
 # Inventory Defaults
 INV_SIZE = 8
 INV_PADDING = 5
@@ -47,31 +62,3 @@ SHOP_MENU_HEIGHT = 450
 SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
                         (HEIGHT - SHOP_MENU_HEIGHT) // 2,
                         SHOP_MENU_WIDTH, SHOP_MENU_HEIGHT)
-
-#Tile Defaults
-class TileState(Enum):
-    UNTILLED = auto()
-    TILLED = auto()
-    PLANTED = auto()
-    WATERED = auto()
-    FERTILISED = auto()
-
-
-
-SAMPLE_LEVEL_MAP = [
-    "WWWWWWWWWWWWWWW", # W = Wall/Water (Example for future)
-    "W.........W....",
-    "W..TTTT...W....", # T = Tilled Soil
-    "W..TPPT....W...", # P = Planted Soil (For demonstration)
-    "W..T..T........",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "W..............",
-    "WWWWWWWWWWWWWWW",
-]

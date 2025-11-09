@@ -121,7 +121,8 @@ class Player(pygame.sprite.Sprite):
         if active_item is None:
             print("Inventory Slot Empty!")
             return
-
+        return
+        ### ** need to update interaction with tiles!!
         temp_tile = tile.Tile(x, y, "GROUND")
         colliding_tiles = pygame.sprite.spritecollide(temp_tile, all_tiles, False)
         target_tile = colliding_tiles[0] if colliding_tiles else None

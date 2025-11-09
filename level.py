@@ -1,48 +1,197 @@
-from tile import Ground, Water
-from settings import BLOCK_SIZE, TileState
-
+import pygame, random, math
+from spritesheet import SpriteSheet
+from tile import Tile
+from settings import BLOCK_SIZE, QUAD_SIZE
 class Level:
-    def __init__(self, level_data, all_tiles_group, player_sprite):
-        self.level_data = level_data
-        self.all_tiles = all_tiles_group
-        self.player_sprite = player_sprite # Used to set the player's start position
+    """ Handles level initialization by processing a node map (corner statuses)
+    and generating high-resolution Marching Squares tiles. """
+    
+    # Assuming GROUND_TILES is loaded and contains the tileset for blending.
+    # Replace this with your actual loaded tileset list.
+    DEFAULT_TILESET = None 
+    EXTERIOR = None
+    GROUND_TILES = {}
+    DIRT_TILE = None
+    WATER_TILE = None
+    WATER_NODE = 2
+    #PLANT_TILE
 
-        # Map characters to the class/state to be created
-        self.tile_mapping = {
-            ".": {"type": Ground, "state": TileState.UNTILLED}, # Default ground is UNTILLED
-            "T": {"type": Ground, "state": TileState.TILLED},
-            "P": {"type": Ground, "state": TileState.PLANTED},
-            "S": None, # Future: Shop object goes here
-            "W": {"type": Water}, # Future: Water or impassable terrain
+    def __init__(self, node_map_data: list[list[int]], all_tiles_group, 
+                 player_sprite, tileset_list: list):
+        
+        self.node_map = node_map_data
+        self.all_tiles = all_tiles_group
+        self.player_sprite = player_sprite
+        self.tileset = tileset_list # The list of 32x32 grass sub-tiles
+        
+        # The tile map dimensions are 2 less than the node map dimensions
+        self.MAP_HEIGHT = len(self.node_map) - 2
+        self.MAP_WIDTH = len(self.node_map[0]) - 2 
+
+        self.generate_level()
+    def generate_level(self):
+        """
+        Iterates over the node map to calculate the 9-node status for each 
+        64x64 tile and creates the Tile object.
+        """
+        self.all_tiles.empty() # Clear existing tiles
+        
+        # Initialize the screen tile counters
+        map_tile_x = 0
+        map_tile_y = 0
+
+        # We iterate over the tile coordinates (which range from 0 to MAP_SIZE-1)
+        for node_y in range(0, self.MAP_HEIGHT, 2):
+            map_tile_x = 0 # Reset tile X index for each new row
+            for node_x in range(0, self.MAP_WIDTH, 2):
+                
+                # --- 1. Extract the 9-Node Status ---
+                # The current tile at (tile_x, tile_y) is influenced by a 3x3 node grid 
+                # starting at node (tile_x, tile_y) and ending at (tile_x + 2, tile_y + 2).
+                is_water_tile = False
+                nine_nodes_status = []
+                for y_offset in range(3):
+                    for x_offset in range(3):
+                        # Accesses node_map[node_y + y_offset][node_x + x_offset]
+                        node_value = self.node_map[node_y + y_offset][node_x + x_offset]
+                        if node_value == self.WATER_NODE:
+                            is_water_tile = True
+                        nine_nodes_status.append(bool(node_value))
+
+                # --- 2. Calculate Screen Position (CORRECTED) ---
+                # Use the simple map tile index (0, 1, 2, 3...) for screen position
+                x = map_tile_x * BLOCK_SIZE
+                y = map_tile_y * BLOCK_SIZE
+                    
+                # --- 3. Create the Marching Tile ---
+                new_tile = Tile(
+                    x, y,
+                    tile_type="WATER" if is_water_tile else "GRASS_A", 
+                    neighbors=nine_nodes_status, # The 9 boolean nodes
+                    tileset=self.tileset
+                )
+                
+                self.all_tiles.add(new_tile)
+                
+                # --- 4. Place Player (using the map_tile_x/y indices) ---
+                if map_tile_x == 1 and map_tile_y == 1:
+                    self.player_sprite.rect.topleft = (x, y)
+                    
+                # --- 5. Increment Map Tile Index ---
+                map_tile_x += 1 # Advance the screen position counter by 1
+                
+            map_tile_y += 1 # Advance the screen position counter to the next row
+            
+        # --- Final Dimension Calculation ---
+        # Recalculate dimensions based on the tiles actually generated
+        self.MAP_WIDTH = map_tile_x 
+        self.MAP_HEIGHT = map_tile_y
+        print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
+
+    @classmethod
+    def load_level_assets(cls):
+        """ Initializes the EXTERIOR SpriteSheet and extracts all GROUND_TILES and 
+        the PLANT_TILE. Stores them as class attributes (cls.EXTERIOR, etc.). """
+        if cls.EXTERIOR is not None:
+            print("Level assets already loaded.")
+            return
+
+        # 2. Load the SpriteSheet
+        try:
+            cls.EXTERIOR = SpriteSheet("exterior.png")
+            print("loaded spritesheet...")
+        except Exception as e:
+            print(f"Failed to load exterior sprite sheet: {e}")
+            return
+        
+        # print(cls.EXTERIOR.sheet) # Keep or remove print for debugging
+
+        # 3. Extract GROUND_TILES
+        cls.GROUND_TILES = {
+            "GRASS_A_TILES": cls.EXTERIOR.extract_tiles_from_region(0, 176, 160, 48, 16, QUAD_SIZE),
+            "GRASS_B_TILES": cls.EXTERIOR.extract_tiles_from_region(0, 224, 160, 48, 16, QUAD_SIZE),
+            "DIRT_TILES":cls.EXTERIOR.extract_tiles_from_region(0, 272, 160, 48, 16, QUAD_SIZE)
         }
         
-        self.parse_level()
+        # 4. Extract PLANT_TILE 🌿 (Re-enabled the extraction)
+        cls.PLANT_TILE = cls.EXTERIOR.get_image(
+            x=9, 
+            y=281, 
+            width=32, 
+            height=32, 
+            #scale=(BLOCK_SIZE, BLOCK_SIZE)
+        )
+        print("Level assets initialized successfully.")
+    
+    @staticmethod
+    def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):
+        """Randomly selects a center point, calculates a noise-distorted boundary, 
+        and sets nodes within that boundary to the passive_material."""
+        map_size = len(node_map)
 
-    def parse_level(self):
-        self.all_tiles.empty() # Clear any existing tiles before loading
+        # 1. Calculate Safe Boundaries for the Center
+        min_coord = radius + padding
+        max_coord = map_size - 1 - radius - padding
+
+        # 2. Select Random Center Point (Safety check added for impossible boundaries)
+        if min_coord > max_coord:
+            return 
+            
+        center_x = random.randint(min_coord, max_coord)
+        center_y = random.randint(min_coord, max_coord)
         
-        for row_index, row_string in enumerate(self.level_data):
-            for col_index, char in enumerate(row_string):
+        # Iterate over a bounding box
+        for y in range(max(0, center_y - radius - 2), min(map_size, center_y + radius + 3)):
+            for x in range(max(0, center_x - radius - 2), min(map_size, center_x + radius + 3)):
                 
-                x = col_index * BLOCK_SIZE
-                y = row_index * BLOCK_SIZE
+                # 1. Calculate the distance squared from the center
+                distance_sq = (x - center_x)**2 + (y - center_y)**2
                 
-                mapping = self.tile_mapping.get(char)
+                # 2. Calculate the Noise Value (The key to distortion)
+                angle = math.atan2(y - center_y, x - center_x)
                 
-                if mapping:
-                    tile_class = mapping.get("type")
-                    tile_state = mapping.get("state")
-                    
-                    # Create the Tile object
-                    new_tile = tile_class(x, y)
-                    
-                    # Set its specific state if applicable
-                    if tile_state:
-                        # NOTE: You need to implement the set_state method in your Tile class!
-                        new_tile.set_state(tile_state) 
-                        
-                    self.all_tiles.add(new_tile)
+                # Base Distortion: A smooth wave based on the angle (3 cycles around the circle)
+                distortion = math.cos(angle * 3) * 0.5 
                 
-                # Place the player at a starting '@' character (or similar)
-                if char == "@": 
-                    self.player_sprite.rect.topleft = (x, y)
+                # Add subtle high-frequency randomness for texture
+                noise_factor = (distortion + random.random() * 0.5) * 2
+                
+                # 3. Determine the effective radius for this point
+                effective_radius = radius + noise_factor
+                
+                # 4. Check against the effective radius squared
+                if distance_sq < effective_radius**2:
+                    node_map[y][x] = passive_material
+    @staticmethod
+    def draw_pond(node_map: list[list[int]], min_radius: int = 1, max_radius: int = 2):
+        """ Carves a randomly sized, organically shaped pond (Water Node = 2) 
+        into the node map."""
+        
+        # 1. Randomly select the radius
+        radius = random.randint(min_radius, max_radius)
+        
+        # 2. Call draw_blob with the Water Node value
+        Level.draw_blob( # Need to call the static method via the class name
+            node_map,
+            radius=radius,
+            passive_material=Level.WATER_NODE,
+            padding=0
+        )
+    @staticmethod
+    def create_node_map(map_size=32, active=1, passive=0):
+        """Generates the initial node map with grass, dirt patches, and a pond."""
+        # 1. Initialize the entire map grid to the active material (Grass = 1)
+        node_map = [[active for _ in range(map_size)] for _ in range(map_size)]
+        
+        # 2. Carve out Dirt Patches (Setting nodes to 0)
+        Level.draw_blob(node_map, radius=8, passive_material=passive)
+        Level.draw_blob(node_map, radius=4, passive_material=passive, padding=1)
+        Level.draw_blob(node_map, radius=4, passive_material=passive, padding=0)
+
+        # 3. Add a Random Pond (WATER_NODE = 2)
+        #Level.draw_pond(node_map, min_radius=6, max_radius=10)
+        print("Node map created.")
+        return node_map
+    
+    
+    

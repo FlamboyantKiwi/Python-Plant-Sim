@@ -1,7 +1,6 @@
 import pygame
 from abc import ABC, abstractmethod
 import tile
-from settings import TileState
 from helper import get_grid_pos, get_image
 Default_colour = (150, 150, 150)
 class Item(ABC):
@@ -45,12 +44,7 @@ class Seed(Item):
     def use(self, player, target_tile, all_tiles):
         if target_tile is None:
             return False # no tile to use seeds on
-        if target_tile.state == TileState.TILLED:
-            player.inventory.remove_item(self.name, 1)
-            target_tile.set_state(TileState.PLANTED)
-            print(f"Planted a {self.name}!")
-        else:
-            print(f"Cannot plant on {target_tile.state} soil. Need TILLED soil.")
+        pass
 
 
 class Hoe(Item):
@@ -68,20 +62,12 @@ class Hoe(Item):
         if target_tile:
             print("found tile")
             # Action 1: Till existing UNTILLED soil
-            if hasattr(target_tile, "state"):
-                if target_tile.state == TileState.UNTILLED:
-                    target_tile.set_state(TileState.TILLED)
-                    print("Tilled the soil!")
-                    return True
-                else:
-                    print(f"Cannot till soil in {target_tile.state} state.")
-            else:
-                print("Block has no state")
+           
         else:
             # Action 2: Place a new base tile if the space is empty
             target_x, target_y = get_grid_pos((player.rect.centerx, player.rect.bottom))
-            new_tile = tile.Ground(target_x, target_y) # Tile initializes as "UNTILLED"
-            all_tiles.add(new_tile)
-            print("Placed new plot of UNTILLED land.")
+            # new_tile = tile.Ground(target_x, target_y) # Tile initializes as "UNTILLED"
+            #all_tiles.add(new_tile)
+            #print("Placed new plot of UNTILLED land.")
             return True
         return False

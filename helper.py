@@ -105,3 +105,4 @@ def get_image(image_name, scale, fallback_type=None):
     image = pygame.Surface(scale) 
     image.fill(colour)
     return image
+
