@@ -1,5 +1,5 @@
 import pygame, random
-from settings import BLOCK_SIZE, QUAD_SIZE, DIRT_TILE, WATER_TILE
+from settings import BLOCK_SIZE, QUAD_SIZE, DIRT_TILE
 
 
 MARCHING_TILES = {
@@ -54,12 +54,7 @@ class Tile(pygame.sprite.Sprite):
         self.image = DIRT_TILE.copy()
         self.rect = self.image.get_rect(topleft=self.position)
         # --- WATER OVERRIDE CHECK ---
-        if self.tile_type == "WATER":
-            # Render a solid water block
-            self.image = WATER_TILE.copy() 
-            self.obstructed = True
-            self.tileset = []
-        elif not tileset:
+        if not tileset:
             # If tileset is None or empty list, assign a distinct failure surface.
             self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
             self.image.fill((255, 0, 255)) # Magenta failure color

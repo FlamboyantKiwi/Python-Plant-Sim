@@ -1,5 +1,6 @@
 import pygame, os
 from settings import BLOCK_SIZE, COLOURS, DEFAULT_COLOUR, IMAGE_LOAD_FAILURES
+from asset_loader import AssetLoader
 #Helper Function
 def get_asset(fileName, path="assets"): 
     """Gets the full, cross-platform path for a file in the assets folder.
@@ -106,3 +107,15 @@ def get_image(image_name, scale, fallback_type=None):
     image.fill(colour)
     return image
 
+def get_tool_image(tool_name):
+    
+    material, type  = tool_name.upper().split("_", 1)
+    print(type, material)
+    return AssetLoader.ALL_TOOLS.get(material).get(type)
+
+def get_fruit_image(fruit_name, fruit_rank = "GOLD"):
+    fruit_rank_dict = AssetLoader.ALL_FRUITS.get(fruit_name)
+    if fruit_rank_dict:
+        return fruit_rank_dict.get(fruit_rank.upper())
+        
+    return None

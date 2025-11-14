@@ -50,8 +50,9 @@ class Player(pygame.sprite.Sprite):
                                    rect = inv_rect,
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
-        self.inventory.add_item(item.Hoe())
+        self.inventory.add_item(item.Tool("GOLD_SCYTHE"))
         self.inventory.add_item(item.Seed())
+        self.inventory.add_item(item.Fruit("Melon"))
 
     def key_down(self, key, all_tiles=None):
         if key in self.direction_keys:
@@ -117,10 +118,10 @@ class Player(pygame.sprite.Sprite):
     def interact(self, all_tiles):
         x, y = get_grid_pos((self.rect.centerx, self.rect.bottom))
         active_item = self.inventory.get_active_item()
-        print(active_item)
         if active_item is None:
             print("Inventory Slot Empty!")
             return
+        active_item.use(self, target_tile=None, all_tiles=all_tiles)
         return
         ### ** need to update interaction with tiles!!
         temp_tile = tile.Tile(x, y, "GROUND")

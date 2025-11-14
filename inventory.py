@@ -1,5 +1,6 @@
 from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU
 from helper import get_image, get_colour
+from item import Item
 import pygame
 
 class Inventory:
@@ -62,9 +63,8 @@ class Inventory:
                 stack_size=stack_size,
                 sell_value=new_item.sell_value, 
                 buy_value=new_item.buy_value, 
-                image_size=self.item_size
             )
-            
+
             self.items.append(new_item)
             remaining -= count_for_new_slot
         print(f"Added {new_item.name} to inventory")
@@ -176,7 +176,7 @@ class Inventory:
             self.active_slot = index
             return True
         return False
-    def get_active_item(self):
+    def get_active_item(self) -> Item:
         """Returns the Item object currently selected, or None."""
         if 0 <= self.active_slot < len(self.items):
             return self.items[self.active_slot]

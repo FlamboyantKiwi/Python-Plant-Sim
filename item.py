@@ -1,7 +1,8 @@
 import pygame
 from abc import ABC, abstractmethod
 import tile
-from helper import get_grid_pos, get_image
+from helper import get_grid_pos, get_image, get_tool_image, get_fruit_image
+
 Default_colour = (150, 150, 150)
 class Item(ABC):
     def __init__(self, name, count = 1, stack_size = 1, sell_value = 0, buy_value = 0, image_filename=None, image_size = 35):
@@ -14,7 +15,8 @@ class Item(ABC):
             self.count = self.stack_size
         else:
             self.count = count
-        self.image = get_image(image_filename, (image_size, image_size), name)
+        if image_filename != -1:
+            self.image = get_image(image_filename, (image_size, image_size), name)
 
     def get_stack_space(self):
         return self.stack_size - self.count
@@ -32,42 +34,70 @@ class Item(ABC):
         pass
 
 class Seed(Item):
-    def __init__(self, name="Seed", count=1, stack_size=50, sell_value=1, buy_value=0, colour=None, image_size=35):
+    def __init__(self, name="Seed", count=1, stack_size=50, sell_value=1, buy_value=0, image_filename=None):
         super().__init__(
             name, 
             count=count, 
             stack_size=stack_size,
             sell_value=sell_value, 
             buy_value=buy_value,
-            image_size=image_size,
+            image_filename=image_filename,
+            image_size=36,
         )
     def use(self, player, target_tile, all_tiles):
         if target_tile is None:
             return False # no tile to use seeds on
         pass
 
-
-class Hoe(Item):
-    def __init__(self, name="Hoe", count=1, stack_size=1, sell_value=0, buy_value=0, colour=None, image_size=36):
+class Tool(Item):
+    def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
+        image = get_tool_image(name)
         super().__init__(
             name = name, 
             count=count, 
             stack_size=stack_size,
             sell_value=sell_value,
             buy_value=buy_value,
-            image_size=image_size,
+            image_filename=-1,
         )
-    def use(self, player, target_tile, all_tiles): 
+        if image is not None:
+            self.image = image
+            print("Tool Image:", self.image)
+        else:
+            print(f"Warning: Tool sprite not found for {name}. Using fallback color.")
+        
+    def use(self, player, target_tile, all_tiles):
+        tool_name = self.name.upper()
+        match tool_name:
+            case "HOE":
+                return self.hoe(player, target_tile, all_tiles)
+            case "SHOVEL":
+                return self.shovel(player, target_tile, all_tiles)
+            case "WATERING_CAN":
+                return self.water(player, target_tile, all_tiles)
+            case _:
+                print("Tool interaction for {tool_name} is not defined.")
+                return False
+
+    def hoe(self, player, target_tile, all_tiles):
         print("trying to use hoe")
         if target_tile:
             print("found tile")
             # Action 1: Till existing UNTILLED soil
-           
-        else:
-            # Action 2: Place a new base tile if the space is empty
-            target_x, target_y = get_grid_pos((player.rect.centerx, player.rect.bottom))
-            # new_tile = tile.Ground(target_x, target_y) # Tile initializes as "UNTILLED"
-            #all_tiles.add(new_tile)
-            #print("Placed new plot of UNTILLED land.")
-            return True
+    def shovel(self, player, target_tile, all_tiles):
+        print(f"Using {self.material} Shovel. Digging logic not yet implemented.")
         return False
+
+    def water(self, player, target_tile, all_tiles):
+        print(f"Using {self.material} Watering Can. Watering logic not yet implemented.")
+        return False
+    
+
+class Fruit(Item):
+    def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
+        image = get_fruit_image(name)
+        super().__init__(name, count, stack_size, sell_value, buy_value, image_filename=-1)
+        if image is not None:
+            self.image = image
+    def use(self, player, target_tile, all_tiles):
+        print("Eating fruit")

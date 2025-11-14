@@ -5,16 +5,6 @@ from settings import BLOCK_SIZE, QUAD_SIZE
 class Level:
     """ Handles level initialization by processing a node map (corner statuses)
     and generating high-resolution Marching Squares tiles. """
-    
-    # Assuming GROUND_TILES is loaded and contains the tileset for blending.
-    # Replace this with your actual loaded tileset list.
-    DEFAULT_TILESET = None 
-    EXTERIOR = None
-    GROUND_TILES = {}
-    DIRT_TILE = None
-    WATER_TILE = None
-    WATER_NODE = 2
-    #PLANT_TILE
 
     def __init__(self, node_map_data: list[list[int]], all_tiles_group, 
                  player_sprite, tileset_list: list):
@@ -54,8 +44,6 @@ class Level:
                     for x_offset in range(3):
                         # Accesses node_map[node_y + y_offset][node_x + x_offset]
                         node_value = self.node_map[node_y + y_offset][node_x + x_offset]
-                        if node_value == self.WATER_NODE:
-                            is_water_tile = True
                         nine_nodes_status.append(bool(node_value))
 
                 # --- 2. Calculate Screen Position (CORRECTED) ---
@@ -66,7 +54,7 @@ class Level:
                 # --- 3. Create the Marching Tile ---
                 new_tile = Tile(
                     x, y,
-                    tile_type="WATER" if is_water_tile else "GRASS_A", 
+                    tile_type="GRASS_A", 
                     neighbors=nine_nodes_status, # The 9 boolean nodes
                     tileset=self.tileset
                 )
@@ -88,45 +76,6 @@ class Level:
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
 
-    @classmethod
-    def load_level_assets(cls):
-        """ Initializes the EXTERIOR SpriteSheet and extracts all GROUND_TILES and 
-        the PLANT_TILE. Stores them as class attributes (cls.EXTERIOR, etc.). """
-        if cls.EXTERIOR is not None:
-            print("Level assets already loaded.")
-            return
-
-        # 2. Load the SpriteSheet
-        try:
-            cls.EXTERIOR = SpriteSheet("exterior.png")
-            print("loaded spritesheet...")
-        except Exception as e:
-            print(f"Failed to load exterior sprite sheet: {e}")
-            return
-        
-        # print(cls.EXTERIOR.sheet) # Keep or remove print for debugging
-
-        # 3. Extract GROUND_TILES
-        cls.GROUND_TILES = {
-            "GRASS_A_TILES": cls.EXTERIOR.extract_tiles_from_region(0, 176, 160, 48, 16, QUAD_SIZE),
-            "GRASS_B_TILES": cls.EXTERIOR.extract_tiles_from_region(0, 224, 160, 48, 16, QUAD_SIZE),
-            "DIRT_TILES":cls.EXTERIOR.extract_tiles_from_region(0, 272, 160, 48, 16, QUAD_SIZE)
-        }
-        
-        # 4. Extract PLANT_TILE 🌿 (Re-enabled the extraction)
-        cls.PLANT_TILE = cls.EXTERIOR.get_image(
-            x=9, 
-            y=281, 
-            width=32, 
-            height=32, 
-            #scale=(BLOCK_SIZE, BLOCK_SIZE)
-        )
-
-        pebbles = cls.EXTERIOR.extract_tiles_from_region(144, 112, 80, 16)
-        little_rocks = cls.EXTERIOR.extract_tiles_from_region(48, 400, 192, 64, tile_size = 32)
-            # add: (0, 400, 48, 48)
-        #big rock: X = 0 Y = 40 Width = 48 Height = 48
-        print("Level assets initialized successfully.")
     
     @staticmethod
     def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):

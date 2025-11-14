@@ -4,11 +4,14 @@ from level import Level
 import settings
 from hud import HUD
 from sys import exit
+from asset_loader import AssetLoader
 pygame.init()
 
 screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
 pygame.display.set_caption("Freddy's Python Plant Sim")
 clock = pygame.time.Clock()
+AssetLoader.load_tool_assets()
+AssetLoader.load_fruit_assets()
 
 all_sprites = pygame.sprite.Group()
 all_tiles = pygame.sprite.Group()
@@ -19,15 +22,16 @@ all_sprites.add(player)
 hud = HUD(player)
 
 # Load Assets
-Level.load_level_assets()
-grass_tileset = Level.GROUND_TILES.get("GRASS_A_TILES")
+all_ground_tiles = AssetLoader.load_tile_assets()
 
-print(grass_tileset)
+grass_tileset = all_ground_tiles.get("GRASS_A_TILES")
+#dirt_tileset = all_ground_tiles.get("DIRT_TILES")
+
 current_level = Level(
     node_map_data=Level.create_node_map(), 
     all_tiles_group=all_tiles,
     player_sprite=player,
-    tileset_list=grass_tileset, # GRASS_A is still the primary blending set
+    tileset_list=grass_tileset, 
 )
 
 playing = True

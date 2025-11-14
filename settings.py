@@ -40,11 +40,10 @@ try:
     WATER_TILE.fill(COLOURS["WATER"])
     print("Basic tiles initialized upon settings import.")
 except NameError as e:
-    # This catch handles cases where BLOCK_SIZE or COLOURS might not be defined yet
-    # You might not need this if your settings file is ordered correctly.
     print(f"Error initializing basic tiles in settings: {e}")
-    DIRT_TILE = pygame.Surface((1, 1)) # Placeholder to prevent crash
-    WATER_TILE = pygame.Surface((1, 1)) # Placeholder to prevent crash
+    # Fallback to a minimal surface if constants are missing
+    DIRT_TILE = pygame.Surface((1, 1)) 
+    WATER_TILE = pygame.Surface((1, 1))
 
 # Inventory Defaults
 INV_SIZE = 8
