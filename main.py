@@ -43,7 +43,7 @@ while playing:
             if event.button == 1:
                 hud.handle_click(event.pos)
                 
-    screen.fill(settings.COLOURS.get("DIRT", settings.DEFAULT_COLOUR))
+    screen.fill(settings.COLOURS.get("WATER", settings.DEFAULT_COLOUR))
     all_tiles.update()
     all_sprites.update(all_tiles)
     hud.update(pygame.mouse.get_pos())

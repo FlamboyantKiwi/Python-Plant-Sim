@@ -121,6 +121,11 @@ class Level:
             height=32, 
             #scale=(BLOCK_SIZE, BLOCK_SIZE)
         )
+
+        pebbles = cls.EXTERIOR.extract_tiles_from_region(144, 112, 80, 16)
+        little_rocks = cls.EXTERIOR.extract_tiles_from_region(48, 400, 192, 64, tile_size = 32)
+            # add: (0, 400, 48, 48)
+        #big rock: X = 0 Y = 40 Width = 48 Height = 48
         print("Level assets initialized successfully.")
     
     @staticmethod
