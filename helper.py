@@ -107,15 +107,19 @@ def get_image(image_name, scale, fallback_type=None):
     image.fill(colour)
     return image
 
-def get_tool_image(tool_name):
+def get_tool_image(tool_name: str):
     
     material, type  = tool_name.upper().split("_", 1)
     print(type, material)
     return AssetLoader.ALL_TOOLS.get(material).get(type)
 
-def get_fruit_image(fruit_name, fruit_rank = "GOLD"):
-    fruit_rank_dict = AssetLoader.ALL_FRUITS.get(fruit_name)
-    if fruit_rank_dict:
-        return fruit_rank_dict.get(fruit_rank.upper())
-        
-    return None
+def get_fruit_image(fruit_name: str):
+    rank, name  = fruit_name.split("_", 1)
+    fruit_rank_dict = AssetLoader.ALL_FRUITS.get(name.title())
+    return fruit_rank_dict.get(rank.upper())
+
+def get_sprite_image(name: str):
+    match name:
+        case "Seed":
+            print(AssetLoader.SEED_BAGS)
+            return AssetLoader.SEED_BAGS.get("1")

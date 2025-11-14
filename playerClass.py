@@ -50,9 +50,9 @@ class Player(pygame.sprite.Sprite):
                                    rect = inv_rect,
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
-        self.inventory.add_item(item.Tool("GOLD_SCYTHE"))
+        self.inventory.add_item(item.Tool("gold_scythe"))
         self.inventory.add_item(item.Seed())
-        self.inventory.add_item(item.Fruit("Melon"))
+        self.inventory.add_item(item.Fruit("gold_Red Pepper"))
 
     def key_down(self, key, all_tiles=None):
         if key in self.direction_keys:

@@ -10,8 +10,7 @@ pygame.init()
 screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
 pygame.display.set_caption("Freddy's Python Plant Sim")
 clock = pygame.time.Clock()
-AssetLoader.load_tool_assets()
-AssetLoader.load_fruit_assets()
+AssetLoader()
 
 all_sprites = pygame.sprite.Group()
 all_tiles = pygame.sprite.Group()
@@ -21,11 +20,8 @@ all_sprites.add(player)
 
 hud = HUD(player)
 
-# Load Assets
-all_ground_tiles = AssetLoader.load_tile_assets()
-
-grass_tileset = all_ground_tiles.get("GRASS_A_TILES")
-#dirt_tileset = all_ground_tiles.get("DIRT_TILES")
+grass_tileset = AssetLoader.TILE_ASSETS.get("GRASS_A_TILES")
+#dirt_tileset = AssetLoader.TILE_ASSETS.get("DIRT_TILES")
 
 current_level = Level(
     node_map_data=Level.create_node_map(), 

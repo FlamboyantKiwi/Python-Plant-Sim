@@ -1,7 +1,7 @@
 import pygame
 from abc import ABC, abstractmethod
 import tile
-from helper import get_grid_pos, get_image, get_tool_image, get_fruit_image
+from helper import get_grid_pos, get_image, get_tool_image, get_fruit_image, get_sprite_image
 
 Default_colour = (150, 150, 150)
 class Item(ABC):
@@ -32,6 +32,15 @@ class Item(ABC):
     @abstractmethod
     def use(self, player, target_tile, all_tiles):
         pass
+    def get_name(self):
+        return self.name
+    def set_image(self, image):
+        if image is not None:
+            self.image = image
+        else:
+            print(f"Warning: Tool sprite not found for {self.name}. Using fallback color.")
+            get_image(self.name)
+
 
 class Seed(Item):
     def __init__(self, name="Seed", count=1, stack_size=50, sell_value=1, buy_value=0, image_filename=None):
@@ -41,9 +50,8 @@ class Seed(Item):
             stack_size=stack_size,
             sell_value=sell_value, 
             buy_value=buy_value,
-            image_filename=image_filename,
-            image_size=36,
         )
+        self.set_image(get_sprite_image(name))
     def use(self, player, target_tile, all_tiles):
         if target_tile is None:
             return False # no tile to use seeds on
@@ -51,7 +59,6 @@ class Seed(Item):
 
 class Tool(Item):
     def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
-        image = get_tool_image(name)
         super().__init__(
             name = name, 
             count=count, 
@@ -60,11 +67,7 @@ class Tool(Item):
             buy_value=buy_value,
             image_filename=-1,
         )
-        if image is not None:
-            self.image = image
-            print("Tool Image:", self.image)
-        else:
-            print(f"Warning: Tool sprite not found for {name}. Using fallback color.")
+        self.set_image(get_tool_image(name))
         
     def use(self, player, target_tile, all_tiles):
         tool_name = self.name.upper()
@@ -91,13 +94,17 @@ class Tool(Item):
     def water(self, player, target_tile, all_tiles):
         print(f"Using {self.material} Watering Can. Watering logic not yet implemented.")
         return False
+    def get_name(self):
+        _, name = self.name.split("_", 1)
+        return name.title()
     
 
 class Fruit(Item):
     def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
-        image = get_fruit_image(name)
         super().__init__(name, count, stack_size, sell_value, buy_value, image_filename=-1)
-        if image is not None:
-            self.image = image
+        self.set_image(get_fruit_image(name))
     def use(self, player, target_tile, all_tiles):
         print("Eating fruit")
+    def get_name(self):
+        _, name = self.name.split("_", 1)
+        return name.title()

@@ -184,7 +184,7 @@ class Inventory:
     def get_active_item_name(self):
         item = self.get_active_item()
         if item:
-            return item.name
+            return item.get_name()
         else:
             return ""
         

@@ -14,45 +14,50 @@ TOOL_TYPES = [
 MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
 
 FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
-    "Banana": (0, 176, 48, 16),
-    "Cauliflower": (0, 192, 48, 16),
-    "Cabbage": (48, 192, 48, 16),
-    "Green Bean": (0, 208, 48, 16),
-    "Onion": (48, 208, 48, 16),
-    "Squash": (96, 208, 48, 16),
-    "Chestnut Mushroom": (144, 208, 48, 16),
-    "Plum": (192, 208, 48, 16),
-    "Grape": (240, 208, 48, 16),
-    "Mushroom": (192, 192, 48, 16),
-    "Beet": (240, 192, 48, 16),
-    "Coconut": (192, 176, 48, 16),
-    "Red Pepper": (192, 160, 48, 16),
-    "Apple": (192, 144, 48, 16),
-    "Cucumber": (240, 144, 48, 16),
-    "Lemon": (240, 128, 48, 16),
-    "Pineapple": (240, 160, 48, 32),
-    "Melon": (60, 160, 48, 32),
+    "Banana":           [(0, 176,   48, 16),
+                        (96, 8,     32, 38)],
+    "Cauliflower":      [(0, 192,   48, 16),
+                         (128, 8,   32, 38)],
+    "Cabbage":          [(48, 192,  48, 16),
+                         (260, 11,  24, 32)],
+    "Green Bean":       [(0, 208,   48, 16),
+                         (160, 60,  16, 32)],
+    "Onion":            [(48, 208,  48, 16),
+                         (192, 60,  16, 32)],
+    "Squash":           [(96, 208,  48, 16),
+                         (0, 0,     32, 48)],
+    "Chestnut Mushroom":[(144, 208, 48, 16),
+                         (36, 60,   24, 32)],
+    "Plum":             [(192, 208, 48, 16),
+                         (256, 60,  16, 32)],
+    "Grape":            [(240, 208, 48, 16),
+                         (196, 11,  24, 32)],
+    "Mushroom":         [(192, 192, 48, 16),
+                         (68, 60,   24, 32)],
+    "Beet":             [(240, 192, 48, 16),
+                         (224, 60,  16, 32)],
+    "Coconut":          [(192, 176, 48, 16),
+                         (160, 8,   32, 38)],
+    "Red Pepper":       [(192, 160, 48, 16),
+                         (4, 60,    24, 32)],
+    "Apple":            [(192, 144, 48, 16),
+                         (228, 11,  24, 32)],
+    "Cucumber":         [(240, 144, 48, 16),
+                         (100, 60,  24, 32)],
+    "Lemon":            [(240, 128, 48, 16),
+                         (128, 60,  16, 32)],
+    "Pineapple":        [(240, 160, 48, 32),
+                         (32, 0,    32, 48)],
+    "Melon":            [(60, 160,  48, 32), 
+                         (64, 0,    32, 48)],
 }
 SEED_BAGS_POS = (240, 100, 32, 24) # 2 different seed bags
 FRUIT_CONTAINERS = {
-    "Squash": (0, 0, 32, 48),
-    "Pineapple": (32, 0, 32, 48),
-    "Melon": (64, 0, 32, 48),
-    "Banana": (96, 8, 32, 38),
-    "Cauliflower": (128, 8, 32, 38),
-    "Coconut": (160, 8, 32, 38),
-    "Grape": (196, 11, 24, 32),
-    "Beet": (228, 11, 24, 32),
-    "Cabbage": (260, 11, 24, 32),
-    "Red Pepper": (4, 60, 24, 32),
-    "Chestnut Mushroom": (36, 60, 24, 32),
-    "Mushroom": (68, 60, 24, 32),
-    "Cucumber": (100, 60, 24, 32),
-    "Lemon": (128, 60, 16, 32),
-    "Green Bean": (160, 60, 16, 32),
-    "Onion": (192, 60, 16, 32),
-    "Beet": (224, 60, 16, 32),
-    "Plum": (256, 60, 16, 32),
+    "Pineapple": 
+    "Melon": 
+    "Beet": 
+    "Cucumber": 
+    "Lemon": 
 }
 
 class AssetLoader:
@@ -64,6 +69,7 @@ class AssetLoader:
 
     # Index for the preferred base dirt tile: (Row 2 * 10 columns) + Col 3 = 23
     DIRT_SPRITE_INDEX = 23 
+    TILE_ASSETS = {}
 
     ALL_TOOLS = {}
     ALL_FRUITS = {}
@@ -71,6 +77,12 @@ class AssetLoader:
     ALL_FRUIT_CONTAINERS = {}
 
     fruit_ranks = ("GOLD", "SILVER", "BRONZE")
+    @classmethod
+    def __init__(cls):
+        cls.load_fruit_assets()
+        cls.load_tool_assets()
+        cls.load_tile_assets()
+
     @classmethod
     def load_tool_assets(cls):
         all_tools= {}
@@ -103,8 +115,6 @@ class AssetLoader:
         
         print("Tool assets loaded successfully.")
         cls.ALL_TOOLS = all_tools
-
-        
 
     @classmethod
     def load_tile_assets(cls):
@@ -143,7 +153,7 @@ class AssetLoader:
             
         # 4. (Optional) You can add logic here to extract other single sprites like PLANT_TILE.
         
-        return ground_tiles
+        cls.TILE_ASSETS = ground_tiles
     
     @classmethod
     def create_fruit(cls, sheet, rect, ranks, number=3):
