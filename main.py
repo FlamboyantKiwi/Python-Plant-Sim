@@ -31,7 +31,9 @@ current_level = Level(
 )
 
 playing = True
+tick = 0
 while playing:
+    tick += 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             playing = False
@@ -45,7 +47,7 @@ while playing:
                 
     screen.fill(settings.COLOURS.get("WATER", settings.DEFAULT_COLOUR))
     all_tiles.update()
-    all_sprites.update(all_tiles)
+    all_sprites.update(all_tiles, tick)
     hud.update(pygame.mouse.get_pos())
 
     all_tiles.draw(screen)

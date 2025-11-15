@@ -1,6 +1,8 @@
 import pygame, inventory, tile, item
 from helper import calc_pos_rect, get_grid_pos, get_colour
-from settings import BLOCK_SIZE, WIDTH, HEIGHT
+from settings import WIDTH, HEIGHT, ANIMATION_SPEED
+from helper import get_direction
+from asset_loader import AssetLoader
 class Player(pygame.sprite.Sprite):
     direction_keys = {
         # Horizontal Movement
@@ -14,6 +16,7 @@ class Player(pygame.sprite.Sprite):
         pygame.K_UP: (0, -1),
         pygame.K_s: (0, 1),     # Down
         pygame.K_DOWN: (0, 1)}
+    RUN_KEY = pygame.K_LSHIFT
     SLOT_KEY_MAP = {
         pygame.K_1: 0, pygame.K_2: 1, pygame.K_3: 2, pygame.K_4: 3,
         pygame.K_5: 4, pygame.K_6: 5, pygame.K_7: 6, pygame.K_8: 7,
@@ -24,11 +27,21 @@ class Player(pygame.sprite.Sprite):
     SLOT_SIZE = 50
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((BLOCK_SIZE/2, BLOCK_SIZE * 0.75)) # slighly taller than block
-        self.image.fill(get_colour("PLAYER"))
+        self.player_type = "Fox"
+        self.spritesheet = AssetLoader.get_player_image(self.player_type)  ###*** continue from here - need to split spritesheet into individual images + run them with tick
+        """pygame.Surface((BLOCK_SIZE/2, BLOCK_SIZE * 0.75)) # slighly taller than block
+        self.image.fill(get_colour("PLAYER"))"""
+        self.image = AssetLoader.get_player_image_direction(self.spritesheet, "Idle", "Down", 0)
+        if not self.image:
+            print("Error occured")
+            return -1
+
         self.rect = self.image.get_rect(x=x, y=y) 
-        self.direction = None
-        self.speed = 5
+        self.direction = "Down" # start looking down
+        self.base_speed = 5.0
+        self.speed = self.base_speed
+        self.run_multiplier = 1.5
+        self.state = "Idle"
         self.dx = 0
         self.dy = 0      
         
@@ -54,27 +67,61 @@ class Player(pygame.sprite.Sprite):
         self.inventory.add_item(item.Seed())
         self.inventory.add_item(item.Fruit("gold_Red Pepper"))
 
+    def recalculate_movement_vectors(self):
+        """Adjusts self.dx and self.dy to match the current self.speed magnitude 
+        while preserving the direction (sign)."""
+        if self.dx != 0:
+            # Set dx to -speed or +speed
+            self.dx = (self.dx / abs(self.dx)) * self.speed
+            
+        if self.dy != 0:
+            # Set dy to -speed or +speed
+            self.dy = (self.dy / abs(self.dy)) * self.speed
+
     def key_down(self, key, all_tiles=None):
         if key in self.direction_keys:
             x, y = self.direction_keys[key]
+            # Set the directional sign (-1 or 1) without speed magnitude
             if x != 0:
-                self.dx = x * self.speed
+                self.dx = x
             if y != 0:
-                self.dy = y * self.speed
+                self.dy = y
+            # Apply the current speed magnitude to any non-zero vector
+            self.recalculate_movement_vectors()
+        if key == self.RUN_KEY:
+            # Only increase speed if currently at base speed 
+            if self.speed == self.base_speed: # Check against base speed to prevent repeated multiplication
+                self.speed *= self.run_multiplier
+            
+            # Apply the new speed magnitude to existing movement vectors
+            self.recalculate_movement_vectors()
+
+        # Interaction Key Logic
         if key is self.interact_key:
             self.interact(all_tiles)
-        # --- Inventory Selection Logic ---
+
+        # Inventory Selection Logic
         if key in self.SLOT_KEY_MAP:
             index = self.SLOT_KEY_MAP[key]
             self.inventory.set_active_slot(index)
-            #print(f"Active slot set to: {index + 1}")
     def key_up(self, key):
+        # Direction Logic
         if key in self.direction_keys:
             x, y = self.direction_keys[key]
             if x != 0 and ((x < 0 and self.dx < 0) or (x > 0 and self.dx > 0)):
                     self.dx = 0
             if y != 0 and ((y < 0 and self.dy < 0) or (y > 0 and self.dy > 0)):
                     self.dy = 0
+        # Sprint Logic
+        if key == self.RUN_KEY:
+            # Decrease speed magnitude
+            if self.speed != self.base_speed:
+                self.speed /= self.run_multiplier
+            
+            # Recalculate movement vectors if player is still moving
+            if self.dx != 0 or self.dy != 0:
+                self.recalculate_movement_vectors()
+
     def collision_check(self, all_tiles):
         # Get a list of all tiles the player is colliding with
         collided_tiles = pygame.sprite.spritecollide(self, all_tiles, False)
@@ -82,8 +129,26 @@ class Player(pygame.sprite.Sprite):
             if hasattr(tile, "obstructed") and tile.obstructed:
                 return True
         return False
-    def update(self, all_tiles, tick = 0):
-        # --- Horizontal Collision Check ---
+    def update(self, all_tiles, tick):
+        anim_tick = tick // ANIMATION_SPEED
+        
+        if (self.dx != 0 or self.dy != 0):
+            # Calculate new facing direction (handles alternation tie-breaker)
+            new_direction = get_direction(self.dx, self.dy, anim_tick)
+            if new_direction: 
+                self.direction = new_direction
+            
+            # Determine state based on current speed (check for float tolerance)
+            if self.speed > self.base_speed + 0.001:
+                self.state = "Run"
+            else:
+                self.state = "Walk"
+        else:
+            self.state = "Idle"
+        print(self.state)
+        self.image = AssetLoader.get_player_image_direction(self.spritesheet, self.state, self.direction, anim_tick)
+        
+        # Horizontal Collision Check
         if self.dx != 0:
             original_x = self.rect.x
             self.rect.x += self.dx
@@ -92,13 +157,14 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x = original_x # undo movement
                 self.dx = 0 # Stop horizontal momentum
                 
-
+        # Vertical Collision Check
         if self.dy != 0:
             original_y = self.rect.y        
             self.rect.y += self.dy
+            # Get a list of all tiles the player is colliding with
             if self.collision_check(all_tiles):
-                self.rect.y = original_y
-                self.dy = 0
+                self.rect.y = original_y # undo movement
+                self.dy = 0 # Stop vertical momentum
 
         # Horizontal boundaries
         if self.rect.left < 0:

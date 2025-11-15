@@ -1,5 +1,5 @@
 # asset_loader.py
-import pygame
+import pygame, os
 from spritesheet import SpriteSheet
 import settings 
 from settings import BLOCK_SIZE, QUAD_SIZE
@@ -8,9 +8,7 @@ from settings import BLOCK_SIZE, QUAD_SIZE
 TOOL_TYPES = [
     "MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", 
     "BOW", "ARROW", "AXE", "PICKAXE", "SHOVEL", "HOE", 
-    "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"
-]
-
+    "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"]
 MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
 
 FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
@@ -52,36 +50,62 @@ FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, norma
                          (64, 0,    32, 48)],
 }
 SEED_BAGS_POS = (240, 100, 32, 24) # 2 different seed bags
-FRUIT_CONTAINERS = {
-    "Pineapple": 
-    "Melon": 
-    "Beet": 
-    "Cucumber": 
-    "Lemon": 
-}
+
+PLAYER_SHEETS = ["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"]
 
 class AssetLoader:
     """Utility class to load and process all tile-related assets from sprite sheets."""
+    ## --- Tile Attributes ---
     # Tool sprites are 16x16 in the sheet
     TILE_SIZE = 32
-    # Item sprites are scaled to 36x36 for inventory/UI display
-    ITEM_SIZE = 36
-
-    # Index for the preferred base dirt tile: (Row 2 * 10 columns) + Col 3 = 23
-    DIRT_SPRITE_INDEX = 23 
+    DIRT_SPRITE_INDEX = 23 # Index for the preferred base dirt tile: (Row 2 * 10 columns) + Col 3 = 23
     TILE_ASSETS = {}
 
+    ## --- Item Attributes ---
+    # Item sprites are scaled to 36x36 for inventory/UI display
+    ITEM_SIZE = 36
     ALL_TOOLS = {}
     ALL_FRUITS = {}
     SEED_BAGS = {}
     ALL_FRUIT_CONTAINERS = {}
 
     fruit_ranks = ("GOLD", "SILVER", "BRONZE")
+    ## --- Player Attributes ---
+    PLAYER_IMAGES = {}
+    
+    PLAYER_DIRECTIONS = { # X, Y, Width, Height, sprite_size = 32x32
+    "Walk": (0, 0, 128, 128),
+    "Idle": (0, 128, 128, 32),  # up and left need to be switched
+    "Run": (0, 160, 128, 256)}  # left/right need to be switched
+
+    DIRECTIONS = { 
+    "Walk": {
+        "Down":0, 
+        "Right":1, 
+        "Left":2, 
+        "Up":3
+    }, "Run": {
+        "Down":0, 
+        "Right":2, 
+        "Left":1, 
+        "Up":3
+    }, "Idle": {
+        "Down":0, 
+        "Right":1, 
+        "Left":3, 
+        "Up":2
+    }}
+    PLAYER_FRAMES = {
+        "Walk": 4,
+        "Idle": 1,
+        "Run": 8 }
+    
     @classmethod
     def __init__(cls):
         cls.load_fruit_assets()
         cls.load_tool_assets()
         cls.load_tile_assets()
+        cls.load_player_assets()
 
     @classmethod
     def load_tool_assets(cls):
@@ -175,24 +199,58 @@ class AssetLoader:
             print(f"Failed to load Supplies.png sprite sheet: {e}")
             return # Exit on failure
         
-        for name, rect in FRUIT_TYPES.items():
+        for name, [fruit, container] in FRUIT_TYPES.items():
             if name == "Melon":
                 fruit_num = 2
             else:
                 fruit_num = 3
-            cls.ALL_FRUITS[name] = cls.create_fruit(supplies_sheet, rect, cls.fruit_ranks, fruit_num)
-
-        
-        for name, [x, y, w, h ] in FRUIT_CONTAINERS.items():
-            # Scale containers to a large size (BLOCK_SIZE = 64)
-            cls.ALL_FRUIT_CONTAINERS[name] = supplies_sheet.get_image(x, y, w, h)
-
+            cls.ALL_FRUITS[name] = cls.create_fruit(supplies_sheet, fruit, cls.fruit_ranks, fruit_num)
+            x,y,w,h = container
+            cls.ALL_FRUIT_CONTAINERS[name] = supplies_sheet.get_image(x,y,w,h)
 
         x, y, w, h = SEED_BAGS_POS
         cls.SEED_BAGS = cls.create_fruit(supplies_sheet, SEED_BAGS_POS, ["1", "2"], 2)
         print("Fruit and Container assets loaded successfully.")
 
+    @classmethod
+    def load_player_assets(cls):
+        for player in PLAYER_SHEETS:
+            player_images = {}
+            player_sheet = SpriteSheet(os.path.join("Player", f"{player}.png"))
+            if player_sheet is None:
+                player_images = {}
+                return None
+            sprite_directions = cls.PLAYER_DIRECTIONS.keys()
+            for direction in sprite_directions:
+                x, y, w, h = cls.PLAYER_DIRECTIONS[direction]
+                player_images[direction] = player_sheet.extract_tiles_from_region(x, y, w, h, 32, 64)
 
+            cls.PLAYER_IMAGES[player] = player_images
+        print("Player Types: ", len(cls.PLAYER_IMAGES)) # 6 player types/skins
+        print("Player Images: ", 
+              len(cls.PLAYER_IMAGES["Fox"]["Walk"]), # 16 walk animations. 4 images for each direction
+              len(cls.PLAYER_IMAGES["Fox"]["Run"]),  # 32 Run animations.  8 images for each direction
+              len(cls.PLAYER_IMAGES["Fox"]["Idle"])) # 4 idle animations.  1 image for each direction
+
+    @classmethod
+    def get_player_image(cls, player_type):
+        if player_type in cls.PLAYER_IMAGES:
+            return cls.PLAYER_IMAGES[player_type]
+        print("Error!")
+
+    @classmethod
+    def get_player_image_direction(cls, sheet, state: str, direction: str, tick: int):
+
+        movement_types = list(cls.PLAYER_DIRECTIONS.keys())
+        if state not in movement_types:
+            return
+        if direction not in cls.DIRECTIONS[state]:
+            return
+        max_frames = AssetLoader.PLAYER_FRAMES[state]
+        tick = tick % max_frames
+        movement_images = sheet.get(state)
+        direction_id = (cls.DIRECTIONS[state][direction] * max_frames) + tick
+        return movement_images[direction_id]
 
     """
     @classmethod
