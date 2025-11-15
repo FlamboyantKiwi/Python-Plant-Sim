@@ -73,8 +73,8 @@ class Tool(Item):
         self.set_image(AssetLoader.get_tool_image(name))
         
     def use(self, player, target_tile, all_tiles):
-        tool_name = self.name.upper()
-        match tool_name:
+        name = self.get_name()
+        match name:
             case "HOE":
                 return self.hoe(player, target_tile, all_tiles)
             case "SHOVEL":
@@ -82,7 +82,7 @@ class Tool(Item):
             case "WATERING_CAN":
                 return self.water(player, target_tile, all_tiles)
             case _:
-                print("Tool interaction for {tool_name} is not defined.")
+                print(f"Tool interaction for {name} is not defined.")
                 return False
 
     def hoe(self, player, target_tile, all_tiles):
@@ -102,7 +102,7 @@ class Tool(Item):
     
 
 class Fruit(Item):
-    def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
+    def __init__(self, name, count=1, stack_size=50, sell_value=0, buy_value=0):
         super().__init__(name, count, stack_size, sell_value, buy_value, image_filename=-1)
         self.set_image(AssetLoader.get_fruit_image(name))
     def use(self, player, target_tile, all_tiles):

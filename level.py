@@ -1,17 +1,17 @@
 import random, math
 from tile import Tile
-from settings import BLOCK_SIZE, QUAD_SIZE
+from settings import BLOCK_SIZE
+from asset_loader import AssetLoader
 class Level:
     """ Handles level initialization by processing a node map (corner statuses)
     and generating high-resolution Marching Squares tiles. """
 
-    def __init__(self, node_map_data: list[list[int]], all_tiles_group, 
-                 player_sprite, tileset_list: list):
-        
+    def __init__(self, node_map_data: list[list[int]], all_tiles_group, player_sprite):
+        self.tilesets = AssetLoader.TILE_ASSETS
+        self.details = AssetLoader.TILE_DETAILS
         self.node_map = node_map_data
         self.all_tiles = all_tiles_group
         self.player_sprite = player_sprite
-        self.tileset = tileset_list # The list of 32x32 grass sub-tiles
         
         # The tile map dimensions are 2 less than the node map dimensions
         self.MAP_HEIGHT = len(self.node_map) - 2
@@ -35,7 +35,6 @@ class Level:
                 # --- 1. Extract the 9-Node Status ---
                 # The current tile at (tile_x, tile_y) is influenced by a 3x3 node grid 
                 # starting at node (tile_x, tile_y) and ending at (tile_x + 2, tile_y + 2).
-                is_water_tile = False
                 nine_nodes_status = []
                 for y_offset in range(3):
                     for x_offset in range(3):
@@ -47,13 +46,21 @@ class Level:
                 # Use the simple map tile index (0, 1, 2, 3...) for screen position
                 x = map_tile_x * BLOCK_SIZE
                 y = map_tile_y * BLOCK_SIZE
-                    
+                tile_type_key = "GRASS_A"
+                current_tileset = self.tilesets.get(tile_type_key )
+                
+                # Safety check: skip if tileset is not loaded/found
+                if not current_tileset:
+                    print(f"Warning: Tileset '{tile_type_key}' not found.")
+                    map_tile_x += 1
+                    continue
+
                 # --- 3. Create the Marching Tile ---
                 new_tile = Tile(
                     x, y,
-                    tile_type="GRASS_A", 
+                    tile_type=tile_type_key , 
                     neighbors=nine_nodes_status, # The 9 boolean nodes
-                    tileset=self.tileset)
+                    tileset=current_tileset)
                 self.all_tiles.add(new_tile)
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---

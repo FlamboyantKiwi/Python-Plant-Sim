@@ -66,9 +66,9 @@ class Player(pygame.sprite.Sprite):
                                    rect = inv_rect,
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
-        self.inventory.add_item(item.Tool("gold_scythe"))
-        self.inventory.add_item(item.Seed("Red Pepper"))
-        self.inventory.add_item(item.Fruit("gold_Red Pepper"))
+        self.inventory.add_item(item.Tool("Gold_Scythe"))
+        self.inventory.add_item(item.Seed("Red Pepper", 50))
+        self.inventory.add_item(item.Fruit("Gold_Red Pepper", 10))
 
     def recalculate_movement_vectors(self):
         """Adjusts self.dx and self.dy to match the current self.speed magnitude 

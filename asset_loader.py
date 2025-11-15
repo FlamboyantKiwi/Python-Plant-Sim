@@ -11,33 +11,67 @@ TOOL_TYPES = [
     "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"]
 MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
 
+GROUND_TILE_REGIONS = {
+    "GRASS_A": (0, 176, 160, 48),
+    "GRASS_B": (0, 224, 160, 48),
+    "DIRT": (0, 272, 160, 48)
+}
+TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
+    "Dirt": [ 
+        (0,   0,  320, 64,  32, 32),
+        (128, 64, 192, 64,  32, 32),
+        (0,   60, 128, 72,  32, 24),
+        (320, 0,  16,  128, 16, 32)],
+    "Grass": [
+        (4,   134, 144, 48, 48, 48),
+        (160, 128, 144, 48, 48, 48),
+        (128, 136, 32,  32, 32, 32),
+        (4,   189, 84,  32, 32, 32),
+        (9,   224, 64,  32, 32, 32),
+        (80,  224, 96,  32, 32, 32),
+        (178, 256, 96,  32, 32, 32),
+        (288, 128, 48,  48, 48, 48),
+        (0,   256, 64,  32, 32, 32),
+        (73,  256, 32,  32, 32, 32),
+        (100, 184, 32,  32, 32, 32),
+        (176, 240, 92,  16, 32, 16),
+        (176, 176, 96,  64, 32, 32),
+        (144, 184, 32,  32, 32, 32),
+        (304, 176, 32,  32, 32, 32),
+        (276, 184, 32,  32, 32, 32),
+        (276, 248, 32,  32, 32, 32),
+        (304, 224, 32,  32, 32, 32),
+        (120, 256, 32,  32, 32, 32),
+        (276, 224, 48,  48, 48, 48)]
+}
+
 FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
-    "Banana":           [(0, 176,   48, 16),
-                        (96, 8,     32, 38)],
-    "Cauliflower":      [(0, 192,   48, 16),
+    "Banana":           [(0,   176, 48, 16),
+                         (96, 8,    32, 38)],
+    "Cauliflower":      [(0,   192, 48, 16),
                          (128, 8,   32, 38)],
-    "Cabbage":          [(48, 192,  48, 16),
+    "Cabbage":          [(48,  192, 48, 16),
                          (260, 11,  24, 32)],
-    "Green Bean":       [(0, 208,   48, 16),
+    "Green Bean":       [(0,   208, 48, 16),
                          (160, 60,  16, 32)],
-    "Onion":            [(48, 208,  48, 16),
+    "Onion":            [(48,  208, 48, 16),
                          (192, 60,  16, 32)],
-    "Squash":           [(96, 208,  48, 16),
-                         (0, 0,     32, 48)],
+    "Squash":           [(96,  208, 48, 16),
+                         (0,   0,   32, 48)],
     "Chestnut Mushroom":[(144, 208, 48, 16),
-                         (36, 60,   24, 32)],
+                         (36,  60,  24, 32)],
     "Plum":             [(192, 208, 48, 16),
                          (256, 60,  16, 32)],
     "Grape":            [(240, 208, 48, 16),
                          (196, 11,  24, 32)],
     "Mushroom":         [(192, 192, 48, 16),
-                         (68, 60,   24, 32)],
+                         (68,  60,  24, 32)],
     "Beet":             [(240, 192, 48, 16),
                          (224, 60,  16, 32)],
     "Coconut":          [(192, 176, 48, 16),
                          (160, 8,   32, 38)],
     "Red Pepper":       [(192, 160, 48, 16),
-                         (4, 60,    24, 32)],
+                         (4,   60,  24, 32)],
     "Apple":            [(192, 144, 48, 16),
                          (228, 11,  24, 32)],
     "Cucumber":         [(240, 144, 48, 16),
@@ -45,9 +79,9 @@ FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, norma
     "Lemon":            [(240, 128, 48, 16),
                          (128, 60,  16, 32)],
     "Pineapple":        [(240, 160, 48, 32),
-                         (32, 0,    32, 48)],
-    "Melon":            [(60, 160,  48, 32), 
-                         (64, 0,    32, 48)],
+                         (32,  0,   32, 48)],
+    "Melon":            [(60,  160, 48, 32), 
+                         (64,  0,   32, 48)],
 }
 SEED_BAGS_POS = (240, 100, 32, 24) # 2 different seed bags
 
@@ -55,11 +89,13 @@ PLAYER_SHEETS = ["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird
 
 class AssetLoader:
     """Utility class to load and process all tile-related assets from sprite sheets."""
+    SCALE_FACTOR = 2
     ## --- Tile Attributes ---
     # Tool sprites are 16x16 in the sheet
     TILE_SIZE = 32
     DIRT_SPRITE_INDEX = 11 # Index for the preferred base dirt tile: (Row 1 * 10 columns) + Col 1 = 11
     TILE_ASSETS = {}
+    TILE_DETAILS = {}
 
     ## --- Item Attributes ---
     # Item sprites are scaled to 36x36 for inventory/UI display
@@ -104,6 +140,7 @@ class AssetLoader:
         cls.load_fruit_assets()
         cls.load_tool_assets()
         cls.load_tile_assets()
+        cls.load_tile_detail_assets()
         cls.load_player_assets()
     @classmethod
     def create_fruit(cls, sheet: SpriteSheet, rect, ranks, number=3, scale_factor = None):
@@ -115,19 +152,23 @@ class AssetLoader:
             offset_x = x + (i* item_width)
             new_fruit[rank] = sheet.get_image(offset_x, y, item_width, height, scale)
         return new_fruit
-    
+    @classmethod
+    def load_SpriteSheet(cls, name):
+        try:
+            sheet = SpriteSheet(name)
+            print(f"Loaded {name} spritesheet...")
+        except Exception as e:
+            print(f"Failed to load {name} sprite sheet: {e}")
+            return None
+        return sheet
+
     # Load Functions
     @classmethod
     def load_tool_assets(cls):
-        all_tools= {}
-
-        try:
-            tool_sheet = SpriteSheet("Tools_All.png")
-            print("Loaded Tools_All.png spritesheet...")
-        except Exception as e:
-            print(f"Failed to load Tools_All.png sprite sheet: {e}")
-            return all_tools
-        
+        # Load the SpriteSheet
+        tool_sheet = cls.load_SpriteSheet("Tools_All.png")
+        if not tool_sheet:  return None
+        all_tools = {}
         for row_index, material in enumerate(MATERIAL_LEVELS):
             all_tools[material] = {}
             
@@ -151,52 +192,68 @@ class AssetLoader:
         cls.ALL_TOOLS = all_tools
     @classmethod
     def load_tile_assets(cls):
-        """
-        Loads all tile assets, scales the base dirt tile, assigns it to 
-        settings.DIRT_TILE, and returns the full dictionary of tileset lists.
-        """
+        """ Loads all tile assets, scales the base dirt tile, assigns it to 
+        settings.DIRT_TILE, and returns the full dictionary of tileset lists. """
+        # Load the SpriteSheet
+        exterior_sheet = cls.load_SpriteSheet("exterior.png")
+        if not exterior_sheet:  return None
         
-        # 1. Load the SpriteSheet
-        try:
-            exterior_sheet = SpriteSheet("exterior.png")
-            print("Loaded exterior spritesheet...")
-        except Exception as e:
-            print(f"Failed to load exterior sprite sheet: {e}")
-            return {"GRASS_A_TILES": []} # Return empty set on failure
-
-        # 2. Extract Marching Squares Tilesets (32x32 sprites)
-        ground_tiles = {
-            "GRASS_A_TILES": exterior_sheet.extract_tiles_from_region(0, 176, 160, 48, 16, QUAD_SIZE),
-            "GRASS_B_TILES": exterior_sheet.extract_tiles_from_region(0, 224, 160, 48, 16, QUAD_SIZE),
-            "DIRT_TILES": exterior_sheet.extract_tiles_from_region(0, 272, 160, 48, 16, QUAD_SIZE)
-        }
-        
-        # 3. Overwrite DIRT_TILE in settings.py with the specific scaled sprite
-        dirt_tileset = ground_tiles.get("DIRT_TILES")
-        if dirt_tileset and len(dirt_tileset) > cls.DIRT_SPRITE_INDEX:
-            dirt_sprite_32x32 = dirt_tileset[cls.DIRT_SPRITE_INDEX]
-            
-            # Scale the 32x32 sprite up to 64x64 (BLOCK_SIZE)
-            scaled_dirt = pygame.transform.scale(dirt_sprite_32x32, (BLOCK_SIZE, BLOCK_SIZE))
-            
-            settings.DIRT_TILE = scaled_dirt
-            print(f"settings.DIRT_TILE updated and scaled to 64x64 using sprite at index {cls.DIRT_SPRITE_INDEX}.")
-        else:
-            print(f"Warning: Could not load DIRT_TILE sprite at index {cls.DIRT_SPRITE_INDEX}. Using solid color fallback.")
-            
-        # 4. (Optional) You can add logic here to extract other single sprites like PLANT_TILE.
-        
+        # Dynamically Extract Marching Squares Tilesets (32x32 sprites)
+        ground_tiles = {}
+        for key, region_data in GROUND_TILE_REGIONS.items():
+            x, y, width, height = region_data
+            ground_tiles[key] = exterior_sheet.extract_tiles_by_dimensions(
+                start_x=x, 
+                start_y=y, 
+                region_width=width, 
+                region_height=height, 
+                tile_width=16, 
+                tile_height=16,
+                scale_factor=cls.SCALE_FACTOR
+            )
         cls.TILE_ASSETS = ground_tiles
+        # Overwrite DIRT_TILE in settings.py with the specific scaled sprite
+        dirt_tileset = ground_tiles.get("DIRT")
+        if not dirt_tileset or len(dirt_tileset) <= cls.DIRT_SPRITE_INDEX:
+            print(f"Warning: Could not load DIRT_TILE sprite at index {cls.DIRT_SPRITE_INDEX}. Using solid color fallback.")
+            return
+           
+        dirt_sprite_32x32 = dirt_tileset[cls.DIRT_SPRITE_INDEX]
+        
+        # Scale the 32x32 sprite up to 64x64 (BLOCK_SIZE)
+        scaled_dirt = pygame.transform.scale(dirt_sprite_32x32, (BLOCK_SIZE, BLOCK_SIZE))
+        
+        settings.DIRT_TILE = scaled_dirt
+        print(f"settings.DIRT_TILE updated and scaled to 64x64 using sprite at index {cls.DIRT_SPRITE_INDEX}.")
+    @classmethod
+    def load_tile_detail_assets(cls):
+        detail_sheet = cls.load_SpriteSheet("ground_grass_details.png")
+        if not detail_sheet:
+            return None
+
+        for tile_type, regions in TILE_DETAILS.items():
+            tile_details = []
+            for rect_info in regions:
+                x, y, width, height, tile_width, tile_height = rect_info
+                detail_sprites = detail_sheet.extract_tiles_by_dimensions(
+                    x, y, 
+                    width, height, 
+                    tile_width, tile_height, 
+                    cls.SCALE_FACTOR
+                )
+                #Add new detail sprites (and flatten list using extend)
+                tile_details.extend(detail_sprites)
+            cls.TILE_DETAILS = tile_details
+        print("Tile detail assets loaded successfully.")
+
+
+        #cls.TIL_DETAILS = details
     @classmethod
     def load_fruit_assets(cls):
         """Loads and organizes individual fruits/seeds and fruit containers from Supplies.png."""
-        
-        try:
-            supplies_sheet = SpriteSheet("Supplies.png")
-            print("Loaded Supplies.png spritesheet...")
-        except Exception as e:
-            print(f"Failed to load Supplies.png sprite sheet: {e}")
-            return # Exit on failure
+        supplies_sheet = cls.load_SpriteSheet("Supplies.png")
+        if not supplies_sheet:
+            return None
         
         for name, [fruit, container] in FRUIT_TYPES.items():
             if name == "Melon":
@@ -216,12 +273,19 @@ class AssetLoader:
             player_images = {}
             player_sheet = SpriteSheet(os.path.join("Player", f"{player}.png"))
             if player_sheet is None:
-                player_images = {}
                 return None
             sprite_directions = cls.PLAYER_DIRECTIONS.keys()
             for direction in sprite_directions:
                 x, y, w, h = cls.PLAYER_DIRECTIONS[direction]
-                player_images[direction] = player_sheet.extract_tiles_from_region(x, y, w, h, 32, 64)
+                player_images[direction] = player_sheet.extract_tiles_by_dimensions(
+                    start_x=x, 
+                    start_y=y, 
+                    region_width=w, 
+                    region_height=h, 
+                    tile_width=cls.TILE_SIZE, 
+                    tile_height=cls.TILE_SIZE, 
+                    scale_factor=cls.SCALE_FACTOR
+                )
 
             cls.PLAYER_IMAGES[player] = player_images
         """print("Player Types: ", len(cls.PLAYER_IMAGES)) # 6 player types/skins
@@ -245,13 +309,10 @@ class AssetLoader:
         return movement_images[direction_id]
     @classmethod
     def get_player_image(cls, player_type: str):
-        if player_type in cls.PLAYER_IMAGES:
-            return cls.PLAYER_IMAGES[player_type]
-        print("Error!")
+        return cls.PLAYER_IMAGES[player_type]
     @classmethod
     def get_tool_image(cls, tool_name: str):
         material, type  = tool_name.upper().split("_", 1)
-        print(type, material)
         return cls.ALL_TOOLS.get(material).get(type)
     @classmethod
     def get_fruit_image(cls, fruit_name: str):
@@ -323,7 +384,7 @@ class AssetLoader:
         dirt_tileset = cls.GROUND_TILES.get("DIRT_TILES")
         cls.DIRT_TILE = dirt_tileset[23]
 
-         # 4. Extract PLANT_TILE 🌿 (Re-enabled the extraction)
+         # 4. Extract PLANT_TILE (Re-enabled the extraction)
         cls.PLANT_TILE = cls.EXTERIOR.get_image(
             x=9, 
             y=281, 

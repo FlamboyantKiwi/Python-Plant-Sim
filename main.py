@@ -19,16 +19,14 @@ player = playerClass.Player(settings.WIDTH//2, settings.HEIGHT//2)
 all_sprites.add(player)
 
 hud = HUD(player)
-
-grass_tileset = AssetLoader.TILE_ASSETS.get("GRASS_A_TILES")
-#dirt_tileset = AssetLoader.TILE_ASSETS.get("DIRT_TILES")
+print(settings.DIRT_TILE)
 
 current_level = Level(
     node_map_data=Level.create_node_map(), 
     all_tiles_group=all_tiles,
     player_sprite=player,
-    tileset_list=grass_tileset, 
 )
+
 
 playing = True
 tick = 0

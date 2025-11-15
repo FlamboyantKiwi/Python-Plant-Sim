@@ -23,22 +23,26 @@ class SpriteSheet:
         if scale != (width, height):
             image = pygame.transform.scale(image, scale)
         return image
-    def extract_tiles_from_region(self, start_x, start_y, width, height, tile_size=16, final_scale=32):
-        """ Extracts all 16x16 tiles from a defined region of the sprite sheet.
-            
-            :returns: A list of pygame.Surface objects. """
+
+    def extract_tiles_by_dimensions(self, start_x, start_y, region_width, region_height, tile_width, tile_height, scale_factor = 1):
         tiles = []
-        cols = width // tile_size
-        rows = height // tile_size
+        
+        # Calculate number of columns and rows based on tile dimensions
+        cols = region_width // tile_width
+        rows = region_height // tile_height
+
         for row in range(rows):
             for col in range(cols):
-                source_x = start_x + (col*tile_size)
-                source_y = start_y + (row*tile_size)
+                source_x = start_x + (col * tile_width)
+                source_y = start_y + (row * tile_height)
+                scale = (tile_width  * scale_factor, 
+                         tile_height * scale_factor)
                 tiles.append(
                     self.get_image(
-                    source_x, source_y, 
-                    tile_size, tile_size, 
-                    (final_scale,final_scale)
-                ))
+                        source_x, source_y, 
+                        tile_width, tile_height, 
+                        scale
+                    )
+                )
         return tiles
     
