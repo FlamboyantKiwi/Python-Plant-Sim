@@ -4,6 +4,7 @@ from settings import WIDTH, HEIGHT, ANIMATION_SPEED
 from helper import get_direction
 from asset_loader import AssetLoader
 class Player(pygame.sprite.Sprite):
+    # Input Key Variables
     direction_keys = {
         # Horizontal Movement
         pygame.K_a: (-1, 0),    # Left
@@ -16,12 +17,14 @@ class Player(pygame.sprite.Sprite):
         pygame.K_UP: (0, -1),
         pygame.K_s: (0, 1),     # Down
         pygame.K_DOWN: (0, 1)}
-    RUN_KEY = pygame.K_LSHIFT
     SLOT_KEY_MAP = {
         pygame.K_1: 0, pygame.K_2: 1, pygame.K_3: 2, pygame.K_4: 3,
         pygame.K_5: 4, pygame.K_6: 5, pygame.K_7: 6, pygame.K_8: 7,
     }
     interact_key = pygame.K_SPACE
+    RUN_KEY = pygame.K_LSHIFT
+
+    #Inventory Variables
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
@@ -64,7 +67,7 @@ class Player(pygame.sprite.Sprite):
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
         self.inventory.add_item(item.Tool("gold_scythe"))
-        self.inventory.add_item(item.Seed())
+        self.inventory.add_item(item.Seed("Red Pepper"))
         self.inventory.add_item(item.Fruit("gold_Red Pepper"))
 
     def recalculate_movement_vectors(self):
@@ -145,7 +148,6 @@ class Player(pygame.sprite.Sprite):
                 self.state = "Walk"
         else:
             self.state = "Idle"
-        print(self.state)
         self.image = AssetLoader.get_player_image_direction(self.spritesheet, self.state, self.direction, anim_tick)
         
         # Horizontal Collision Check

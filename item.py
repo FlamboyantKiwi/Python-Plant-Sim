@@ -1,7 +1,6 @@
-import pygame
 from abc import ABC, abstractmethod
-import tile
-from helper import get_grid_pos, get_image, get_tool_image, get_fruit_image, get_sprite_image
+from helper import get_image
+from asset_loader import AssetLoader
 
 Default_colour = (150, 150, 150)
 class Item(ABC):
@@ -44,6 +43,7 @@ class Item(ABC):
 
 class Seed(Item):
     def __init__(self, name="Seed", count=1, stack_size=50, sell_value=1, buy_value=0, image_filename=None):
+        name = name.title()
         super().__init__(
             name, 
             count=count, 
@@ -51,11 +51,14 @@ class Seed(Item):
             sell_value=sell_value, 
             buy_value=buy_value,
         )
-        self.set_image(get_sprite_image(name))
+        self.set_image(AssetLoader.get_seed_image(name))
+        
     def use(self, player, target_tile, all_tiles):
         if target_tile is None:
             return False # no tile to use seeds on
         pass
+    def get_name(self):
+        return f" {self.name} Seeds"
 
 class Tool(Item):
     def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
@@ -67,7 +70,7 @@ class Tool(Item):
             buy_value=buy_value,
             image_filename=-1,
         )
-        self.set_image(get_tool_image(name))
+        self.set_image(AssetLoader.get_tool_image(name))
         
     def use(self, player, target_tile, all_tiles):
         tool_name = self.name.upper()
@@ -90,7 +93,6 @@ class Tool(Item):
     def shovel(self, player, target_tile, all_tiles):
         print(f"Using {self.material} Shovel. Digging logic not yet implemented.")
         return False
-
     def water(self, player, target_tile, all_tiles):
         print(f"Using {self.material} Watering Can. Watering logic not yet implemented.")
         return False
@@ -102,7 +104,7 @@ class Tool(Item):
 class Fruit(Item):
     def __init__(self, name, count=1, stack_size=1, sell_value=0, buy_value=0):
         super().__init__(name, count, stack_size, sell_value, buy_value, image_filename=-1)
-        self.set_image(get_fruit_image(name))
+        self.set_image(AssetLoader.get_fruit_image(name))
     def use(self, player, target_tile, all_tiles):
         print("Eating fruit")
     def get_name(self):

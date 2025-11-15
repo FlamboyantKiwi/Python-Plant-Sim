@@ -1,7 +1,5 @@
 import pygame, os
 from settings import BLOCK_SIZE, COLOURS, DEFAULT_COLOUR, IMAGE_LOAD_FAILURES
-from asset_loader import AssetLoader
-from spritesheet import SpriteSheet
 #Helper Function
 def get_asset(fileName, path="assets"): 
     """Gets the full, cross-platform path for a file in the assets folder.
@@ -86,7 +84,6 @@ def get_image(image_name, scale, fallback_type=None):
     if image_name == None:
             image_name = fallback_type
 
-
     if image_name not in IMAGE_LOAD_FAILURES:
         try: # Load image based on image name
             image = pygame.image.load(get_asset(image_name)).convert_alpha()
@@ -108,46 +105,19 @@ def get_image(image_name, scale, fallback_type=None):
     image.fill(colour)
     return image
 
-
-#Add following to assetloader class:
-def get_tool_image(tool_name: str):
-    material, type  = tool_name.upper().split("_", 1)
-    print(type, material)
-    return AssetLoader.ALL_TOOLS.get(material).get(type)
-
-def get_fruit_image(fruit_name: str):
-    rank, name  = fruit_name.split("_", 1)
-    fruit_rank_dict = AssetLoader.ALL_FRUITS.get(name.title())
-    return fruit_rank_dict.get(rank.upper())
-
-def get_sprite_image(name: str):
-    if name == "Seed":
-        print(AssetLoader.SEED_BAGS)
-        return AssetLoader.SEED_BAGS.get("1")
-        
-def get_player_image(name: str):
-    test = AssetLoader.PLAYER_IMAGES.get(name)
-    return test
-
-
-# "Walk", "Idle", "Run"
-
 def get_axis(value, lessthan, greaterthan):
-    """
-    Categorizes a numeric value as negative, positive, or zero, returning 
+    """ Categorizes a numeric value as negative, positive, or zero, returning 
     a specified descriptive string for each case.
 
     :param value: The numeric input being checked (e.g., delta_health, tick_difference).
     :param lessthan: The value to return if input is less than zero (negative).
     :param greaterthan: The value to return if input is greater than zero (positive).
-    :return: 'lessthan', 'greaterthan', or 0 if the value is zero.
-    """
+    :return: 'lessthan', 'greaterthan', or 0 if the value is zero."""
     if value < 0:
         return lessthan
     else:
         return greaterthan
     
-
 def get_direction(dx, dy, tick = 0):
     abs_dx, abs_dy = abs(dx), abs(dy)
     if abs_dx == 0 and abs_dy == 0:

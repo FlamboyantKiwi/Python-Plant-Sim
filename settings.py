@@ -12,7 +12,7 @@ FPS = 60
 ANIMATION_SPEED = 5
 
 #colours
-COLOURS = {
+COLOURS = { # Should be able to remove once images are fully added
     "PLAYER": (0, 0, 255),
     "UNTILLED": (92, 204, 97),
     "INVENTORY_SLOT": (150, 150, 150),
@@ -33,18 +33,8 @@ DEFAULT_COLOUR = COLOURS["DEBUG"]
 
 IMAGE_LOAD_FAILURES = set()
 
-try:
-    DIRT_TILE = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-    DIRT_TILE.fill(COLOURS["TILLED"]) 
-    
-    WATER_TILE = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-    WATER_TILE.fill(COLOURS["WATER"])
-    print("Basic tiles initialized upon settings import.")
-except NameError as e:
-    print(f"Error initializing basic tiles in settings: {e}")
-    # Fallback to a minimal surface if constants are missing
-    DIRT_TILE = pygame.Surface((1, 1)) 
-    WATER_TILE = pygame.Surface((1, 1))
+DIRT_TILE = None
+WATER_TILE = None
 
 # Inventory Defaults
 INV_SIZE = 8

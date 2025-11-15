@@ -1,5 +1,5 @@
 import pygame, random
-from settings import BLOCK_SIZE, QUAD_SIZE, DIRT_TILE
+from settings import QUAD_SIZE
 
 
 MARCHING_TILES = {
@@ -44,6 +44,7 @@ class Tile(pygame.sprite.Sprite):
                 (QUAD_SIZE, QUAD_SIZE)]
     
     def __init__(self, x, y, tile_type, neighbors, tileset, sheet_width = 10):
+        from settings import BLOCK_SIZE, DIRT_TILE
         super().__init__()
         self.tile_type = tile_type
         self.sheet_width = sheet_width

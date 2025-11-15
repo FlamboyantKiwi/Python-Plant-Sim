@@ -70,14 +70,13 @@ class AssetLoader:
     ALL_FRUIT_CONTAINERS = {}
 
     fruit_ranks = ("GOLD", "SILVER", "BRONZE")
+
     ## --- Player Attributes ---
     PLAYER_IMAGES = {}
-    
     PLAYER_DIRECTIONS = { # X, Y, Width, Height, sprite_size = 32x32
     "Walk": (0, 0, 128, 128),
-    "Idle": (0, 128, 128, 32),  # up and left need to be switched
-    "Run": (0, 160, 128, 256)}  # left/right need to be switched
-
+    "Idle": (0, 128, 128, 32),  
+    "Run": (0, 160, 128, 256)}  
     DIRECTIONS = { 
     "Walk": {
         "Down":0, 
@@ -106,7 +105,18 @@ class AssetLoader:
         cls.load_tool_assets()
         cls.load_tile_assets()
         cls.load_player_assets()
-
+    @classmethod
+    def create_fruit(cls, sheet: SpriteSheet, rect, ranks, number=3, scale_factor = None):
+        new_fruit = {}
+        x, y, width, height = rect
+        item_width = width//number
+        scale = (item_width*scale_factor, height*scale_factor)
+        for i, rank in enumerate(ranks):
+            offset_x = x + (i* item_width)
+            new_fruit[rank] = sheet.get_image(offset_x, y, item_width, height, scale)
+        return new_fruit
+    
+    # Load Functions
     @classmethod
     def load_tool_assets(cls):
         all_tools= {}
@@ -139,7 +149,6 @@ class AssetLoader:
         
         print("Tool assets loaded successfully.")
         cls.ALL_TOOLS = all_tools
-
     @classmethod
     def load_tile_assets(cls):
         """
@@ -178,16 +187,6 @@ class AssetLoader:
         # 4. (Optional) You can add logic here to extract other single sprites like PLANT_TILE.
         
         cls.TILE_ASSETS = ground_tiles
-    
-    @classmethod
-    def create_fruit(cls, sheet, rect, ranks, number=3):
-        new_fruit = {}
-        x, y, width, height = rect
-        item_width = width//number
-        for i, rank in enumerate(ranks):
-            offset_x = x + (i* item_width)
-            new_fruit[rank] = sheet.get_image(offset_x, y, item_width, height)
-        return new_fruit
     @classmethod
     def load_fruit_assets(cls):
         """Loads and organizes individual fruits/seeds and fruit containers from Supplies.png."""
@@ -204,14 +203,13 @@ class AssetLoader:
                 fruit_num = 2
             else:
                 fruit_num = 3
-            cls.ALL_FRUITS[name] = cls.create_fruit(supplies_sheet, fruit, cls.fruit_ranks, fruit_num)
+            cls.ALL_FRUITS[name] = cls.create_fruit(supplies_sheet, fruit, cls.fruit_ranks, fruit_num, scale_factor=2)
             x,y,w,h = container
             cls.ALL_FRUIT_CONTAINERS[name] = supplies_sheet.get_image(x,y,w,h)
 
         x, y, w, h = SEED_BAGS_POS
-        cls.SEED_BAGS = cls.create_fruit(supplies_sheet, SEED_BAGS_POS, ["1", "2"], 2)
+        cls.SEED_BAGS = cls.create_fruit(supplies_sheet, SEED_BAGS_POS, ["1", "2"], 2, scale_factor=3)
         print("Fruit and Container assets loaded successfully.")
-
     @classmethod
     def load_player_assets(cls):
         for player in PLAYER_SHEETS:
@@ -226,21 +224,15 @@ class AssetLoader:
                 player_images[direction] = player_sheet.extract_tiles_from_region(x, y, w, h, 32, 64)
 
             cls.PLAYER_IMAGES[player] = player_images
-        print("Player Types: ", len(cls.PLAYER_IMAGES)) # 6 player types/skins
+        """print("Player Types: ", len(cls.PLAYER_IMAGES)) # 6 player types/skins
         print("Player Images: ", 
               len(cls.PLAYER_IMAGES["Fox"]["Walk"]), # 16 walk animations. 4 images for each direction
               len(cls.PLAYER_IMAGES["Fox"]["Run"]),  # 32 Run animations.  8 images for each direction
-              len(cls.PLAYER_IMAGES["Fox"]["Idle"])) # 4 idle animations.  1 image for each direction
+              len(cls.PLAYER_IMAGES["Fox"]["Idle"])) # 4 idle animations.  1 image for each direction"""
 
-    @classmethod
-    def get_player_image(cls, player_type):
-        if player_type in cls.PLAYER_IMAGES:
-            return cls.PLAYER_IMAGES[player_type]
-        print("Error!")
-
+    # Get Functions
     @classmethod
     def get_player_image_direction(cls, sheet, state: str, direction: str, tick: int):
-
         movement_types = list(cls.PLAYER_DIRECTIONS.keys())
         if state not in movement_types:
             return
@@ -251,6 +243,56 @@ class AssetLoader:
         movement_images = sheet.get(state)
         direction_id = (cls.DIRECTIONS[state][direction] * max_frames) + tick
         return movement_images[direction_id]
+    @classmethod
+    def get_player_image(cls, player_type: str):
+        if player_type in cls.PLAYER_IMAGES:
+            return cls.PLAYER_IMAGES[player_type]
+        print("Error!")
+    @classmethod
+    def get_tool_image(cls, tool_name: str):
+        material, type  = tool_name.upper().split("_", 1)
+        print(type, material)
+        return cls.ALL_TOOLS.get(material).get(type)
+    @classmethod
+    def get_fruit_image(cls, fruit_name: str):
+        rank, name  = fruit_name.split("_", 1)
+        fruit_rank_dict = cls.ALL_FRUITS.get(name.title())
+        return fruit_rank_dict.get(rank.upper())
+    @classmethod
+    def get_seed_image(cls, seed_name: str = "", bag_id = "1"):
+        bag_surface = cls.SEED_BAGS.get(bag_id)
+        fruit_surface = cls.get_fruit_image(f"BRONZE_{seed_name}")
+
+        if bag_surface is None:
+            print(f"Warning: Seed bag ID '{bag_id}' not found.")
+            return None
+        if fruit_surface is None:
+            # If the fruit is missing, just return the bag
+            return bag_surface.copy()
+        
+        # 2. Create the Composite Surface
+        # Must use .copy() to avoid drawing on the original SEED_BAGS asset
+        composite_image = bag_surface.copy()
+        
+        # 3. Calculate Centering Position
+        # The image size is likely 36x36 (cls.ITEM_SIZE). We center the smaller fruit image 
+        # slightly above the center to sit naturally on the bag opening.
+        bag_rect = composite_image.get_rect()
+        fruit_rect = fruit_surface.get_rect()
+        
+        # Center horizontally and position slightly up
+        center_x = bag_rect.width // 2
+        center_y = bag_rect.height // 2 - 2 # Shift up by 2 pixels
+
+        blit_pos_x = center_x - (fruit_rect.width // 2)
+        blit_pos_y = center_y - (fruit_rect.height // 2)
+
+        # 4. Blit the Fruit onto the Bag
+        composite_image.blit(fruit_surface, (blit_pos_x, blit_pos_y))
+        
+        return composite_image
+
+
 
     """
     @classmethod

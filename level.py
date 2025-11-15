@@ -1,5 +1,4 @@
-import pygame, random, math
-from spritesheet import SpriteSheet
+import random, math
 from tile import Tile
 from settings import BLOCK_SIZE, QUAD_SIZE
 class Level:
@@ -20,10 +19,8 @@ class Level:
 
         self.generate_level()
     def generate_level(self):
-        """
-        Iterates over the node map to calculate the 9-node status for each 
-        64x64 tile and creates the Tile object.
-        """
+        """ Iterates over the node map to calculate the 9-node status for each 
+        64x64 tile and creates the Tile object. """
         self.all_tiles.empty() # Clear existing tiles
         
         # Initialize the screen tile counters
@@ -56,9 +53,7 @@ class Level:
                     x, y,
                     tile_type="GRASS_A", 
                     neighbors=nine_nodes_status, # The 9 boolean nodes
-                    tileset=self.tileset
-                )
-                
+                    tileset=self.tileset)
                 self.all_tiles.add(new_tile)
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---
@@ -76,7 +71,6 @@ class Level:
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
 
-    
     @staticmethod
     def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):
         """Randomly selects a center point, calculates a noise-distorted boundary, 
@@ -116,7 +110,7 @@ class Level:
                 # 4. Check against the effective radius squared
                 if distance_sq < effective_radius**2:
                     node_map[y][x] = passive_material
-    @staticmethod
+    @staticmethod # REMOVED (for now)
     def draw_pond(node_map: list[list[int]], min_radius: int = 1, max_radius: int = 2):
         """ Carves a randomly sized, organically shaped pond (Water Node = 2) 
         into the node map."""
