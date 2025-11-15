@@ -58,7 +58,7 @@ class AssetLoader:
     ## --- Tile Attributes ---
     # Tool sprites are 16x16 in the sheet
     TILE_SIZE = 32
-    DIRT_SPRITE_INDEX = 23 # Index for the preferred base dirt tile: (Row 2 * 10 columns) + Col 3 = 23
+    DIRT_SPRITE_INDEX = 11 # Index for the preferred base dirt tile: (Row 1 * 10 columns) + Col 1 = 11
     TILE_ASSETS = {}
 
     ## --- Item Attributes ---
