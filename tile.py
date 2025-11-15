@@ -43,13 +43,14 @@ class Tile(pygame.sprite.Sprite):
                 (0, QUAD_SIZE), 
                 (QUAD_SIZE, QUAD_SIZE)]
     
-    def __init__(self, x, y, tile_type, neighbors, tileset, sheet_width = 10):
+    def __init__(self, x, y, tile_type, neighbors, tileset, detail_image:pygame.Surface=None , sheet_width = 10):
         from settings import BLOCK_SIZE, DIRT_TILE
         super().__init__()
         self.tile_type = tile_type
         self.sheet_width = sheet_width
         self.position = (x, y)
         self.obstructed = False # Default unobstructed
+        self.detail_image = detail_image
 
         #Initialise 64x64 Tile Surface
         self.image = DIRT_TILE.copy()
@@ -66,6 +67,10 @@ class Tile(pygame.sprite.Sprite):
                 self.tileset = tileset
                 # create Tile's image (from 4 Sub-Tiles) using Marching Squares logic
                 self.assemble_tile(neighbors)
+            if self.detail_image:
+                detail_rect = self.detail_image.get_rect(
+                    center = (self.image.get_width() // 2, self.image.get_height() // 2))
+                self.image.blit(self.detail_image, detail_rect)
 
 
     def assemble_tile(self, node):

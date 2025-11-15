@@ -231,8 +231,9 @@ class AssetLoader:
         if not detail_sheet:
             return None
 
+        details_dict = {}
         for tile_type, regions in TILE_DETAILS.items():
-            tile_details = []
+            tile_details_list = []
             for rect_info in regions:
                 x, y, width, height, tile_width, tile_height = rect_info
                 detail_sprites = detail_sheet.extract_tiles_by_dimensions(
@@ -241,9 +242,10 @@ class AssetLoader:
                     tile_width, tile_height, 
                     cls.SCALE_FACTOR
                 )
-                #Add new detail sprites (and flatten list using extend)
-                tile_details.extend(detail_sprites)
-            cls.TILE_DETAILS = tile_details
+                # Flatten list using extend
+                tile_details_list.extend(detail_sprites)
+            details_dict[tile_type] = tile_details_list
+        cls.TILE_DETAILS = details_dict
         print("Tile detail assets loaded successfully.")
 
 

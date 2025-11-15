@@ -35,6 +35,7 @@ IMAGE_LOAD_FAILURES = set()
 
 DIRT_TILE = None
 WATER_TILE = None
+DETAIL_CHANCE = 0.2
 
 # Inventory Defaults
 INV_SIZE = 8

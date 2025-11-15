@@ -1,8 +1,10 @@
 import random, math
 from tile import Tile
-from settings import BLOCK_SIZE
+from settings import BLOCK_SIZE, DETAIL_CHANCE
 from asset_loader import AssetLoader
 class Level:
+    DIRT_NODE = 0
+    GRASS_NODE = 1
     """ Handles level initialization by processing a node map (corner statuses)
     and generating high-resolution Marching Squares tiles. """
 
@@ -36,31 +38,64 @@ class Level:
                 # The current tile at (tile_x, tile_y) is influenced by a 3x3 node grid 
                 # starting at node (tile_x, tile_y) and ending at (tile_x + 2, tile_y + 2).
                 nine_nodes_status = []
+                same_type_count = 0
+                # The primary material is based on the center node of the 3x3 grid
+                center_node_material = self.node_map[node_y + 1][node_x + 1]
                 for y_offset in range(3):
                     for x_offset in range(3):
                         # Accesses node_map[node_y + y_offset][node_x + x_offset]
                         node_value = self.node_map[node_y + y_offset][node_x + x_offset]
-                        nine_nodes_status.append(bool(node_value))
+                        nine_nodes_status.append(node_value == Level.GRASS_NODE)
+
+                        if node_value == center_node_material:
+                            same_type_count += 1
 
                 # --- 2. Calculate Screen Position (CORRECTED) ---
                 # Use the simple map tile index (0, 1, 2, 3...) for screen position
                 x = map_tile_x * BLOCK_SIZE
                 y = map_tile_y * BLOCK_SIZE
-                tile_type_key = "GRASS_A"
-                current_tileset = self.tilesets.get(tile_type_key )
+                
+                # If dirt, use the DIRT tileset and Dirt details
+                if center_node_material == Level.DIRT_NODE:
+                    tile_type_key = "DIRT"
+                    detail_key = "Dirt" 
+                    current_tileset = self.tilesets.get("GRASS_A")
+
+                # If grass, randomly choose between GRASS_A and GRASS_B tilesets
+                elif center_node_material == Level.GRASS_NODE:
+                    tile_type_key = "GRASS_A"
+                    detail_key = "Grass" # Details are the same for both grass types
+                    current_tileset = self.tilesets.get(tile_type_key)
+                
+                # Handle other types like WATER or fallback
+                else: 
+                    tile_type_key = "WATER" 
+                    detail_key = None
+                    current_tileset = self.tilesets.get(tile_type_key)
                 
                 # Safety check: skip if tileset is not loaded/found
                 if not current_tileset:
                     print(f"Warning: Tileset '{tile_type_key}' not found.")
                     map_tile_x += 1
                     continue
+                
+                random_detail_image = None
+                
+                # Check if we have a detail key and the random chance succeeds
+                if detail_key and same_type_count >= 6 and random.random() < DETAIL_CHANCE:
+                    detail_list = self.details.get(detail_key)
+                    
+                    if detail_list:
+                        # Select a random image from the list of details for this ground type
+                        random_detail_image = random.choice(detail_list)
 
                 # --- 3. Create the Marching Tile ---
                 new_tile = Tile(
                     x, y,
                     tile_type=tile_type_key , 
                     neighbors=nine_nodes_status, # The 9 boolean nodes
-                    tileset=current_tileset)
+                    tileset=current_tileset,
+                    detail_image = random_detail_image)
                 self.all_tiles.add(new_tile)
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---
