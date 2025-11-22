@@ -87,6 +87,8 @@ SEED_BAGS_POS = (240, 100, 32, 24) # 2 different seed bags
 
 PLAYER_SHEETS = ["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"]
 
+ANIMAL_SHEETS = ["Bull", "Calf", "Chick", "Lamb", "Piglet", "Rooster", "Sheep", "Turkey"]
+
 class AssetLoader:
     """Utility class to load and process all tile-related assets from sprite sheets."""
     SCALE_FACTOR = 2
@@ -109,11 +111,11 @@ class AssetLoader:
 
     ## --- Player Attributes ---
     PLAYER_IMAGES = {}
-    PLAYER_DIRECTIONS = { # X, Y, Width, Height, sprite_size = 32x32
+    PLAYER_STATES = { # X, Y, Width, Height, sprite_size = 32x32
     "Walk": (0, 0, 128, 128),
     "Idle": (0, 128, 128, 32),  
     "Run": (0, 160, 128, 256)}  
-    DIRECTIONS = { 
+    PLAYER_DIRECTIONS = { 
     "Walk": {
         "Down":0, 
         "Right":1, 
@@ -135,6 +137,17 @@ class AssetLoader:
         "Idle": 1,
         "Run": 8 }
     
+    ANIMAL_IMAGES = {}
+    ANIMAL_DIRECTIONS = {
+        "Down": 0,
+        "Up": 1,
+        "Left": 2,
+        "Right": 3
+    }
+    ANIMAL_STATES = {
+        "Walk": (),
+        "Idle": ()
+    }
     @classmethod
     def __init__(cls):
         cls.load_fruit_assets()
@@ -153,10 +166,14 @@ class AssetLoader:
             new_fruit[rank] = sheet.get_image(offset_x, y, item_width, height, scale)
         return new_fruit
     @classmethod
-    def load_SpriteSheet(cls, name):
+    def load_SpriteSheet(cls, name, path = None):
         try:
-            sheet = SpriteSheet(name)
-            print(f"Loaded {name} spritesheet...")
+            if path:
+                image_name = os.path.join(path, f"{name}.png")
+            else:
+                image_name = f"{name}.png"
+            sheet = SpriteSheet(image_name)
+            print(f"Loaded {image_name} spritesheet...")
         except Exception as e:
             print(f"Failed to load {name} sprite sheet: {e}")
             return None
@@ -166,7 +183,7 @@ class AssetLoader:
     @classmethod
     def load_tool_assets(cls):
         # Load the SpriteSheet
-        tool_sheet = cls.load_SpriteSheet("Tools_All.png")
+        tool_sheet = cls.load_SpriteSheet("Tools_All")
         if not tool_sheet:  return None
         all_tools = {}
         for row_index, material in enumerate(MATERIAL_LEVELS):
@@ -195,7 +212,7 @@ class AssetLoader:
         """ Loads all tile assets, scales the base dirt tile, assigns it to 
         settings.DIRT_TILE, and returns the full dictionary of tileset lists. """
         # Load the SpriteSheet
-        exterior_sheet = cls.load_SpriteSheet("exterior.png")
+        exterior_sheet = cls.load_SpriteSheet("exterior")
         if not exterior_sheet:  return None
         
         # Dynamically Extract Marching Squares Tilesets (32x32 sprites)
@@ -227,7 +244,7 @@ class AssetLoader:
         print(f"settings.DIRT_TILE updated and scaled to 64x64 using sprite at index {cls.DIRT_SPRITE_INDEX}.")
     @classmethod
     def load_tile_detail_assets(cls):
-        detail_sheet = cls.load_SpriteSheet("ground_grass_details.png")
+        detail_sheet = cls.load_SpriteSheet("ground_grass_details")
         if not detail_sheet:
             return None
 
@@ -253,7 +270,7 @@ class AssetLoader:
     @classmethod
     def load_fruit_assets(cls):
         """Loads and organizes individual fruits/seeds and fruit containers from Supplies.png."""
-        supplies_sheet = cls.load_SpriteSheet("Supplies.png")
+        supplies_sheet = cls.load_SpriteSheet("Supplies")
         if not supplies_sheet:
             return None
         
@@ -276,9 +293,9 @@ class AssetLoader:
             player_sheet = SpriteSheet(os.path.join("Player", f"{player}.png"))
             if player_sheet is None:
                 return None
-            sprite_directions = cls.PLAYER_DIRECTIONS.keys()
+            sprite_directions = cls.PLAYER_STATES.keys()
             for direction in sprite_directions:
-                x, y, w, h = cls.PLAYER_DIRECTIONS[direction]
+                x, y, w, h = cls.PLAYER_STATES[direction]
                 player_images[direction] = player_sheet.extract_tiles_by_dimensions(
                     start_x=x, 
                     start_y=y, 
@@ -295,19 +312,28 @@ class AssetLoader:
               len(cls.PLAYER_IMAGES["Fox"]["Walk"]), # 16 walk animations. 4 images for each direction
               len(cls.PLAYER_IMAGES["Fox"]["Run"]),  # 32 Run animations.  8 images for each direction
               len(cls.PLAYER_IMAGES["Fox"]["Idle"])) # 4 idle animations.  1 image for each direction"""
+    @classmethod
+    def load_animal_assets(cls):
+        for animal in ANIMAL_SHEETS:
+            animal_image = {}
+            animal_sheet = SpriteSheet(os.path.join("Farm_Animals", f"{animal}.png"))
+            if animal_sheet is None:
+                return None
+            pass### setup individual animal images
+                
 
     # Get Functions
     @classmethod
-    def get_player_image_direction(cls, sheet, state: str, direction: str, tick: int):
-        movement_types = list(cls.PLAYER_DIRECTIONS.keys())
+    def get_player_image_direction(cls, sheet: SpriteSheet, state: str, direction: str, tick: int = 0):
+        movement_types = list(cls.PLAYER_STATES.keys())
         if state not in movement_types:
             return
-        if direction not in cls.DIRECTIONS[state]:
+        if direction not in cls.PLAYER_DIRECTIONS[state]:
             return
         max_frames = AssetLoader.PLAYER_FRAMES[state]
         tick = tick % max_frames
         movement_images = sheet.get(state)
-        direction_id = (cls.DIRECTIONS[state][direction] * max_frames) + tick
+        direction_id = (cls.PLAYER_DIRECTIONS[state][direction] * max_frames) + tick
         return movement_images[direction_id]
     @classmethod
     def get_player_image(cls, player_type: str):
@@ -355,7 +381,11 @@ class AssetLoader:
         
         return composite_image
 
+    def get_animal_image(cls, animal_type: str):
+        return cls.ANIMAL_IMAGES[animal_type]
 
+    def get_animal_image_direction(cls, sheet: SpriteSheet, state: str, direction: str, tick: int = 0):
+        pass
 
     """
     @classmethod

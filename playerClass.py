@@ -28,10 +28,10 @@ class Player(pygame.sprite.Sprite):
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
-    def __init__(self, x, y):
+    def __init__(self, x, y, type="Fox"):
         super().__init__()
-        self.player_type = "Fox"
-        self.spritesheet = AssetLoader.get_player_image(self.player_type)  ###*** continue from here - need to split spritesheet into individual images + run them with tick
+        self.player_type = type
+        self.spritesheet = AssetLoader.get_player_image(self.player_type)  
         """pygame.Surface((BLOCK_SIZE/2, BLOCK_SIZE * 0.75)) # slighly taller than block
         self.image.fill(get_colour("PLAYER"))"""
         self.image = AssetLoader.get_player_image_direction(self.spritesheet, "Idle", "Down", 0)
