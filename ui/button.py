@@ -1,8 +1,8 @@
 import pygame
 from settings import  SLOT_FONT
-from helper import get_image, get_colour
+from core.helper import get_image, get_colour
 class Button(pygame.sprite.Sprite):
-    def __init__(self, rect, text=None, font = SLOT_FONT, image_filename=None):
+    def __init__(self, rect, text=None, font = SLOT_FONT, image_filename=""):
         super().__init__()
         self.rect = rect
         self.text = text
@@ -28,7 +28,6 @@ class Button(pygame.sprite.Sprite):
 
         # Draw a thin colored outline for hover feedback
         if self.is_hovered:
-            print("over shop")
             # Use the stored hover_color for the border
             pygame.draw.rect(screen, self.hover_border, self.rect, 2) 
         

@@ -2,17 +2,22 @@
 import pygame
 pygame.init()
 
-# Game/Screen Defaults
+# Screen & Grid Configuration
 BLOCK_SIZE = 64
-SPRITESHEET_SIZE = 16
-QUAD_SIZE = BLOCK_SIZE//2 #32
-WIDTH = 900
-HEIGHT = 900
-FPS = 60
-ANIMATION_SPEED = 5
+TILES_X = 16
+TILES_Y = 12
 
-#colours
-COLOURS = { # Should be able to remove once images are fully added
+WIDTH = BLOCK_SIZE * TILES_X
+HEIGHT = BLOCK_SIZE * TILES_Y
+
+SPRITESHEET_SIZE = BLOCK_SIZE // 4
+QUAD_SIZE = BLOCK_SIZE // 2
+
+FPS = 60
+ANIMATION_SPEED = 5 # Lower is faster (ticks per frame)
+
+# Visuals & Colors
+COLOURS = {
     "PLAYER": (0, 0, 255),
     "UNTILLED": (92, 204, 97),
     "INVENTORY_SLOT": (150, 150, 150),
@@ -27,29 +32,39 @@ COLOURS = { # Should be able to remove once images are fully added
     "WATER": (56, 220, 245),
     "SHOP_BUTTON": (100, 194, 37),
     "SHOP_HOVER": (36, 66, 16),
-    "SHOP_MENU": (250, 250, 250)
-    }
-DEFAULT_COLOUR = COLOURS["DEBUG"]
+    "SHOP_MENU": (250, 250, 250),
+    "GOLD": (255, 215, 0),
+    "MONEY": (255, 215, 0),
+    "TEXT": (255, 255, 255)}
+DEFAULT_COLOUR = (255, 0, 255) # Magenta For Errors
 
 IMAGE_LOAD_FAILURES = set()
 
-DIRT_TILE = None
-WATER_TILE = None
+# Gameplay Config
 DETAIL_CHANCE = 0.2
 
-# Inventory Defaults
+# Inventory UI
 INV_SIZE = 8
 INV_PADDING = 5
 SLOT_SIZE = 50
 HIGHLIGHT_THICKNESS = 2
-HUD_FONT = pygame.font.Font(None, 36)
-SLOT_FONT = pygame.font.Font(None, 24)
 
-#Shop Button
-SHOP_BUTTON = pygame.Rect(BLOCK_SIZE//2, BLOCK_SIZE//2, BLOCK_SIZE, BLOCK_SIZE) 
-
+# Shop UI
 SHOP_MENU_WIDTH = 400
 SHOP_MENU_HEIGHT = 450
 SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
                         (HEIGHT - SHOP_MENU_HEIGHT) // 2,
                         SHOP_MENU_WIDTH, SHOP_MENU_HEIGHT)
+
+#Shop Button Position
+SHOP_BUTTON = pygame.Rect(BLOCK_SIZE//2, BLOCK_SIZE//2, BLOCK_SIZE, BLOCK_SIZE) 
+
+#Pygame Objects (Fonts)
+try:
+    pygame.font.init()
+    HUD_FONT = pygame.font.Font(None, 36)
+    SLOT_FONT = pygame.font.Font(None, 24)
+except pygame.error:
+    print("Warning: Fonts not initialized in settings (pygame not ready).")
+    HUD_FONT = None
+    SLOT_FONT = None

@@ -1,6 +1,6 @@
 from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU
-from helper import get_image, get_colour
-from item import Item
+from core.helper import get_image, get_colour
+from .items import Item
 import pygame
 
 class Inventory:
@@ -176,7 +176,7 @@ class Inventory:
             self.active_slot = index
             return True
         return False
-    def get_active_item(self) -> Item:
+    def get_active_item(self) -> Item | None:
         """Returns the Item object currently selected, or None."""
         if 0 <= self.active_slot < len(self.items):
             return self.items[self.active_slot]
@@ -222,7 +222,8 @@ class ShopMenu(Inventory):
             self.active_slot=clicked_slot
             if clicked_slot < len(self.items):
                 item_to_buy = self.items[clicked_slot]
-                self.buy_item(item_to_buy)
+                # self.buy_item(item_to_buy) # Logic to be implemented
+                print(f"Buying {item_to_buy.name}")
             return True 
         
         return False # Click was not on a valid shop item or button

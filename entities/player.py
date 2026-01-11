@@ -1,8 +1,17 @@
-import pygame, inventory, tile, item
-from helper import calc_pos_rect, get_grid_pos, get_colour
+import pygame
 from settings import WIDTH, HEIGHT, ANIMATION_SPEED
-from helper import get_direction
-from asset_loader import AssetLoader
+
+# 1. Core Imports
+from core.helper import calc_pos_rect, get_grid_pos, get_direction, get_colour
+from core.asset_loader import AssetLoader
+
+# 2. Entity Imports
+from entities.inventory import Inventory
+from entities import items  # Access item.Tool, item.Seed, etc.
+
+# 3. World Imports (Assumes you moved tile.py to world/tile.py)
+from world.tile import Tile
+
 class Player(pygame.sprite.Sprite):
     # Input Key Variables
     direction_keys = {
@@ -28,16 +37,15 @@ class Player(pygame.sprite.Sprite):
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
-    def __init__(self, x, y, type="Fox"):
+    def __init__(self, x:int|float, y:int|float, type="Fox"):
         super().__init__()
         self.player_type = type
-        self.spritesheet = AssetLoader.get_player_image(self.player_type)  
-        """pygame.Surface((BLOCK_SIZE/2, BLOCK_SIZE * 0.75)) # slighly taller than block
-        self.image.fill(get_colour("PLAYER"))"""
-        self.image = AssetLoader.get_player_image_direction(self.spritesheet, "Idle", "Down", 0)
+        self.image = AssetLoader.get_animated_sprite("PLAYER", self.player_type, "Idle", "Down", 0)
         if not self.image:
-            print("Error occured")
-            return -1
+            print("Error occured loading player image")
+            # Create fallback surface to prevent crash
+            self.image = pygame.Surface((32, 64))
+            self.image.fill(get_colour("PLAYER"))
 
         self.rect = self.image.get_rect(x=x, y=y) 
         self.direction = "Down" # start looking down
@@ -61,14 +69,15 @@ class Player(pygame.sprite.Sprite):
             x_offset=0,
             y_offset= ((HEIGHT - required_height) // 2) - 10
         )
-        self.inventory = inventory.Inventory(max_size=self.INV_SIZE, 
+        self.inventory = Inventory(max_size=self.INV_SIZE, 
                                    columns=self.INV_SIZE, 
                                    rect = inv_rect,
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
-        self.inventory.add_item(item.Tool("Gold_Scythe"))
-        self.inventory.add_item(item.Seed("Red Pepper", 50))
-        self.inventory.add_item(item.Fruit("Gold_Red Pepper", 10))
+        self.inventory.add_item(items.Tool("Gold_Scythe"))
+        self.inventory.add_item(items.Seed("Red Pepper", 50))
+        self.inventory.add_item(items.Fruit("Gold_Red Pepper", 10))
+        self.inventory.add_item(items.Tool("Wood_Hoe"))
 
     def recalculate_movement_vectors(self):
         """Adjusts self.dx and self.dy to match the current self.speed magnitude 
@@ -85,10 +94,8 @@ class Player(pygame.sprite.Sprite):
         if key in self.direction_keys:
             x, y = self.direction_keys[key]
             # Set the directional sign (-1 or 1) without speed magnitude
-            if x != 0:
-                self.dx = x
-            if y != 0:
-                self.dy = y
+            if x != 0:      self.dx = x
+            if y != 0:      self.dy = y
             # Apply the current speed magnitude to any non-zero vector
             self.recalculate_movement_vectors()
         if key == self.RUN_KEY:
@@ -112,9 +119,9 @@ class Player(pygame.sprite.Sprite):
         if key in self.direction_keys:
             x, y = self.direction_keys[key]
             if x != 0 and ((x < 0 and self.dx < 0) or (x > 0 and self.dx > 0)):
-                    self.dx = 0
+                self.dx = 0
             if y != 0 and ((y < 0 and self.dy < 0) or (y > 0 and self.dy > 0)):
-                    self.dy = 0
+                self.dy = 0
         # Sprint Logic
         if key == self.RUN_KEY:
             # Decrease speed magnitude
@@ -127,7 +134,7 @@ class Player(pygame.sprite.Sprite):
 
     def collision_check(self, all_tiles):
         # Get a list of all tiles the player is colliding with
-        collided_tiles = pygame.sprite.spritecollide(self, all_tiles, False)
+        collided_tiles = pygame.sprite.spritecollide(self, all_tiles, False) # type: ignore
         for tile in collided_tiles:
             if hasattr(tile, "obstructed") and tile.obstructed:
                 return True
@@ -148,12 +155,19 @@ class Player(pygame.sprite.Sprite):
                 self.state = "Walk"
         else:
             self.state = "Idle"
-        self.image = AssetLoader.get_player_image_direction(self.spritesheet, self.state, self.direction, anim_tick)
+
+        self.image = AssetLoader.get_animated_sprite(
+            category="PLAYER",
+            name=self.player_type,      # 'Fox', 'BlueBird', etc.
+            state=self.state,           # 'Walk', 'Idle', 'Run'
+            direction=self.direction,   # 'Up', 'Down', etc.
+            tick=anim_tick
+        )
         
         # Horizontal Collision Check
         if self.dx != 0:
             original_x = self.rect.x
-            self.rect.x += self.dx
+            self.rect.x += self.dx # type: ignore
             # Get a list of all tiles the player is colliding with
             if self.collision_check(all_tiles):
                 self.rect.x = original_x # undo movement
@@ -162,7 +176,7 @@ class Player(pygame.sprite.Sprite):
         # Vertical Collision Check
         if self.dy != 0:
             original_y = self.rect.y        
-            self.rect.y += self.dy
+            self.rect.y += self.dy # type: ignore
             # Get a list of all tiles the player is colliding with
             if self.collision_check(all_tiles):
                 self.rect.y = original_y # undo movement

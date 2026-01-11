@@ -1,25 +1,27 @@
 #spritesheet.py
 import pygame
+from .helper import get_asset, get_colour
 
 class SpriteSheet:
-    path="SpriteSheets"
+    path="Assets"
     def __init__(self, filename):
-        from helper import get_asset
         try:
             self.name = filename
-            self.sheet = pygame.image.load(get_asset(filename, self.path)).convert_alpha()
-        except pygame.error as e:
+            full_path = get_asset(filename, self.path)
+            self.sheet = pygame.image.load(full_path).convert_alpha()
+        except (pygame.error, FileNotFoundError) as e:
             print(f"ERROR: Could not load sprite sheet {filename}. {e}")
             self.sheet = None # None if failured
     def get_image(self, x, y, width, height, scale=None):
-        from helper import get_colour
+
         if scale is None:
             scale = width, height
         image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
         if self.sheet is None:
             colour = get_colour(self.name.upper(), "SPRITESHEET")
             image.fill(colour)
-        image.blit(self.sheet, (0, 0), (x, y, width, height))
+        else:
+            image.blit(self.sheet, (0, 0), (x, y, width, height))
         if scale != (width, height):
             image = pygame.transform.scale(image, scale)
         return image

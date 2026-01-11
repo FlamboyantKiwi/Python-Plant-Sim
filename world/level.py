@@ -1,20 +1,27 @@
-import random, math
-from tile import Tile
+import random, math, pygame
 from settings import BLOCK_SIZE, DETAIL_CHANCE
-from asset_loader import AssetLoader
+from core.asset_loader import AssetLoader
+from world.tile import Tile
 class Level:
     DIRT_NODE = 0
     GRASS_NODE = 1
+    WATER_NODE = 2
     """ Handles level initialization by processing a node map (corner statuses)
     and generating high-resolution Marching Squares tiles. """
 
-    def __init__(self, node_map_data: list[list[int]], all_tiles_group, player_sprite):
+    def __init__(self, all_tiles_group, player_sprite, map_data: list[list[int]]|None = None):
         self.tilesets = AssetLoader.TILE_ASSETS
         self.details = AssetLoader.TILE_DETAILS
-        self.node_map = node_map_data
         self.all_tiles = all_tiles_group
         self.player_sprite = player_sprite
         
+        if map_data:
+            print("loading existing map data")
+            self.node_map = map_data
+        else:
+            print("Generating new procdural Map")
+            self.node_map = self.create_node_map(map_size=32)
+
         # The tile map dimensions are 2 less than the node map dimensions
         self.MAP_HEIGHT = len(self.node_map) - 2
         self.MAP_WIDTH = len(self.node_map[0]) - 2 
@@ -54,6 +61,9 @@ class Level:
                 # Use the simple map tile index (0, 1, 2, 3...) for screen position
                 x = map_tile_x * BLOCK_SIZE
                 y = map_tile_y * BLOCK_SIZE
+
+                detail_key = None
+                current_tileset = None
                 
                 # If dirt, use the DIRT tileset and Dirt details
                 if center_node_material == Level.DIRT_NODE:
@@ -70,8 +80,7 @@ class Level:
                 # Handle other types like WATER or fallback
                 else: 
                     tile_type_key = "WATER" 
-                    detail_key = None
-                    current_tileset = self.tilesets.get(tile_type_key)
+                    current_tileset = None
                 
                 # Safety check: skip if tileset is not loaded/found
                 if not current_tileset:
@@ -113,6 +122,9 @@ class Level:
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
 
+    def update(self):
+        """Updates all entities within the level (tiles, water animations, etc)."""
+        self.all_tiles.update()
     @staticmethod
     def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):
         """Randomly selects a center point, calculates a noise-distorted boundary, 

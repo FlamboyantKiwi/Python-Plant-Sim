@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from helper import get_image
-from asset_loader import AssetLoader
+from core.helper import get_image
+from core.asset_loader import AssetLoader
 
 Default_colour = (150, 150, 150)
 class Item(ABC):
@@ -14,9 +14,12 @@ class Item(ABC):
             self.count = self.stack_size
         else:
             self.count = count
-        if image_filename != -1:
+        # Image Loading Logic
+        self.image = None # Initialize to avoid AttributeError
+        if image_filename != -1 and image_filename is not None:
+             # Legacy support for direct filename loading
             self.image = get_image(image_filename, (image_size, image_size), name)
-
+    
     def get_stack_space(self):
         return self.stack_size - self.count
     
@@ -38,7 +41,7 @@ class Item(ABC):
             self.image = image
         else:
             print(f"Warning: Tool sprite not found for {self.name}. Using fallback color.")
-            get_image(self.name)
+            self.image = get_image(self.name, (32, 32), "TOOL")
 
 
 class Seed(Item):
@@ -68,11 +71,13 @@ class Tool(Item):
             stack_size=stack_size,
             sell_value=sell_value,
             buy_value=buy_value,
-            image_filename=-1,
+            image_filename=-1, # -1 tells parent not to auto-load
         )
         self.set_image(AssetLoader.get_tool_image(name))
         
     def use(self, player, target_tile, all_tiles):
+        if target_tile is None:
+            print("Can't find tile for interaction")
         name = self.get_name()
         match name:
             case "HOE":
@@ -86,19 +91,19 @@ class Tool(Item):
                 return False
 
     def hoe(self, player, target_tile, all_tiles):
-        print("trying to use hoe")
-        if target_tile:
-            print("found tile")
-            # Action 1: Till existing UNTILLED soil
+        print(f"Using {self.name}. Hoeing logic not yet implemented")
     def shovel(self, player, target_tile, all_tiles):
-        print(f"Using {self.material} Shovel. Digging logic not yet implemented.")
+        print(f"Using {self.name}. Digging logic not yet implemented.")
         return False
     def water(self, player, target_tile, all_tiles):
-        print(f"Using {self.material} Watering Can. Watering logic not yet implemented.")
+        print(f"Using {self.name}. Watering logic not yet implemented.")
         return False
     def get_name(self):
-        _, name = self.name.split("_", 1)
-        return name.title()
+        try:
+            _, name = self.name.split("_", 1)
+            return name.title()
+        except ValueError:
+            return self.name.title()
     
 
 class Fruit(Item):
@@ -108,5 +113,8 @@ class Fruit(Item):
     def use(self, player, target_tile, all_tiles):
         print("Eating fruit")
     def get_name(self):
-        _, name = self.name.split("_", 1)
-        return name.title()
+        try:
+            _, name = self.name.split("_", 1)
+            return name.title()
+        except ValueError:
+            return self.name.title()

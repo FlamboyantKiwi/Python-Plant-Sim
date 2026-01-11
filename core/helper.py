@@ -80,7 +80,7 @@ def get_colour(name, fallback_type=None):
         
     return final_colour
 
-def get_image(image_name, scale, fallback_type=None):
+def get_image(image_name:str, scale, fallback_type=None):
     if image_name == None:
             image_name = fallback_type
 
@@ -137,3 +137,9 @@ def get_direction(dx, dy, tick = 0):
     else: 
         # Vertical axis has the greatest speed
         return get_axis(dy, "Up", "Down")
+    
+
+def draw_text(screen, text, font, x, y, colour):
+    text = font.render(text, True, colour)
+    rect = text.get_rect(center=(x, y))
+    screen.blit(text, rect)
