@@ -1,6 +1,7 @@
 # settings.py
 import pygame
 pygame.init()
+pygame.font.init()
 
 # Screen & Grid Configuration
 BLOCK_SIZE = 64
@@ -68,3 +69,17 @@ except pygame.error:
     print("Warning: Fonts not initialized in settings (pygame not ready).")
     HUD_FONT = None
     SLOT_FONT = None
+
+
+SHOPS = {
+    "general_store": {
+        "type": "General Store",
+        "items": [
+            "tomato_seeds",
+            "melon_seeds",
+            "rusty_hoe", 
+            "watering_can"
+        ]
+    },
+}
+

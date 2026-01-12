@@ -101,26 +101,140 @@ FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, norma
 SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
 
-# ============ Player ============ #
-PLAYER_SHEETS = ["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"]
-
-# X, Y, Width, Height, sprite_size = 32x32
-PLAYER_STATES = { 
-    "Walk": SpriteRect(0, 0, 128, 128),
-    "Idle": SpriteRect(0, 128, 128, 32),
-    "Run":  SpriteRect(0, 160, 128, 256)}  
-PLAYER_DIRECTIONS = { 
-    "Walk": {"Down":0, "Right":1, "Left":2, "Up":3}, 
-    "Run":  {"Down":0, "Right":2, "Left":1, "Up":3}, 
-    "Idle": {"Down":0, "Right":1, "Left":3, "Up":2}}
-PLAYER_FRAMES = {"Walk": 4, "Idle": 1, "Run": 8}
-
-# ============ Animals ============ #
-
-ANIMAL_SHEETS = ["Bull", "Calf", "Chick", "Lamb", "Piglet", "Rooster", "Sheep", "Turkey"]
-
-ANIMAL_DIRECTIONS = {"Down": 0,"Up": 1,"Left": 2,"Right": 3}
-ANIMAL_STATES = { ### Needs new values!
-    "Walk": SpriteRect(0, 0, 128, 128), 
-    "Idle": SpriteRect(0, 128, 128, 128)
+GAME_ENTITIES = {
+    "PLAYER": EntityConfig(
+    folder="Player",
+    sheets=["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"],
+    states={
+        "Walk": SpriteRect(0, 0, 128, 128),
+        "Idle": SpriteRect(0, 128, 128, 32),
+        "Run":  SpriteRect(0, 160, 128, 256)
+    },
+    directions={
+        "Walk": {"Down":0, "Right":1, "Left":2, "Up":3}, 
+        "Run":  {"Down":0, "Right":2, "Left":1, "Up":3}, 
+        "Idle": {"Down":0, "Right":1, "Left":3, "Up":2}
+    },
+    frames={"Walk": 4, "Idle": 1, "Run": 8}
+),
+    "ANIMAL": EntityConfig(
+    folder="Farm_Animals",
+    sheets=["Bull", "Calf", "Chick", "Lamb", "Piglet", "Rooster", "Sheep", "Turkey"],
+    states={
+        "Walk": SpriteRect(0, 0, 128, 128), 
+        "Idle": SpriteRect(0, 128, 128, 128)
+    },
+    directions={"Down": 0, "Up": 1, "Left": 2, "Right": 3},
+    frames={"Walk": 3, "Idle": 2} 
+)
 }
+
+
+@dataclass(frozen=True)
+class ItemData:
+    """
+    The Master Schema for any item in the game.
+    """
+    name: str
+    price: int
+    category: str  # "seed", "tool", "crop", "misc"
+    description: str
+    
+    # Visual Linking
+    image_key: str  # Keys into FRUIT_TYPES or TOOL_TYPES
+    sprite_type: str = "fruit" # "fruit", "tool", "seed", "single"
+    
+    # Inventory Flags
+    stackable: bool = True
+    max_stack: int = 99
+    
+    # Gameplay Stats (Optional, defaults to 0 or None)
+    energy_gain: int = 0         # For eating
+    grow_time: int = 0           # For seeds (days)
+    sell_value: int = 0          # If 0, generic calculation used (e.g. half price)
+    tool_type: str|None = None # "hoe", "water", etc.
+
+# ==========================================
+# [PART 3] THE DATABASE (ITEMS)
+# ==========================================
+
+ITEMS = {
+    # --- SEEDS ---
+    "tomato_seeds": ItemData(
+        name="Tomato Seeds",
+        price=10,
+        category="seed",
+        description="Plant these in tilled soil. Grows in 4 days.",
+        image_key="Tomato",   # We will match this to your specific seed assets later
+        sprite_type="seed",
+        grow_time=4
+    ),
+    
+    "melon_seeds": ItemData(
+        name="Melon Seeds",
+        price=40,
+        category="seed",
+        description="A summer favorite. Grows big!",
+        image_key="Melon",
+        sprite_type="seed",
+        grow_time=8
+    ),
+
+    # --- CROPS (Produce) ---
+    # Linking to your FRUIT_TYPES keys
+    "tomato": ItemData(
+        name="Tomato",
+        price=25, # Sell value
+        category="crop",
+        description="A bright red, juicy fruit... or vegetable?",
+        image_key="Tomato", # Matches FRUIT_TYPES["Tomato"] (You need to add Tomato to your FRUIT_TYPES)
+        sprite_type="fruit",
+        energy_gain=15
+    ),
+    
+    "banana": ItemData(
+        name="Banana",
+        price=50,
+        category="crop",
+        description="High in potassium.",
+        image_key="Banana", # Matches FRUIT_TYPES["Banana"]
+        sprite_type="fruit",
+        energy_gain=25
+    ),
+
+    # --- TOOLS ---
+    "rusty_hoe": ItemData(
+        name="Rusty Hoe",
+        price=0, # Cannot be bought usually
+        category="tool",
+        description="Used to till the ground.",
+        image_key="HOE", 
+        sprite_type="tool",
+        stackable=False,
+        tool_type="hoe"
+    ),
+
+    "watering_can": ItemData(
+        name="Watering Can",
+        price=0,
+        category="tool",
+        description="Plants need water to grow.",
+        image_key="WATERING_CAN",
+        sprite_type="tool",
+        stackable=False,
+        tool_type="water"
+    )
+}
+
+# ==========================================
+# [PART 4] HELPER FUNCTIONS
+# ==========================================
+
+def get_item_data(item_id: str) -> ItemData:
+    """Safe way to get item data. Returns a placeholder if missing."""
+    if item_id in ITEMS:
+        return ITEMS[item_id]
+    
+    # Fallback/Error Item
+    print(f"WARNING: Item ID '{item_id}' not found in database.")
+    return ItemData("Unknown", 0, "misc", "Error item", "None")

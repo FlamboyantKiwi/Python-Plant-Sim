@@ -1,28 +1,29 @@
 from abc import ABC, abstractmethod
-from core.helper import get_image
+from core.helper import get_image, load_image
 from core.asset_loader import AssetLoader
+from copy import copy
 
 Default_colour = (150, 150, 150)
 class Item(ABC):
-    def __init__(self, name, count = 1, stack_size = 1, sell_value = 0, buy_value = 0, image_filename=None, image_size = 35):
+    def __init__(self, name, count = 1, stack_size = 1, sell_value = 0, buy_value = 0, display_name=None, image_filename=None, image_size=48, data=None):
         self.name = name
+        self.display_name = display_name if display_name else name.replace("_", " ").title()
+
         self.stack_size = stack_size
         self.sell_value = sell_value
         self.buy_value = buy_value
+        self.data = data
+
         if count > self.stack_size:
             print(f"Warning! Item {self.name} initialised with a count greater than its stack size. capping at {self.stack_size}")
             self.count = self.stack_size
         else:
             self.count = count
+
         # Image Loading Logic
-        self.image = None # Initialize to avoid AttributeError
-        if image_filename != -1 and image_filename is not None:
-             # Legacy support for direct filename loading
-            self.image = get_image(image_filename, (image_size, image_size), name)
-    
+        self.image = load_image(image_filename, scale=(image_size, image_size))
     def get_stack_space(self):
         return self.stack_size - self.count
-    
     def add_to_stack(self, amount):
         transfer_amount = min(amount, self.get_stack_space())
         self.count += transfer_amount
@@ -31,9 +32,8 @@ class Item(ABC):
         transfer_amount = min(amount, self.count)
         self.count -= transfer_amount
         return transfer_amount
-    @abstractmethod
     def use(self, player, target_tile, all_tiles):
-        pass
+        return False
     def get_name(self):
         return self.name
     def set_image(self, image):
@@ -42,7 +42,11 @@ class Item(ABC):
         else:
             print(f"Warning: Tool sprite not found for {self.name}. Using fallback color.")
             self.image = get_image(self.name, (32, 32), "TOOL")
-
+    def copy_one(self):
+        """Returns a new instance of this item with count 1"""
+        new_item = copy.copy(self) # Shallow copy is usually enough for simple items
+        new_item.count = 1
+        return new_item
 
 class Seed(Item):
     def __init__(self, name="Seed", count=1, stack_size=50, sell_value=1, buy_value=0, image_filename=None):
@@ -70,8 +74,7 @@ class Tool(Item):
             count=count, 
             stack_size=stack_size,
             sell_value=sell_value,
-            buy_value=buy_value,
-            image_filename=-1, # -1 tells parent not to auto-load
+            buy_value=buy_value
         )
         self.set_image(AssetLoader.get_tool_image(name))
         
@@ -108,7 +111,7 @@ class Tool(Item):
 
 class Fruit(Item):
     def __init__(self, name, count=1, stack_size=50, sell_value=0, buy_value=0):
-        super().__init__(name, count, stack_size, sell_value, buy_value, image_filename=-1)
+        super().__init__(name, count, stack_size, sell_value, buy_value)
         self.set_image(AssetLoader.get_fruit_image(name))
     def use(self, player, target_tile, all_tiles):
         print("Eating fruit")

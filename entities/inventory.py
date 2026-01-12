@@ -1,7 +1,9 @@
 from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU
 from core.helper import get_image, get_colour
-from .items import Item
-import pygame
+from .items import Item, Seed, Fruit, Tool
+from core.helper import draw_text
+from Assets.asset_data import ITEMS, get_item_data
+import pygame, copy
 
 class Inventory:
     def __init__(self, max_size = 4, columns = 1, rect = None, slot_size = 40, padding = 5):
@@ -123,9 +125,12 @@ class Inventory:
                 screen.blit(item.image, item_rect)
                 
                 # 3. Draw the count text for stackable items
-                if item.stack_size > 1:
-                    count_text = SLOT_FONT.render(str(item.count), True, (255, 255, 255))
+                if hasattr(item, 'stack_size') and item.stack_size > 1:
+                    # Note: Added a check for 'count' just in case
+                    count_val = item.count if hasattr(item, 'count') else 1
+                    count_text = SLOT_FONT.render(str(count_val), True, (255, 255, 255))
                     
+                    # FIX 2: count_text IS the image. It does not have an .image attribute.
                     # Position the count text in the bottom right corner of the slot
                     text_rect = count_text.get_rect(bottomright=(slot_rect.right - 2, slot_rect.bottom - 2))
                     screen.blit(count_text, text_rect)
@@ -190,19 +195,67 @@ class Inventory:
         
 
 class ShopMenu(Inventory):
-    def __init__(self, player, columns=4, max_size=16):
+    def __init__(self, player, data=None, columns=4, max_size=16):
         super().__init__(max_size, columns, rect=SHOP_MENU, slot_size=70, padding=20)
         
         # Shop specific properties
+        self.font = SLOT_FONT.render("Cost: $10", True, get_colour("GOLD"))
         self.player = player
+        self.shop_data = data
         self.is_open = False
+
         self.items = []
         self.active_slot = -1
 
         self.image = get_image("SHOP_MENU", (SHOP_MENU.width, SHOP_MENU.height), fallback_type="MENU")
+        self.populate_shop()
 
+    def populate_shop(self):
+        self.items = [] 
 
-    def toggle_open(self, hud_ref, is_open=None):
+        CLASS_MAP = {
+            "seed": Seed,
+            "crop": Fruit,
+            "fruit": Fruit,
+            "tool": Tool,
+            "misc": Item
+        }
+        
+        # Check if shop_data exists
+        if not self.shop_data or "items" not in self.shop_data:
+            return
+
+        # Iterate through the list of IDs (e.g., "tomato_seeds")
+        for item_id in self.shop_data["items"]:
+            
+            # 1. Fetch the master data blueprint
+            # If you haven't imported get_item_data, use ITEMS.get(item_id)
+            item_data = ITEMS.get(item_id) 
+
+            if not item_data: continue # Skip invalid IDs
+
+            # 2. Look up the correct class using the category
+            # default to generic Item if category isn't found
+            ItemClass = CLASS_MAP.get(item_data.category, Item)
+
+            # 3. Instantiate the class
+            # Since Seed, Tool, and Fruit all take "name" (or image_key) as the first arg,
+            # we can call them uniformly.
+            
+            # Special Handling: Tools might need underscores (e.g., "Wood Hoe" -> "Wood_Hoe")
+            constructor_key = item_data.image_key
+            if item_data.category == "tool":
+                constructor_key = item_data.name.replace(" ", "_")
+
+            # Create the object!
+            new_item = ItemClass(constructor_key)
+            
+            # 4. Apply common stats from the data
+            new_item.buy_value = item_data.price
+            new_item.data = item_data # Link the data back to the object
+            
+            self.items.append(new_item)
+    def toggle_open(self, hud_ref=None, is_open=None):
         if is_open is not None:
             self.is_open = is_open
         else:
@@ -211,19 +264,68 @@ class ShopMenu(Inventory):
     def draw(self, screen):
         if not self.is_open:
             return
+        
+        # Draw Background
         screen.blit(self.image, self.rect)
+
+        title = "Shop"
+        if self.shop_data:
+            title = self.shop_data.get("type", "Shop").replace("_", " ").title()
+        draw_text(screen, title, HUD_FONT, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
+        
         super().draw(screen)
-    def handle_click(self, pos):
-        """Handles clicks on slots and the exit button."""
+        for i, item in enumerate(self.items):
+            if i >= len(self.items): break 
             
-        # --- Use Inherited Method to Find Slot Index ---
+            # Calculate grid position 
+            col = i % self.grid_cols
+            row = i // self.grid_cols
+            slot_x = self.rect.x + self.padding + col * (self.slot_size + self.padding)
+            slot_y = self.rect.y + self.padding + row * (self.slot_size + self.padding)
+            
+            # Draw Price using your helper function
+            # We use center=(x, y) logic to place it near bottom right
+            price_x = slot_x + self.slot_size - 15
+            price_y = slot_y + self.slot_size - 10
+            
+            # Optional: Draw a small black box behind the price for readability
+            # (You can remove these 2 lines if you want just text)
+            price_bg_rect = pygame.Rect(price_x - 15, price_y - 8, 30, 16)
+            pygame.draw.rect(screen, (0,0,0), price_bg_rect, border_radius=4)
+
+            draw_text(screen, f"${item.buy_value}", SLOT_FONT, price_x, price_y, (255, 215, 0))
+
+    def handle_click(self, pos):
+        """Handles interaction. Returns a string action code if the State needs to react."""
         clicked_slot = self.get_slot_from_pos(pos) 
         if clicked_slot != -1 and clicked_slot < self.max_size:
             self.active_slot=clicked_slot
             if clicked_slot < len(self.items):
-                item_to_buy = self.items[clicked_slot]
-                # self.buy_item(item_to_buy) # Logic to be implemented
-                print(f"Buying {item_to_buy.name}")
-            return True 
+                item = self.items[clicked_slot]
+                self.try_buy_item(item)
+            
+            return "SLOT_CLICKED"
         
-        return False # Click was not on a valid shop item or button
+        return None # Click was not on a valid shop item or button
+
+    def try_buy_item(self, item:Item):
+        """Validates and executes the purchase logic"""
+        # 1. Check Gold
+        if self.player.money < item.buy_value:
+            print(f"Cannot afford {item.name}! (Cost: {item.buy_value}, Have: {self.player.money})")
+            return False
+
+        # 2. Check Inventory Space
+        if self.player.inventory.is_full():
+            print("Inventory Full!")
+            return False
+
+        # 3. Execute Transaction
+        self.player.money -= item.buy_value
+        new_item = copy.copy(item)
+        new_item.count = 1 # Player buys 1 at a time usually
+        
+        self.player.inventory.add_item(new_item)
+        
+        print(f"Bought {item.name} for {item.buy_value}g. New Balance: {self.player.money}")
+        return True

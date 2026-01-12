@@ -6,7 +6,7 @@ from entities.inventory import ShopMenu
 from ui.hud import HUD
 from ui.button import Button
 from world.level import Level
-from settings import WIDTH, HEIGHT
+from settings import WIDTH, HEIGHT, SHOPS
 from core.helper import get_colour, draw_text
 import pygame
 
@@ -29,26 +29,38 @@ class GameState(ABC):
     def exit_state(self): pass
 
 class ShopState(GameState):
-    def __init__(self, game:"Game", shop_menu:ShopMenu):
+    def __init__(self, game:"Game", player: Player, shop_data: dict|None = None):
         super().__init__(game)
-        self.shop_menu = shop_menu # Store the passed instance
-        self.shop_menu.is_open = True
+        self.player = player
+       
+        self.ui_elements = []
 
-    def update(self):   pass #game is paused
+        self.shop_menu = ShopMenu(self.player, data=shop_data) 
+        self.shop_menu.is_open = True
+        self.ui_elements.append(self.shop_menu)
+
+        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
+
+    def update(self):  
+        mouse_pos = pygame.mouse.get_pos()
+        # Update all UI elements (Grid, Buttons, potentially Dialogue later)
+        for element in self.ui_elements:
+            if hasattr(element, "update"):
+                element.update(mouse_pos)
 
     def draw(self, screen):
         # 1. Draw the game behind the menu (Transparent look)
         self.game.state_manager.draw_previous(screen)
         
-        # 2. Draw a semi-transparent overlay (Dim the background)
-        overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
-        screen.blit(overlay, (0,0))
+        # 2. Blit the pre-calculated overlay (Dim the background)
+        screen.blit(self.overlay, (0, 0))
 
-        # 3. Draw the Shop Menu
-        self.shop_menu.draw(screen)
+        # 3. Draw all UI elements
+        for element in self.ui_elements:
+            element.draw(screen)
 
-    def handle_event(self, event):
+    def handle_event(self, event): #### Improve
         if event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_ESCAPE, pygame.K_p):
                 self.close_menu()
@@ -60,7 +72,6 @@ class ShopState(GameState):
                 self.close_menu()
 
     def close_menu(self):
-        self.shop_menu.is_open = False
         self.game.state_manager.pop()
 
 class PlayingState(GameState):
@@ -69,7 +80,6 @@ class PlayingState(GameState):
 
         self.player = Player(WIDTH // 2, HEIGHT // 2)
         self.hud = HUD(self.player)
-        self.shop_menu = ShopMenu(self.player)
         
         self.all_tiles = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()
@@ -95,41 +105,52 @@ class PlayingState(GameState):
 
     def handle_event(self, event):
         """ Handles user input while the game is running (Movement, Interaction, UI). """
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.game.running = False
+                return # Stop processing
+            elif event.key == pygame.K_p:
+                self.open_shop("general_store")
+                return # Stop processing
+        elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # Left Click
                 # Check if we hit a button or inventory slot
                 action = self.hud.handle_click(event.pos)
                 
                 if action == "OPEN_SHOP":
-                    self.open_shop()
+                    self.open_shop("general_store")
+                    return
+                elif action:
+                    return
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_p: # Alternative Hotkey to open Shop/Pause
-                self.open_shop()
+        self.handle_player_input(event)
 
-            #elif event.key == pygame.K_F5: # Quick Save logic
-                #self.game.level.save_map("level_data.json")
-
-            elif event.key == pygame.K_ESCAPE:
-                # Stop the 'while' loop in core/game.py
-                self.game.running = False
-
-            else: # pass to Player for movement/interaction
-                self.player.key_down(event.key, self.level.all_tiles)
-
-        # --- 3. KEYBOARD RELEASES ---
+    def handle_player_input(self, event):
+        """Clean separation for player controls"""
+        if event.type == pygame.KEYDOWN:
+            self.player.key_down(event.key, self.level.all_tiles)
         elif event.type == pygame.KEYUP:
-            # Essential for stopping player movement when key is released
             self.player.key_up(event.key)
 
-    def open_shop(self): 
-        self.game.state_manager.push(ShopState(self.game, self.shop_menu))
+    def open_shop(self, shop_id="general_store"): 
+        """
+        Opens the shop state with data loaded from settings.
+        :param shop_id: The key matching a dictionary in settings.SHOPS
+        """
+        # 1. Get the data from settings
+        shop_data = SHOPS.get(shop_id)
+        
+        if not shop_data:
+            print(f"Error: Shop ID '{shop_id}' not found in settings.")
+            return
 
-
+        # 2. Push the Shop State, passing the specific data
+        print(f"Opening Shop: {shop_data['type']}")
+        self.game.state_manager.push(ShopState(self.game, self.player, shop_data))
 class MenuState(GameState):
     def __init__(self, game: "Game"):
         super().__init__(game)
-        self.title_font = pygame.font.SysFont("ariel", 80, bold=True)
+        self.title_font = pygame.font.SysFont("arial", 80, bold=True)
         self.menu_actions = {
             "New Game": self.start_new_game,
             "Continue": self.continue_game,
@@ -198,10 +219,3 @@ class MenuState(GameState):
                     action = self.menu_actions.get(btn.text)
                     if action:
                         action()
-
-
-
-
-
-
-

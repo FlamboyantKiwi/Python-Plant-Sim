@@ -41,13 +41,19 @@ def load_image(fileName, scale=None, factor=1, angle=0):
     :param angle: Degrees to rotate the image counter-clockwise.
     :type angle: float, optional
     :return pygame.Surface: The loaded and transformed image surface."""
-    img = pygame.image.load(get_asset(fileName)).convert_alpha()
-    if scale:
-        img = pygame.transform.scale(img, scale)
-    if factor != 1:
-        size = round(img.get_width() * factor), round(img.get_height() * factor)
-        img = pygame.transform.scale(img, size)
-    return pygame.transform.rotate(img, angle)
+    try:
+        img = pygame.image.load(get_asset(fileName)).convert_alpha()
+        if scale:
+            img = pygame.transform.scale(img, scale)
+        if factor != 1:
+            size = round(img.get_width() * factor), round(img.get_height() * factor)
+            img = pygame.transform.scale(img, size)
+        return pygame.transform.rotate(img, angle)
+    except Exception as e:
+        print(f"ERROR: Could not load image '{fileName}': {e}")
+        fallback = pygame.Surface((48, 48))
+        fallback.fill((255, 0, 255)) 
+        return fallback
 
 def get_grid_pos(pos):
     """Snaps a pixel coordinate to the nearest grid position."""
