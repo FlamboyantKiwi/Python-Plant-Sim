@@ -82,6 +82,29 @@ class AssetLoader:
                     rect_data.x, rect_data.y, rect_data.w, rect_data.h, 16, 16, cls.SCALE_FACTOR
                 )
         return data
+    @classmethod
+    def extract_region(cls, sheet, x, y, width, height):
+        """ Cuts a defined rectangular region into a list of individual tile images. """
+        frames = []
+        # Calculate how many columns and rows fit in this region
+        cols = width // cls.TILE_SIZE
+        rows = height // cls.TILE_SIZE
+        
+        for row in range(rows):
+            for col in range(cols):
+                src_x = x + (col * cls.TILE_SIZE)
+                src_y = y + (row * cls.TILE_SIZE)
+                
+                img = sheet.get_image(
+                    x=src_x, 
+                    y=src_y,
+                    width=cls.TILE_SIZE, 
+                    height=cls.TILE_SIZE,
+                    scale=(cls.TILE_SIZE * cls.SCALE_FACTOR, cls.TILE_SIZE * cls.SCALE_FACTOR)
+                )
+                frames.append(img)
+                
+        return frames
 
     # ==================================================
     #   SPECIFIC LOADERS (Tools, Fruits, Tiles)
@@ -161,49 +184,53 @@ class AssetLoader:
             sheet = SpriteSheet(path)
             
             # Use config.states
-            for state_name, rect in config.states.items():
-                group_assets[name][state_name] = sheet.extract_tiles_by_dimensions(
-                    start_x=rect.x, start_y=rect.y, 
-                    region_width=rect.w, region_height=rect.h, 
-                    tile_width=cls.TILE_SIZE, tile_height=cls.TILE_SIZE, 
-                    scale_factor=cls.SCALE_FACTOR
-                )
+            for state, anim_grid in config.animations.items():
+                
+                # Convert Enum to String for storage (e.g. EntityState.WALK -> "Walk")
+                # This ensures your game loop can use strings OR enums easily
+                state_key = state.value if isinstance(state, Enum) else state
+                group_assets[name][state_key] = {}
+                
+                # 2. Iterate over DIRECTIONS (Down, Up...) inside the Grid
+                # anim_grid is a Dict[Direction, SpriteRect]
+                for direction, rect in anim_grid.items():
+                    
+                    dir_key = direction.value if isinstance(direction, Enum) else direction
+                    
+                    # 3. Cut the frames using the Helper
+                    # The helper handles the row/col splitting automatically based on Rect size
+                    frames = cls.extract_region(sheet, rect.x, rect.y, rect.w, rect.h)
+                    
+                    group_assets[name][state_key][dir_key] = frames
+                        
         return group_assets
 
     @classmethod
     def get_animated_sprite(cls, category: str, name: str, state: str, direction: str, tick: int):
         """ Universal function to get the correct frame for ANY moving entity. """
-        # 1. Retrieve the specific entity's image set
-        entity_library = cls.ENTITIES.get(category, {}) # Get Player or Animal dict
-        sheet = entity_library.get(name)                # Get "Fox" or "Bull"
-        if not sheet: return None
+       # 1. Retrieve the specific entity's library
+        entity_library = cls.ENTITIES.get(category, {}) 
+        sheet_data = entity_library.get(name)             
+        if not sheet_data: return None # Error
 
-        # 2. Retrieve Configuration for this Category (Player vs Animal vs Monster)
-        config = GAME_ENTITIES.get(category)
-        if not config: return None
+        # 2. Retrieve the State Dictionary (e.g. "Walk")
+        # Handles cases where input might be an Enum or String
+        s_key = state.value if isinstance(state, Enum) else state
+        state_data = sheet_data.get(s_key)
+        if not state_data: return None # Error
 
-        # 3. Calculate Offset
-        dir_offset = 0
-        directions = config.directions
+        # Retrieve the Direction List (e.g. "Down")
+        d_key = direction.value if isinstance(direction, Enum) else direction
         
-        if isinstance(directions, dict):
-            # Nested (Player)
-            if state in directions and isinstance(directions[state], dict):
-                dir_offset = directions[state].get(direction, 0)
-            # Flat (Animal)
-            elif direction in directions:
-                dir_offset = directions.get(direction, 0)
+        # Fallback to DOWN if the specific direction is missing
+        frames = state_data.get(d_key)
+        if not frames:
+            frames = state_data.get("Down") 
+            if not frames: return None # Error
 
-        # 4. Calculate Frame
-        max_frames = config.frames.get(state, 1)
-        current_frame = tick % max_frames
-        sprite_index = (dir_offset * max_frames) + current_frame
-        
-        # 5. Return
-        images = sheet.get(state)
-        if images and 0 <= sprite_index < len(images):
-            return images[sprite_index]
-        return None
+        # Calculate current frame (based on tick and total frames) 
+        current_frame = int(tick) % len(frames)
+        return frames[current_frame]
 
     # ==================================================
     #   SPECIFIC GETTERS

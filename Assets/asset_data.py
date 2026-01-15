@@ -1,14 +1,19 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import NamedTuple
 # ============ Data Structures ============ #
+
+class EntityState(Enum):
+    WALK = "Walk"; IDLE = "Idle"; RUN = "Run"
+
+class Direction(Enum):
+    DOWN = "Down"; RIGHT = "Right"; LEFT = "Left"; UP = "Up"
+DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
 
 @dataclass(frozen=True)
 class SpriteRect:
     """Defines a basic region on a sprite sheet."""
-    x: int
-    y: int
-    w: int
-    h: int
+    x: int; y: int; w: int; h: int
 
 @dataclass(frozen=True)
 class ScaleRect(SpriteRect):
@@ -24,13 +29,61 @@ class RectPair:
     a: SpriteRect 
     b: SpriteRect
 
+
+@dataclass
+class AnimationGrid(dict):
+    """ A dictionary-like object that auto-slices a SpriteRect into directions.
+        It behaves exactly like dict[Direction, SpriteRect]."""
+    def __init__(self, rect: SpriteRect, directions: list[Direction]|None = None, is_vertical: bool = True):
+        super().__init__() # Initialize the underlying dict
+        if directions is None:
+            for d in Direction:
+                self[d] = rect
+            return
+        count = len(directions)
+        
+        if count == 0: # Empty List: Default to DOWN
+            self[Direction.DOWN] = rect
+            return
+        
+        # 1. Calculate slice dimensions
+        step_h = rect.h // count if is_vertical else rect.h
+        step_w = rect.w // count if not is_vertical else rect.w
+        
+        # 2. Slice and populate self
+        for i, direction in enumerate(directions):
+            new_x = rect.x + (i * step_w if not is_vertical else 0)
+            new_y = rect.y + (i * step_h if is_vertical else 0)
+            
+            # This assigns the key/value into the dictionary itself
+            self[direction] = SpriteRect(new_x, new_y, step_w, step_h)
+    @classmethod
+    def non_directional(cls, rect:SpriteRect, assign_to_all:bool = True):
+        """Creates an animation entry for non-directional actions (e.g., Death).
+        
+        assign_to_all: 
+            If True, maps the SAME rect to Down, Up, Left, Right.
+            (Useful if you want the same anim to play regardless of facing).
+            If False, maps only to Direction.DOWN. """
+        instance = cls(rect, [], True) # Empty init
+        
+        if assign_to_all:
+            # Map the same rectangle to all directions so lookups never fail
+            for d in Direction:
+                instance[d] = rect
+        else:
+            # Just map to Down (default)
+            instance[Direction.DOWN] = rect
+            
+        return instance
+
 class EntityConfig(NamedTuple):
     """Blueprint for registering a new entity type."""
-    sheets: list        # List of filenames (e.g. ["Fox", "Cat"])
     folder: str         # Folder name (e.g. "Player")
-    states: dict        # The Rect definitions (e.g. PLAYER_STATES)
-    directions: dict    # Direction mapping (e.g. PLAYER_DIRECTIONS)
-    frames: dict        # Frame counts (e.g. PLAYER_FRAMES)
+    sheets: list[str]   # List of filenames (e.g. ["Fox", "Cat"])
+    animations: dict[EntityState, AnimationGrid]
+    def get_animation(self, state:EntityState) -> dict[Direction, SpriteRect]:
+        return self.animations.get(state, {})
 
 # ============ Tiles ============ #
 # Constants defining the tool grid structure
@@ -105,28 +158,20 @@ GAME_ENTITIES = {
     "PLAYER": EntityConfig(
     folder="Player",
     sheets=["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"],
-    states={
-        "Walk": SpriteRect(0, 0, 128, 128),
-        "Idle": SpriteRect(0, 128, 128, 32),
-        "Run":  SpriteRect(0, 160, 128, 256)
-    },
-    directions={
-        "Walk": {"Down":0, "Right":1, "Left":2, "Up":3}, 
-        "Run":  {"Down":0, "Right":2, "Left":1, "Up":3}, 
-        "Idle": {"Down":0, "Right":1, "Left":3, "Up":2}
-    },
-    frames={"Walk": 4, "Idle": 1, "Run": 8}
-),
+    animations={
+        # WALK/RUN: Vertical Split
+        EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, RIGHT, LEFT, UP]),
+        EntityState.RUN:    AnimationGrid(SpriteRect(0, 160, 128, 256), [DOWN, LEFT, RIGHT, UP]),
+        # IDLE: Horizontal Split
+        EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 128, 32), [DOWN, RIGHT, UP, LEFT], is_vertical=False)}
+    ),
     "ANIMAL": EntityConfig(
     folder="Farm_Animals",
     sheets=["Bull", "Calf", "Chick", "Lamb", "Piglet", "Rooster", "Sheep", "Turkey"],
-    states={
-        "Walk": SpriteRect(0, 0, 128, 128), 
-        "Idle": SpriteRect(0, 128, 128, 128)
-    },
-    directions={"Down": 0, "Up": 1, "Left": 2, "Right": 3},
-    frames={"Walk": 3, "Idle": 2} 
-)
+    animations={
+        EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, UP, LEFT, RIGHT]),
+        EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 128, 128), [DOWN, UP, LEFT, RIGHT])}
+    )
 }
 
 

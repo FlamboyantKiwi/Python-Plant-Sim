@@ -77,12 +77,12 @@ class ShopState(GameState):
 class PlayingState(GameState):
     def __init__(self, game: "Game"):
         super().__init__(game)
+        self.all_tiles = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group()
 
         self.player = Player(WIDTH // 2, HEIGHT // 2)
         self.hud = HUD(self.player)
-        
-        self.all_tiles = pygame.sprite.Group()
-        self.all_sprites = pygame.sprite.Group()
+
         self.all_sprites.add(self.player)
 
         self.level = Level(

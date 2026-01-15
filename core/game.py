@@ -23,13 +23,6 @@ class Game:
         #start with playing - will change later to main menu
         self.state_manager.push(MenuState(self))
         
-
-    def change_state(self, new_state):
-        if self.state:
-            self.state.exit_state()
-        self.state = new_state
-        self.state.enter_state()
-
     def run(self):
         while self.running:
             self.tick += 1
