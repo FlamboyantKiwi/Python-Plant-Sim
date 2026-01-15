@@ -70,6 +70,12 @@ except pygame.error:
     HUD_FONT = None
     SLOT_FONT = None
 
+PLAYER_START_INVENTORY = [
+    ("wood_hoe", 1),
+    ("wood_watering_can", 1),
+    ("red_pepper_seeds", 5),
+    ("apple", 3)
+]
 
 SHOPS = {
     "general_store": {
@@ -77,9 +83,9 @@ SHOPS = {
         "items": [
             "tomato_seeds",
             "melon_seeds",
-            "rusty_hoe", 
-            "watering_can"
+            "wood_axe", 
+            "wood_sword",
+            "apple"
         ]
-    },
+    }
 }
-

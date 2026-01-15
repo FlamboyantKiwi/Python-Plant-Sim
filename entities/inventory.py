@@ -1,6 +1,7 @@
 from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU
 from core.helper import get_image, get_colour
-from .items import Item, Seed, Fruit, Tool
+from .items import Item, ItemFactory
+from Assets.asset_data import ITEMS
 from core.helper import draw_text
 from Assets.asset_data import ITEMS, get_item_data
 import pygame, copy
@@ -16,12 +17,15 @@ class Inventory:
         self.item_size = self.slot_size - 4
         self.padding = padding
         self.bg_image = get_image("slot_bg", (self.slot_size, self.slot_size), "INVENTORY_SLOT")
+
+        #Colours 
         self.hover_border = get_colour("HOVER_COLOUR", fallback_type="HIGHLIGHT")
         self.active_border = get_colour("ACTIVE_COLOUR", fallback_type="HIGHLIGHT")
         self.active_text = get_colour("INV_TEXT", fallback_type="TEXT")
 
+        #Grid Calculations
         self.grid_cols = columns
-        self.grid_rows = (self.max_size + self.grid_cols - 1) //self.grid_cols # Calculate rows needed
+        self.grid_rows = (self.max_size + self.grid_cols - 1) //self.grid_cols
         
         if rect is None:
             # If no rect is provided, create a minimal default one
@@ -39,7 +43,9 @@ class Inventory:
     def is_full(self):
         return len(self.items) >= self.max_size
     
-    def add_item(self, new_item):
+    def add_item(self, new_item:Item):
+        """ Adds an item to the inventory. Handles stacking and splitting 
+        large stacks into multiple slots automatically."""
         remaining = new_item.count
         #add to existing slots
         for slot in self.items:
@@ -52,25 +58,21 @@ class Inventory:
             if self.is_full():
                 print(f"Inventory full! Left {remaining} {new_item.name} behind. Ouch.")
                 return False # Inventory is full, cannot add more
-            # Create a new slot for the remaining item
-            stack_size = new_item.stack_size
             
-            # Determine how many go into this new slot
-            count_for_new_slot = min(remaining, stack_size)
-            item_class = new_item.__class__
-            # Create a new Item instance with the correct count
-            new_item = item_class(
-                name=new_item.name, 
-                count=count_for_new_slot, 
-                stack_size=stack_size,
-                sell_value=new_item.sell_value, 
-                buy_value=new_item.buy_value, 
-            )
+           # Create a NEW stack for the new slot
+            new_slot_item = copy.copy(new_item)
+            
+            # Determine how many fit in this new slot
+            count_to_add = min(remaining, new_slot_item.stack_size)
+            
+            new_slot_item.count = count_to_add
+            self.items.append(new_slot_item)
+            
+            remaining -= count_to_add
+            print(f"Added new stack of {new_slot_item.name}")
 
-            self.items.append(new_item)
-            remaining -= count_for_new_slot
-        print(f"Added {new_item.name} to inventory")
         return True
+    
     def remove_item(self, item_name, amount=1):
         remaining = amount
         for i in range(len(self.items) - 1, -1, -1): # iterate backwards from end of list
@@ -98,15 +100,15 @@ class Inventory:
         )
         screen.blit(name_text, name_rect)
 
+        # draw slots
         for i in range(self.max_size):
-            # Calculate grid position
             col = i % self.grid_cols
             row = i // self.grid_cols
             slot_x = self.rect.x + self.padding + col * (self.slot_size + self.padding)
             slot_y = self.rect.y + self.padding + row * (self.slot_size + self.padding)
             
             slot_rect = pygame.Rect(slot_x, slot_y, self.slot_size, self.slot_size)
-            # 1. Draw the Slot Background using the image/surface (self.slot_bg_image)
+            # Draw the Slot Background
             screen.blit(self.bg_image, slot_rect)
 
             # Draw Highlight for the Active Slot
@@ -116,7 +118,7 @@ class Inventory:
             elif i == self.hover_slot:
                 pygame.draw.rect(screen, self.hover_border, slot_rect, HIGHLIGHT_THICKNESS)
 
-            # 2. Draw the item (if it exists in this slot)
+            # Draw Item Content
             if i < len(self.items):
                 item = self.items[i]
                 
@@ -124,14 +126,9 @@ class Inventory:
                 item_rect = item.image.get_rect(center=slot_rect.center)
                 screen.blit(item.image, item_rect)
                 
-                # 3. Draw the count text for stackable items
-                if hasattr(item, 'stack_size') and item.stack_size > 1:
-                    # Note: Added a check for 'count' just in case
-                    count_val = item.count if hasattr(item, 'count') else 1
-                    count_text = SLOT_FONT.render(str(count_val), True, (255, 255, 255))
-                    
-                    # FIX 2: count_text IS the image. It does not have an .image attribute.
-                    # Position the count text in the bottom right corner of the slot
+                # Draw stack count
+                if item.stack_size > 1: 
+                    count_text = SLOT_FONT.render(str(item.count), True, (255, 255, 255))
                     text_rect = count_text.get_rect(bottomright=(slot_rect.right - 2, slot_rect.bottom - 2))
                     screen.blit(count_text, text_rect)
     def update(self, pos):
@@ -142,9 +139,8 @@ class Inventory:
         """Internal helper to convert mouse coordinates to a slot index."""
         mouse_x, mouse_y = pos
         
-        # 1. Check if the mouse is even within the inventory's main rect
-        if not self.rect.collidepoint(mouse_x, mouse_y):
-            return -1
+        # Check if the mouse is within the inventory's main rect
+        if not self.rect.collidepoint(mouse_x, mouse_y): return -1
         
         # Calculate coordinates relative to the inventory's inner drawing area
         rel_x = mouse_x - (self.rect.x + self.padding)
@@ -152,13 +148,13 @@ class Inventory:
         
         slot_size_with_padding = self.slot_size + self.padding
         
-        # 2. Calculate column and row index
+        # Calculate column and row index
         col = rel_x // slot_size_with_padding
         row = rel_y // slot_size_with_padding
         
         index = row * self.grid_cols + col
         
-        # 3. Final check: is the index valid and not in the padding gaps?
+        # Final check: is the index valid and not in the padding gaps?
         if 0 <= index < self.max_size and \
            (rel_x % slot_size_with_padding) < self.slot_size and \
            (rel_y % slot_size_with_padding) < self.slot_size:
@@ -189,7 +185,7 @@ class Inventory:
     def get_active_item_name(self):
         item = self.get_active_item()
         if item:
-            return item.get_name()
+            return item.name
         else:
             return ""
         
@@ -199,7 +195,6 @@ class ShopMenu(Inventory):
         super().__init__(max_size, columns, rect=SHOP_MENU, slot_size=70, padding=20)
         
         # Shop specific properties
-        self.font = SLOT_FONT.render("Cost: $10", True, get_colour("GOLD"))
         self.player = player
         self.shop_data = data
         self.is_open = False
@@ -211,50 +206,25 @@ class ShopMenu(Inventory):
         self.populate_shop()
 
     def populate_shop(self):
+        # Reads IDs from shop_data and creates items
         self.items = [] 
 
-        CLASS_MAP = {
-            "seed": Seed,
-            "crop": Fruit,
-            "fruit": Fruit,
-            "tool": Tool,
-            "misc": Item
-        }
-        
         # Check if shop_data exists
         if not self.shop_data or "items" not in self.shop_data:
             return
 
         # Iterate through the list of IDs (e.g., "tomato_seeds")
         for item_id in self.shop_data["items"]:
+            # Check if valid ID
+            if item_id not in ITEMS:
+                print(f"Shop Warning: Item ID '{item_id}' not found in database.")
+                continue
+            #Create item via item factory
+            new_item = ItemFactory.create(item_id, count=1)
             
-            # 1. Fetch the master data blueprint
-            # If you haven't imported get_item_data, use ITEMS.get(item_id)
-            item_data = ITEMS.get(item_id) 
-
-            if not item_data: continue # Skip invalid IDs
-
-            # 2. Look up the correct class using the category
-            # default to generic Item if category isn't found
-            ItemClass = CLASS_MAP.get(item_data.category, Item)
-
-            # 3. Instantiate the class
-            # Since Seed, Tool, and Fruit all take "name" (or image_key) as the first arg,
-            # we can call them uniformly.
-            
-            # Special Handling: Tools might need underscores (e.g., "Wood Hoe" -> "Wood_Hoe")
-            constructor_key = item_data.image_key
-            if item_data.category == "tool":
-                constructor_key = item_data.name.replace(" ", "_")
-
-            # Create the object!
-            new_item = ItemClass(constructor_key)
-            
-            # 4. Apply common stats from the data
-            new_item.buy_value = item_data.price
-            new_item.data = item_data # Link the data back to the object
-            
+            # Add to shop list
             self.items.append(new_item)
+            
     def toggle_open(self, hud_ref=None, is_open=None):
         if is_open is not None:
             self.is_open = is_open
@@ -262,8 +232,7 @@ class ShopMenu(Inventory):
             self.is_open = not self.is_open
         print(f"Shop is now {'OPEN' if self.is_open else 'CLOSED'}.")
     def draw(self, screen):
-        if not self.is_open:
-            return
+        if not self.is_open: return
         
         # Draw Background
         screen.blit(self.image, self.rect)
@@ -273,7 +242,9 @@ class ShopMenu(Inventory):
             title = self.shop_data.get("type", "Shop").replace("_", " ").title()
         draw_text(screen, title, HUD_FONT, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
         
+        #draw Slots
         super().draw(screen)
+        #Drow prices
         for i, item in enumerate(self.items):
             if i >= len(self.items): break 
             
@@ -293,39 +264,41 @@ class ShopMenu(Inventory):
             price_bg_rect = pygame.Rect(price_x - 15, price_y - 8, 30, 16)
             pygame.draw.rect(screen, (0,0,0), price_bg_rect, border_radius=4)
 
-            draw_text(screen, f"${item.buy_value}", SLOT_FONT, price_x, price_y, (255, 215, 0))
+            draw_text(screen, f"${item.data.price}", SLOT_FONT, price_x, price_y, (255, 215, 0))
 
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
         clicked_slot = self.get_slot_from_pos(pos) 
-        if clicked_slot != -1 and clicked_slot < self.max_size:
-            self.active_slot=clicked_slot
-            if clicked_slot < len(self.items):
-                item = self.items[clicked_slot]
-                self.try_buy_item(item)
-            
+        if clicked_slot != -1 and clicked_slot < len(self.items):
+            self.active_slot = clicked_slot
+            item = self.items[clicked_slot]
+            self.try_buy_item(item)
             return "SLOT_CLICKED"
-        
         return None # Click was not on a valid shop item or button
 
     def try_buy_item(self, item:Item):
         """Validates and executes the purchase logic"""
-        # 1. Check Gold
-        if self.player.money < item.buy_value:
-            print(f"Cannot afford {item.name}! (Cost: {item.buy_value}, Have: {self.player.money})")
+        cost = item.data.price
+        # Check Money
+        if self.player.money < cost:
+            print(f"Cannot afford {item.name}! (Cost: {cost}, Have: {self.player.money})")
             return False
 
-        # 2. Check Inventory Space
+        # Check Inventory Space
         if self.player.inventory.is_full():
             print("Inventory Full!")
             return False
 
-        # 3. Execute Transaction
-        self.player.money -= item.buy_value
-        new_item = copy.copy(item)
-        new_item.count = 1 # Player buys 1 at a time usually
+        player_item = copy.copy(item)
+        player_item.count = 1 
         
-        self.player.inventory.add_item(new_item)
+        # 4. Try Add
+        success = self.player.inventory.add_item(player_item)
         
-        print(f"Bought {item.name} for {item.buy_value}g. New Balance: {self.player.money}")
-        return True
+        if success:
+            self.player.money -= cost
+            print(f"Bought {player_item.name} for {cost}g.")
+            return True
+        else:
+            print("Transaction failed (Inventory full).")
+            return False

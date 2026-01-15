@@ -29,7 +29,7 @@ class GameState(ABC):
     def exit_state(self): pass
 
 class ShopState(GameState):
-    def __init__(self, game:"Game", player: Player, shop_data: dict|None = None):
+    def __init__(self, game:"Game", player: Player, shop_data: dict):
         super().__init__(game)
         self.player = player
        

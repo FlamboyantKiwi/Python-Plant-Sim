@@ -12,7 +12,4 @@ from .inventory import Inventory
 # (Assumes you kept 'item.py', or renamed it to 'items.py')
 from .items import (
     Item,
-    Seed,
-    Tool,
-    Fruit
 )

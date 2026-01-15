@@ -1,5 +1,5 @@
 import pygame
-from settings import WIDTH, HEIGHT, ANIMATION_SPEED
+from settings import WIDTH, HEIGHT, ANIMATION_SPEED, PLAYER_START_INVENTORY
 
 # 1. Core Imports
 from core.helper import calc_pos_rect, get_grid_pos, get_direction, get_colour
@@ -7,7 +7,7 @@ from core.asset_loader import AssetLoader
 
 # 2. Entity Imports
 from entities.inventory import Inventory
-from entities import items  # Access item.Tool, item.Seed, etc.
+from entities.items import ItemFactory
 
 # 3. World Imports (Assumes you moved tile.py to world/tile.py)
 from world.tile import Tile
@@ -74,10 +74,9 @@ class Player(pygame.sprite.Sprite):
                                    rect = inv_rect,
                                    slot_size=self.SLOT_SIZE,
                                    padding=self.INV_PADDING)
-        self.inventory.add_item(items.Tool("Gold_Scythe"))
-        self.inventory.add_item(items.Seed("Red Pepper", 50))
-        self.inventory.add_item(items.Fruit("Gold_Red Pepper", 10))
-        self.inventory.add_item(items.Tool("Wood_Hoe"))
+        
+        for item_id, count in PLAYER_START_INVENTORY:
+            self.inventory.add_item(ItemFactory.create(item_id, count))
 
     def recalculate_movement_vectors(self):
         """Adjusts self.dx and self.dy to match the current self.speed magnitude 

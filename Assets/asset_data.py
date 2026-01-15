@@ -271,6 +271,81 @@ ITEMS = {
     )
 }
 
+
+# 1. Define Defaults / Helper Maps
+# Maps UPPERCASE tool names to the lowercase "tool_type" your ToolItem class needs
+TOOL_BEHAVIOR_MAP = {
+    "HOE": "hoe",
+    "WATERING_CAN": "water",
+    "AXE": "axe",
+    "PICKAXE": "pick",
+    "FISHING_ROD": "rod",
+    # Others default to generic tools
+}
+
+# 2. Initialize the Dictionary
+ITEMS = {}
+
+# --- GENERATE SEEDS & CROPS AUTOMATICALLY ---
+# We loop through every fruit defined in FRUIT_TYPES
+for fruit_name in FRUIT_TYPES.keys():
+    
+    # Clean up name (e.g. "Green Bean" -> "green_bean")
+    safe_id = fruit_name.lower().replace(" ", "_")
+    
+    # A. Add the Seed
+    ITEMS[f"{safe_id}_seeds"] = ItemData(
+        name=f"{fruit_name} Seeds",
+        price=10,  # Default price, you can override later
+        category="seed",
+        description=f"Seeds for {fruit_name}.",
+        image_key=fruit_name, # Passed to get_seed_image("Banana")
+        sprite_type="seed",
+        grow_time=4           # Default grow time
+    )
+
+    # B. Add the Crop/Fruit
+    ITEMS[safe_id] = ItemData(
+        name=fruit_name,
+        price=50,
+        category="crop", # or "fruit"
+        description=f"Fresh {fruit_name}.",
+        image_key=fruit_name, # Passed to get_fruit_image("BRONZE_Banana")
+        sprite_type="fruit",
+        energy_gain=15
+    )
+
+# --- GENERATE TOOLS AUTOMATICALLY ---
+# Loop through Materials (Wood, Copper...) and Types (Hoe, Axe...)
+for mat in MATERIAL_LEVELS:
+    for tool_type in TOOL_TYPES:
+        
+        # skip MATERIAL type (it's likely an icon, not a tool)
+        if tool_type == "MATERIAL": continue
+            
+        # Create IDs: "wood_hoe", "gold_sword"
+        tool_id = f"{mat.lower()}_{tool_type.lower()}"
+        
+        # Create Display Name: "Wood Hoe"
+        display_name = f"{mat.title()} {tool_type.replace('_', ' ').title()}"
+        
+        # Create Image Key: "WOOD_HOE" (Matches AssetLoader expectation)
+        img_key = f"{mat}_{tool_type}"
+        
+        # Determine behavior (hoe, water, etc)
+        behavior = TOOL_BEHAVIOR_MAP.get(tool_type, "generic")
+
+        ITEMS[tool_id] = ItemData(
+            name=display_name,
+            price=0 if mat == "WOOD" else 500, # Basic logic: Wood is free/starter
+            category="tool",
+            description=f"A {mat.lower()} quality tool.",
+            image_key=img_key,
+            sprite_type="tool",
+            tool_type=behavior,
+            stackable=False
+        )
+
 # ==========================================
 # [PART 4] HELPER FUNCTIONS
 # ==========================================
