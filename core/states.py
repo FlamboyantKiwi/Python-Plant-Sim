@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from entities.player import Player
 from entities.inventory import ShopMenu
+from entities.Plant import Plant
 from ui.hud import HUD
 from ui.button import Button
 from world.level import Level
@@ -90,6 +91,11 @@ class PlayingState(GameState):
             map_data=None 
         )
 
+        self.plants = [
+            Plant("Apple", 5, 5),   # A Tree
+            Plant("Onion", 6, 5)    # A Crop
+        ]
+
     def update(self):
         # Calculate Delta Time (dt) in seconds
         dt = self.game.clock.get_time() / 1000 
@@ -100,11 +106,18 @@ class PlayingState(GameState):
         self.player.update(dt, self.level.all_tiles)
         self.hud.update(mouse_pos)
 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            for plant in self.plants:
+                plant.grow(0.1) # Grow slightly every frame
+
     def draw(self, screen):
         # Draw the game world
         screen.fill(get_colour("WATER")) # Or use settings.COLOURS
         self.all_tiles.draw(screen)
         self.all_sprites.draw(screen)
+        for plant in self.plants:
+            plant.draw(screen, 0, 0)
         self.hud.draw(screen)
 
     def handle_event(self, event):

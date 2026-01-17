@@ -1,52 +1,135 @@
-from core.types import (ItemData, ItemCategory, SpriteRect, RectPair, ToolType, ShopData,
-    ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, UP, DOWN, LEFT, RIGHT)
+from core.types import *
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
 )
+from dataclasses import dataclass
 # ==========================================
 # GAMEPLAY BALANCE CONFIG
 # ==========================================
 
-# 1. CROP BALANCE
-# Keys match FRUIT_TYPES keys. 
-# Missing keys will use the 'DEFAULT' values.
-CROP_BALANCE = {
-    "DEFAULT":       {"seed_price": 10, "crop_price": 20, "grow_time": 3, "energy": 10},
-    "Tomato":        {"seed_price": 15, "crop_price": 35, "grow_time": 4, "energy": 15},
-    "Cauliflower":   {"seed_price": 40, "crop_price": 90, "grow_time": 8, "energy": 30},
-    "Melon":         {"seed_price": 50, "crop_price": 120, "grow_time": 10, "energy": 50},
-    "Pineapple":     {"seed_price": 100, "crop_price": 300, "grow_time": 14, "energy": 80},
-    "Wheat":         {"seed_price": 5,  "crop_price": 10, "grow_time": 2, "energy": 5},
-}
-
-# 2. TOOL BALANCE
-# Base costs for specific tool types
-BASE_TOOL_COST = {
-    "HOE": 50, "WATERING_CAN": 50, "AXE": 100, "PICKAXE": 100, 
-    "SWORD": 200, "FISHING_ROD": 150, "SCYTHE": 80, "DEFAULT": 100
-}
-
-# Multipliers for materials
-MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
-
 FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
+CROP_BALANCE = {
+    # --- SINGLE HARVEST CROPS (Standard) ---
+    "Beet":             CropConfig(seed_price=10, crop_price=22, grow_time=3, energy=8),
+    "Onion":            CropConfig(seed_price=12, crop_price=28, grow_time=4, energy=10),
+    "Cabbage":          CropConfig(seed_price=20, crop_price=55, grow_time=6, energy=15),
+    "Squash":           CropConfig(seed_price=30, crop_price=75, grow_time=7, energy=20),
+    "Cauliflower":      CropConfig(seed_price=40, crop_price=95, grow_time=9, energy=30),
+    "Melon":            CropConfig(seed_price=50, crop_price=130, grow_time=10, energy=50),
+    "Wheat":            CropConfig(seed_price=5,  crop_price=10,  grow_time=2, energy=5),
+
+    # --- REGROWING CROPS (Harvest multiple times) ---
+    # These usually cost more upfront but pay off over time
+    "Green Bean":       CropConfig(seed_price=30, crop_price=20, grow_time=5, energy=12, regrows=True),
+    "Cucumber":         CropConfig(seed_price=35, crop_price=25, grow_time=5, energy=15, regrows=True),
+    "Tomato":           CropConfig(seed_price=25, crop_price=30, grow_time=6, energy=18, regrows=True),
+    "Red Pepper":       CropConfig(seed_price=40, crop_price=45, grow_time=7, energy=22, regrows=True),
+    "Grape":            CropConfig(seed_price=45, crop_price=50, grow_time=8, energy=25, regrows=True),
+    "Pineapple":        CropConfig(seed_price=150, crop_price=350, grow_time=14, energy=100, regrows=True),
+
+    # --- MUSHROOMS (Fast growers, good energy) ---
+    "Mushroom":         CropConfig(seed_price=20, crop_price=40, grow_time=3, energy=20, regrows=True),
+    "Chestnut Mushroom":CropConfig(seed_price=25, crop_price=55, grow_time=4, energy=25, regrows=True),
+
+    # --- TREES (Permanent, long growth, high yield) ---
+    # Note: is_tree=True usually implies it blocks movement and takes 5 stages
+    "Apple":            CropConfig(seed_price=100, crop_price=60, grow_time=10, energy=25, is_tree=True, regrows=True),
+    "Lemon":            CropConfig(seed_price=120, crop_price=70, grow_time=11, energy=30, is_tree=True, regrows=True),
+    "Plum":             CropConfig(seed_price=130, crop_price=75, grow_time=11, energy=30, is_tree=True, regrows=True),
+    "Coconut":          CropConfig(seed_price=150, crop_price=90, grow_time=12, energy=40, is_tree=True, regrows=True),
+    "Banana":           CropConfig(seed_price=180, crop_price=110, grow_time=13, energy=50, is_tree=True, regrows=True),
+    # Others
+    "Corn":             CropConfig(seed_price=10, crop_price=20, grow_time=4, energy=15),
+    "Sunflower":        CropConfig(seed_price=15, crop_price=40, grow_time=5, energy=20),
+}
+DEFAULT_CROP = CropConfig(seed_price=10, crop_price=20, grow_time=3, energy=10)
+
+PLANT_SPRITE_REGIONS = {
+    "Grape":        SpriteRect(0, 6,   128, 42),
+    "Cucumber":     SpriteRect(0, 53,  128, 42),
+    "Red Pepper":   SpriteRect(0, 95,  128, 36),
+    "Cauliflower":  SpriteRect(0, 133, 128, 24),
+    "Green Bean":   SpriteRect(0, 171, 128, 36),
+    "Cabbage":      SpriteRect(0, 211, 128, 24),
+    "Squash":       SpriteRect(0, 235, 128, 36),
+    "Melon":        SpriteRect(0, 280, 128, 36),
+    "Pineapple":    SpriteRect(0, 316, 128, 36),
+    "Corn":         SpriteRect(0, 352, 128, 36),
+    "Sunflower":    SpriteRect(0, 396, 128, 36),
+
+    "Onion":             SpriteRect(144, 368, 64, 36),
+    "Chestnut Mushroom": SpriteRect(224, 368, 64, 36),
+    "Beet":              SpriteRect(144, 404, 64, 36),
+    "Mushroom":          SpriteRect(224, 404, 64, 36),
+}
+
+TREE_FRAME_SLICES = [
+    (0, 30),    # Stage 0: Seed
+    (30, 30),   # Stage 1: Sapling
+    (65, 60),   # Stage 2: Growing
+    (130, 60),  # Stage 3: Mature
+    (190, 60)   # Stage 4: Fruiting
+]
+TREE_SPRITE_REGIONS = {
+    "Plum":     SpriteRect(130, 4,   250, 78),
+    "Lemon":    SpriteRect(130, 82,  250, 64),
+    "Apple":    SpriteRect(130, 146, 250, 64),
+    "Banana":   SpriteRect(130, 212, 250, 78),
+    "Coconut":  SpriteRect(130, 290, 250, 78), 
+}
+
+# Materials
+MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
 MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
 
-# ============ Data Structures ============ #
+TOOL_SPRITE_LAYOUT = [
+    "MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", "BOW", "ARROW", "AXE", 
+    "PICKAXE", "SHOVEL", "HOE", "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"
+]
+TOOL_DEFINITIONS = [
+    MaterialBP(sprite_suffix="MATERIAL", base_cost=10),
+    ArrowBP(sprite_suffix="ARROW", base_cost=5),
 
-def get_item_data(item_id: str) -> ItemData:
-    """Safe way to get item data. Returns a placeholder if missing."""
-    if item_id in ITEMS:
-        return ITEMS[item_id]
+    # Tools
+    ToolBP(sprite_suffix="HOE",          base_cost=50,  tool_type=ToolType.HOE),
+    ToolBP(sprite_suffix="WATERING_CAN", base_cost=50,  tool_type=ToolType.WATER, display_suffix="Watering Can"),
+    ToolBP(sprite_suffix="AXE",          base_cost=100, tool_type=ToolType.AXE),
+    ToolBP(sprite_suffix="PICKAXE",      base_cost=100, tool_type=ToolType.PICKAXE),
+    ToolBP(sprite_suffix="FISHING_ROD",  base_cost=150, tool_type=ToolType.ROD, display_suffix="Fishing Rod"),
+
+    # Weapons
+    ToolBP(sprite_suffix="SWORD",  base_cost=200, tool_type=ToolType.SWORD),
+    ToolBP(sprite_suffix="SCYTHE", base_cost=80,  tool_type=ToolType.SCYTHE),
     
-    # Fallback/Error Item
-    print(f"WARNING: Item ID '{item_id}' not found in database.")
-    return ItemData(name="Unknown",  description="misc", category=ItemCategory.MISC,  image_key="None", buy_price=0)
+    # 5. Generic / Unused (Defaults to Generic ToolType)
+    ToolBP(sprite_suffix="DAGGER", base_cost=100),
+    ToolBP(sprite_suffix="STAFF",  base_cost=250),
+    ToolBP(sprite_suffix="BOW",    base_cost=150),
+    ToolBP(sprite_suffix="HAMMER", base_cost=120),
+    ToolBP(sprite_suffix="SHOVEL", base_cost=50, tool_type=ToolType.SHOVEL),
+]
 
-# ============ Tools ============ #
-TOOL_SPRITE_LAYOUT = ["MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", "BOW", "ARROW", "AXE", 
-    "PICKAXE", "SHOVEL", "HOE", "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"]
+# ============ Get Data ============ #
+
+def get_data(key:str, database:dict, fallback):
+    """Generic safe-access function for any game database.
+    :param key: The ID to look up (e.g. "tomato_seeds")
+    :param database: The dictionary to search (e.g. ITEMS)
+    :param fallback: The dummy object to return if missing"""
+    if key in database:
+        return database[key]
+    
+    print(f"WARNING: ID '{key}' not found in database.")
+    return fallback
+def get_item_data(item_id: str) -> ItemData:
+    fallback_item = ItemData(name="Unknown", description="missing", 
+        category=ItemCategory.MISC, image_key="None", buy_price=0)
+    return get_data(item_id, ITEMS, fallback_item)
+def get_plant_data(plant_name: str) -> PlantData:
+    fallback_plant = PlantData(name="Unknown Plant", grow_time=1, 
+        harvest_item="none", image_stages=1, is_tree=False, regrows=False)
+    return get_data(plant_name, PLANT_DATA, fallback_plant)
 
 # ============ Tiles ============ #
 GROUND_TILE_REGIONS = {
@@ -129,106 +212,29 @@ GAME_ENTITIES = {
 
 # ============ Items ============ #
 ITEMS = {}
+PLANT_DATA = {}
 
 # --- GENERATE SEEDS & CROPS AUTOMATICALLY ---
 for fruit_name in FRUIT_TYPES.keys():
     
+    config = CROP_BALANCE.get(fruit_name, DEFAULT_CROP)
+
     # Clean up name (e.g. "Green Bean" -> "green_bean")
     safe_id = fruit_name.lower().replace(" ", "_")
-    stats = CROP_BALANCE.get(fruit_name, CROP_BALANCE["DEFAULT"])
 
-    # Add the Seed
-    ITEMS[f"{safe_id}_seeds"] = ItemData(
-        name=f"{fruit_name} Seeds",
-        description=f"Plant these to grow {fruit_name}. Takes {stats['grow_time']} days.",
-        category=ItemCategory.SEED,
-        image_key=fruit_name,
+    # Generate Data using the Class Methods
+    ITEMS[f"{safe_id}_seeds"] = config.generate_seed_data(name=fruit_name, image_key=fruit_name)
+    ITEMS[safe_id] = config.generate_crop_data(name=fruit_name, image_key=fruit_name)
+    PLANT_DATA[fruit_name] = config.generate_plant_data(name=fruit_name, harvest_id=safe_id)
 
-        buy_price=stats["seed_price"],
-        grow_time=stats["grow_time"]
-    )
-
-    # Add the Crop/Fruit
-    ITEMS[safe_id] = ItemData(
-        name=fruit_name,
-        buy_price=stats["crop_price"],
-        category=ItemCategory.CROP,
-        description=f"Fresh {fruit_name}. Restores {stats['energy']} energy.",
-        image_key=fruit_name,
-        energy_gain=stats["energy"]
-    )
-
-# --- GENERATE TOOLS AUTOMATICALLY ---
-
-def _register_material_item(mat: str, sprite_key: str):
-    """Creates raw resources like 'Wood', 'Iron'."""
-    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
-    
-    # Logic: Materials are named simply "Wood", not "Wood Material"
-    item_id = mat.lower()
-    
-    ITEMS[item_id] = ItemData(
-        name=mat.title(),
-        # Raw materials are cheap but scale up
-        buy_price=10 * multiplier, 
-        category=ItemCategory.MISC,
-        description=f"A raw piece of {mat.lower()}.",
-        image_key=f"{mat}_{sprite_key}",
-        stackable=True
-    )
-
-def _register_ammo_item(mat: str, sprite_key: str):
-    """Creates ammo like 'Wood Arrow', 'Gold Arrow'."""
-    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
-    
-    item_id = f"{mat.lower()}_{sprite_key.lower()}"
-    
-    ITEMS[item_id] = ItemData(
-        name=f"{mat.title()} Arrow",
-        # Ammo is cheaper than tools
-        buy_price=5 * multiplier,
-        category=ItemCategory.MISC, # or ItemCategory.TOOL if you prefer
-        description=f"A {mat.lower()}-tipped arrow.",
-        image_key=f"{mat}_{sprite_key}",
-        stackable=True
-    )
-
-def _register_tool_item(mat: str, sprite_key: str):
-    """Creates weapons and tools like 'Wood Axe', 'Iron Sword'."""
-    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
-    base_cost = BASE_TOOL_COST.get(sprite_key, 100)
-    
-    price = int(base_cost * multiplier)
-    if mat == "WOOD": price = 0 # Starter tools are free?
-    
-    item_id = f"{mat.lower()}_{sprite_key.lower()}"
-    
-    # Dynamic behavior lookup
-    behavior = getattr(ToolType, sprite_key, ToolType.GENERIC)
-
-    ITEMS[item_id] = ItemData(
-        name=f"{mat.title()} {sprite_key.replace('_', ' ').title()}",
-        buy_price=price,
-        category=ItemCategory.TOOL,
-        description=f"A {mat.lower()} quality tool.",
-        image_key=f"{mat}_{sprite_key}",
-        tool_type=behavior,
-        stackable=False
-    )
 
 for mat in MATERIAL_LEVELS:
-    for sprite_key in TOOL_SPRITE_LAYOUT:
-        
-        # Traffic Cop Logic: Dispatch to the correct builder
-        if sprite_key == "MATERIAL":
-            _register_material_item(mat, sprite_key)
-            
-        elif sprite_key == "ARROW":
-            _register_ammo_item(mat, sprite_key)
-            
-        else:
-            # Everything else (Axes, Hoes, Swords) is a Tool
-            _register_tool_item(mat, sprite_key)
+    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
+    
+    for blueprint in TOOL_DEFINITIONS:
+        # Use the Polymorphic Blueprint logic!
+        item_id, item_data = blueprint.generate(mat, multiplier)
+        ITEMS[item_id] = item_data
 
 SHOPS = {
     "general_store": ShopData(
@@ -241,8 +247,7 @@ SHOPS = {
             "wood_sword",
             "apple"
         ]
-    ),
-
+    )
 }
 
 
@@ -250,3 +255,7 @@ FONT_CONFIG = {
     FontType.HUD:   (HUD_FONT_SIZE, HUD_FONT_BOLD),
     FontType.SLOT:  (SLOT_FONT_SIZE, SLOT_FONT_BOLD),
 }
+
+
+
+        

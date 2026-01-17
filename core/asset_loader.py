@@ -5,7 +5,7 @@ from enum import Enum
 from core.spritesheet import SpriteSheet
 from core.helper import get_colour
 from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction
-from Assets.asset_data import GAME_ENTITIES, MATERIAL_LEVELS, TILE_DETAILS, FRUIT_TYPES, FRUIT_RANKS, SEED_BAGS_POS, TOOL_SPRITE_LAYOUT, GROUND_TILE_REGIONS
+from Assets.asset_data import GAME_ENTITIES, MATERIAL_LEVELS, TILE_DETAILS, FRUIT_TYPES, FRUIT_RANKS, SEED_BAGS_POS, GROUND_TILE_REGIONS, TOOL_SPRITE_LAYOUT, PLANT_SPRITE_REGIONS, TREE_SPRITE_REGIONS, TREE_FRAME_SLICES
 from settings import BLOCK_SIZE, HUD_FONT_SIZE, SLOT_FONT_SIZE
 
 class AssetLoader:
@@ -23,11 +23,12 @@ class AssetLoader:
     ALL_FRUITS = {}
     ALL_FRUIT_CONTAINERS = {}
     SEED_BAGS = {}
+    ALL_PLANTS = {}
 
     # Cashes
     _SEED_CACHE = {}
     ENTITIES = {}
-    FONTS:dict[FontType,pygame.font.Font] = {}
+    FONTS:dict[FontType, pygame.font.Font] = {}
 
     @classmethod
     def __init__(cls):
@@ -39,6 +40,7 @@ class AssetLoader:
         cls.load_tool_assets()
         cls.load_tile_assets()
         cls.load_tile_detail_assets()
+        cls.load_plant_assets()
         
         for category, config in GAME_ENTITIES.items():
             cls.ENTITIES[category] = cls.load_entity_group(config)
@@ -188,6 +190,48 @@ class AssetLoader:
         cls.SEED_BAGS = cls.create_fruit_strip(sheet, SEED_BAGS_POS, ["1", "2"], 2, 3)
     
     @classmethod
+    def load_plant_assets(cls):        
+        """ Loads growing plant sprites (Crops and Trees). """
+        sheet = cls.load_spritesheet("Plants") 
+        if not sheet: return
+
+        # Load Crops: 4 frames per strip
+        FRAMES_PER_STRIP = 4
+
+        for crop_name, rect in PLANT_SPRITE_REGIONS.items():
+            frame_width = rect.w // FRAMES_PER_STRIP
+            
+            for i in range(FRAMES_PER_STRIP):
+                img = sheet.get_image(
+                    x=rect.x + (i * frame_width),
+                    y=rect.y,
+                    width=frame_width,
+                    height=rect.h,
+                    scale=(frame_width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
+                )
+                cls.ALL_PLANTS[f"{crop_name}_{i}"] = img
+
+        # --- 2. LOAD TREES (Unevenly Spaced) ---
+        for tree_name, rect in TREE_SPRITE_REGIONS.items():
+            
+            # Iterate through the manual slices defined in asset_data
+            for i, (rel_x, width) in enumerate(TREE_FRAME_SLICES):
+                
+                img = sheet.get_image(
+                    x=rect.x + rel_x,  # Start X + Offset
+                    y=rect.y,
+                    width=width,
+                    height=rect.h,
+                    # Scale trees up
+                    scale=(width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
+                )
+                
+                # Key example: "Apple_0", "Apple_4"
+                cls.ALL_PLANTS[f"{tree_name}_{i}"] = img
+                
+        print(f"Loaded plants: {len(PLANT_SPRITE_REGIONS)} crops, {len(TREE_SPRITE_REGIONS)} trees.")
+
+    @classmethod
     def create_fruit_strip(cls, sheet: SpriteSheet, rect, ranks, number=3, scale_factor = None):
         """Helper for fruit strips."""
         items = {}
@@ -264,6 +308,34 @@ class AssetLoader:
     #   SPECIFIC GETTERS
     # ==================================================
 
+    @classmethod
+    def get_image(cls, key: str) -> pygame.Surface | None:
+        """ 
+        Universal string-based lookup. 
+        Used by the Plant class to find 'Apple_0', 'Corn_3', etc. 
+        """
+        # 1. Check Plants (Growing Stages)
+        # Keys look like: "Corn_0", "Apple_4"
+        if key in cls.ALL_PLANTS:
+            return cls.ALL_PLANTS[key]
+        
+        # 2. Check Tools/Materials 
+        # Keys look like: "WOOD_AXE", "IRON_HOE"
+        if "_" in key:
+            try:
+                mat, typ = key.upper().split("_", 1)
+                if mat in cls.ALL_TOOLS and typ in cls.ALL_TOOLS[mat]:
+                    return cls.ALL_TOOLS[mat][typ]
+            except: pass
+
+        # 3. Check Fruits (Items)
+        # If the key is just "Tomato", return the Bronze icon
+        if key in cls.ALL_FRUITS:
+            return cls.ALL_FRUITS[key].get("BRONZE")
+        
+        return cls.TILE_ASSETS.get("DIRT_IMAGE")
+
+    
     @classmethod
     def get_item_image(cls, item_data:ItemData):
         """ Determines which loader to use based on the Item Category. """
