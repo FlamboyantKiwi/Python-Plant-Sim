@@ -22,18 +22,12 @@ class Plant:
             self.age = self.data.grow_time
 
     def draw(self, surface: pygame.Surface, offset_x=0, offset_y=0):
-        # Calculate which image to use based on age
-        stage_index = self.data.get_stage_index(self.age)
-        
-        # Get the sprite from the loader (e.g., "Apple_4")
-        image_key = f"{self.data.name}_{stage_index}"
+        # Calculate  the current growth stage image
+        image_key = f"{self.data.name}_{self.data.get_stage_index(self.age)}"
         image = AssetLoader.get_image(image_key)
         if not image: return
 
-        # Calculate Position
-        # We want the BOTTOM-CENTER of the tree to sit at the BOTTOM-CENTER of the tile.
-        
-        # Convert Grid Coords to Pixel Coords
+        # Calculate Tile Position in pixels
         tile_pixel_x = (self.x * BLOCK_SIZE) - offset_x
         tile_pixel_y = (self.y * BLOCK_SIZE) - offset_y
         

@@ -66,17 +66,17 @@ PLANT_SPRITE_REGIONS = {
 
 TREE_FRAME_SLICES = [
     (0, 30),    # Stage 0: Seed
-    (30, 30),   # Stage 1: Sapling
-    (65, 60),   # Stage 2: Growing
-    (130, 60),  # Stage 3: Mature
-    (190, 60)   # Stage 4: Fruiting
+    (32, 30),   # Stage 1: Sapling
+    (66, 60),   # Stage 2: Growing
+    (131, 60),  # Stage 3: Mature
+    (195, 60)   # Stage 4: Fruiting
 ]
 TREE_SPRITE_REGIONS = {
-    "Plum":     SpriteRect(130, 4,   250, 78),
-    "Lemon":    SpriteRect(130, 82,  250, 64),
-    "Apple":    SpriteRect(130, 146, 250, 64),
-    "Banana":   SpriteRect(130, 212, 250, 78),
-    "Coconut":  SpriteRect(130, 290, 250, 78), 
+    "Plum":     SpriteRect(128, 4,   255, 78),
+    "Lemon":    SpriteRect(128, 82,  255, 64),
+    "Apple":    SpriteRect(128, 146, 255, 64),
+    "Banana":   SpriteRect(128, 212, 255, 78),
+    "Coconut":  SpriteRect(128, 290, 255, 78), 
 }
 
 # Materials

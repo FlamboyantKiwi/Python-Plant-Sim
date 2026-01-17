@@ -1,7 +1,7 @@
 import pygame, random
 from settings import QUAD_SIZE, BLOCK_SIZE, DEFAULT_COLOUR
 from core.helper import get_colour
-from core.asset_loader import AssetLoader
+from core.asset_loader import TileGroup
 
 MARCHING_TILES = {
     # Marching Squares Map Config
@@ -54,7 +54,7 @@ class Tile(pygame.sprite.Sprite):
         self.watered = False
 
         #Initialise 64x64 Tile Surface
-        dirt_asset = AssetLoader.TILE_ASSETS.get("DIRT_IMAGE")
+        dirt_asset = TileGroup.STORAGE.get("DIRT_IMAGE")
         if dirt_asset:
             self.image = dirt_asset.copy()
         else: # Fallback if DIRT_TILE failed to load in AssetLoader

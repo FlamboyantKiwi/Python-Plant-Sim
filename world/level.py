@@ -1,6 +1,6 @@
 import random, math, pygame
 from settings import BLOCK_SIZE, DETAIL_CHANCE
-from core.asset_loader import AssetLoader
+from core.asset_loader import TileGroup
 from world.tile import Tile
 class Level:
     DIRT_NODE = 0
@@ -10,8 +10,8 @@ class Level:
     and generating high-resolution Marching Squares tiles. """
 
     def __init__(self, all_tiles_group, player_sprite, map_data: list[list[int]]|None = None):
-        self.tilesets = AssetLoader.TILE_ASSETS
-        self.details = AssetLoader.TILE_DETAILS
+        self.tilesets = TileGroup.STORAGE
+        #self.details = AssetLoader.TILE_DETAILS
         self.all_tiles = all_tiles_group
         self.player_sprite = player_sprite
         
@@ -68,13 +68,13 @@ class Level:
                 # If dirt, use the DIRT tileset and Dirt details
                 if center_node_material == Level.DIRT_NODE:
                     tile_type_key = "DIRT"
-                    detail_key = "Dirt" 
+                    detail_key = "DETAIL_DIRT" 
                     current_tileset = self.tilesets.get("GRASS_A")
 
                 # If grass, randomly choose between GRASS_A and GRASS_B tilesets
                 elif center_node_material == Level.GRASS_NODE:
                     tile_type_key = "GRASS_A"
-                    detail_key = "Grass" # Details are the same for both grass types
+                    detail_key = "DETAIL_GRASS"
                     current_tileset = self.tilesets.get(tile_type_key)
                 
                 # Handle other types like WATER or fallback
@@ -83,16 +83,15 @@ class Level:
                     current_tileset = None
                 
                 # Safety check: skip if tileset is not loaded/found
-                if not current_tileset:
+                if not current_tileset and tile_type_key != "WATER":
                     print(f"Warning: Tileset '{tile_type_key}' not found.")
                     map_tile_x += 1
                     continue
                 
-                random_detail_image = None
-                
                 # Check if we have a detail key and the random chance succeeds
+                random_detail_image = None
                 if detail_key and same_type_count >= 6 and random.random() < DETAIL_CHANCE:
-                    detail_list = self.details.get(detail_key)
+                    detail_list = self.tilesets.get(detail_key)
                     
                     if detail_list:
                         # Select a random image from the list of details for this ground type
@@ -113,7 +112,6 @@ class Level:
                     
                 # --- 5. Increment Map Tile Index ---
                 map_tile_x += 1 # Advance the screen position counter by 1
-                
             map_tile_y += 1 # Advance the screen position counter to the next row
             
         # --- Final Dimension Calculation ---
