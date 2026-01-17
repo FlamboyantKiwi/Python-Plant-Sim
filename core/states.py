@@ -6,7 +6,7 @@ from entities.inventory import ShopMenu
 from ui.hud import HUD
 from ui.button import Button
 from world.level import Level
-from settings import WIDTH, HEIGHT, SHOPS
+from settings import WIDTH, HEIGHT, SHOPS, ShopData
 from core.helper import get_colour, draw_text
 import pygame
 
@@ -29,7 +29,7 @@ class GameState(ABC):
     def exit_state(self): pass
 
 class ShopState(GameState):
-    def __init__(self, game:"Game", player: Player, shop_data: dict):
+    def __init__(self, game:"Game", player: Player, shop_data: ShopData):
         super().__init__(game)
         self.player = player
        
@@ -145,7 +145,7 @@ class PlayingState(GameState):
             return
 
         # 2. Push the Shop State, passing the specific data
-        print(f"Opening Shop: {shop_data['type']}")
+        print(f"Opening Shop: {shop_data.store_name}")
         self.game.state_manager.push(ShopState(self.game, self.player, shop_data))
 class MenuState(GameState):
     def __init__(self, game: "Game"):

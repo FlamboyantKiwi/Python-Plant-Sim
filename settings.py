@@ -2,7 +2,7 @@
 import pygame
 pygame.init()
 pygame.font.init()
-
+from core.types import ShopData
 # Screen & Grid Configuration
 BLOCK_SIZE = 64
 TILES_X = 16
@@ -77,15 +77,18 @@ PLAYER_START_INVENTORY = [
     ("apple", 3)
 ]
 
+
 SHOPS = {
-    "general_store": {
-        "type": "General Store",
-        "items": [
+    "general_store": ShopData(
+        store_name="General Store",
+        items_ids=[
             "tomato_seeds",
             "melon_seeds",
+            "red_pepper_seeds", # Now available because of your generator!
             "wood_axe", 
             "wood_sword",
             "apple"
         ]
-    }
+    ),
+
 }

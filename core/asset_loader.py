@@ -115,7 +115,7 @@ class AssetLoader:
         sheet = cls.load_spritesheet("Tools_All")
         if sheet:
             # Logic moved to _extract_grid
-            cls.ALL_TOOLS = cls.extract_grid(sheet, MATERIAL_LEVELS, TOOL_TYPES)
+            cls.ALL_TOOLS = cls.extract_grid(sheet, MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT)
             print("Tool assets loaded successfully.")
 
     @classmethod
@@ -238,28 +238,23 @@ class AssetLoader:
 
     @classmethod
     def get_item_image(cls, item_data:ItemData):
-        """
-        Routing function: Looks at the ItemData.sprite_type and 
-        calls the correct specific loader.
-        """
+        """ Determines which loader to use based on the Item Category. """
         key = item_data.image_key
-        stype = item_data.sprite_type.lower()
+        cat = item_data.category
 
-        if stype == "tool":
-            # Assuming tool keys in ItemData match your tool dict keys (e.g. "WOOD_HOE")
+        if cat == ItemCategory.TOOL:
             return cls.get_tool_image(key)
             
-        elif stype == "seed":
-            # Seeds might need specific bag IDs if you have variants
+        elif cat == ItemCategory.SEED:
             return cls.get_seed_image(key)
             
-        elif stype == "fruit" or stype == "crop":
-            # Crops usually default to the "Normal/Bronze" rank for generic icons
+        elif cat == ItemCategory.CROP or cat == ItemCategory.FRUIT:
+            # Crops default to the 'Bronze' rank visual for the generic item
             return cls.get_fruit_image(f"BRONZE_{key}")
-            
-        # Fallback
-        print(f"AssetLoader: No loader defined for sprite_type '{stype}'")
-        return cls.TILE_ASSETS["DIRT_IMAGE"] # Return error placeholder
+
+        # Fallback Error
+        print(f"AssetLoader: No image loader defined for category '{cat}'")
+        return cls.TILE_ASSETS["DIRT_IMAGE"]
 
     @classmethod
     def get_tool_image(cls, tool_name: str):

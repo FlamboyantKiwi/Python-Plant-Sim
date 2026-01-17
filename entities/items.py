@@ -1,8 +1,6 @@
-from abc import ABC, abstractmethod
-from core.helper import get_image, load_image
 from core.asset_loader import AssetLoader
 from Assets.asset_data import get_item_data, ItemData
-from copy import copy
+from core.types import ItemCategory
 
 Default_colour = (150, 150, 150)
 
@@ -27,7 +25,11 @@ class Item:
     def stack_size(self): return self.data.max_stack
     
     @property
-    def sell_value(self): return self.data.sell_value
+    def sell_value(self): return self.data.sell_price
+
+    @property
+    def stackable(self):
+        return self.data.stackable
 
     # --- INVENTORY LOGIC ---
     def add_to_stack(self, amount):
@@ -56,12 +58,6 @@ class Item:
 # We only subclass if there is custom BEHAVIOR (methods), not custom DATA.
 
 class ToolItem(Item):
-    TOOL_DISPATCH = {
-        "hoe":   "_use_hoe",
-        "water": "_use_water",
-        "axe":   "_use_axe",
-        "pick":  "_use_pickaxe"
-    }
     def use(self, player, target_tile, all_tiles):
         if not target_tile: return False
         
@@ -73,21 +69,21 @@ class ToolItem(Item):
             return False
         
         # Look up the handler name (e.g., "_use_hoe")
-        handler_name = self.TOOL_DISPATCH.get(t_type)
+        method_name = f"_use_{t_type.name.lower()}"
         
-        if handler_name:
-            # Dynamically get the method from 'self' and call it
-            handler_func = getattr(self, handler_name)
-            return handler_func(player, target_tile, all_tiles)
+        if hasattr(self, method_name):
+            # Get the method and call it
+            method = getattr(self, method_name)
+            return method(player, target_tile, all_tiles)
             
-        print(f"No handler defined for tool type: {t_type}")
+        print(f"ToolItem Error: Method '{method_name}' not implemented for {self.name}.")
         return False
 
     def _use_hoe(self, tile):
         print(f"Hoeing {tile}...")
         return True
 
-    def _use_water(self, tile):
+    def _use_watering_can(self, tile):
         print(f"Watering {tile}...")
         return True
 
@@ -118,15 +114,16 @@ class FoodItem(Item):
 # --- THE FACTORY ---
 
 CLASS_MAPPING = {
-    "tool": ToolItem,
-    "seed": SeedItem,
-    "crop": FoodItem,
-    "food": FoodItem, # Allow alias
-    "misc": Item}      # Default
+    ItemCategory.TOOL:  ToolItem,
+    ItemCategory.SEED:  SeedItem,
+    ItemCategory.CROP:  FoodItem,
+    ItemCategory.FRUIT: FoodItem,
+    ItemCategory.MISC:  Item    } # Default Item
+
 
 class ItemFactory:
     @staticmethod
-    def create(item_id: str, count: int = 1):
+    def create(item_id: str, count: int = 1)-> Item:
         """ Creates the correct class instance based on the ItemData category.
         Input: "tomato_seeds"
         Output: SeedItem Instance with correct image and stats."""

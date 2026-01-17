@@ -1,100 +1,54 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import NamedTuple
-# ============ Data Structures ============ #
+from core.types import (ItemData, ItemCategory, SpriteRect, RectPair, ToolType,
+    ScaleRect, EntityConfig, EntityState, AnimationGrid, UP, DOWN, LEFT, RIGHT)
 
-class EntityState(Enum):
-    WALK = "Walk"; IDLE = "Idle"; RUN = "Run"
+# ==========================================
+# GAMEPLAY BALANCE CONFIG
+# ==========================================
 
-class Direction(Enum):
-    DOWN = "Down"; RIGHT = "Right"; LEFT = "Left"; UP = "Up"
-DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
+# 1. CROP BALANCE
+# Keys match FRUIT_TYPES keys. 
+# Missing keys will use the 'DEFAULT' values.
+CROP_BALANCE = {
+    "DEFAULT":       {"seed_price": 10, "crop_price": 20, "grow_time": 3, "energy": 10},
+    "Tomato":        {"seed_price": 15, "crop_price": 35, "grow_time": 4, "energy": 15},
+    "Cauliflower":   {"seed_price": 40, "crop_price": 90, "grow_time": 8, "energy": 30},
+    "Melon":         {"seed_price": 50, "crop_price": 120, "grow_time": 10, "energy": 50},
+    "Pineapple":     {"seed_price": 100, "crop_price": 300, "grow_time": 14, "energy": 80},
+    "Wheat":         {"seed_price": 5,  "crop_price": 10, "grow_time": 2, "energy": 5},
+}
 
-@dataclass(frozen=True)
-class SpriteRect:
-    """Defines a basic region on a sprite sheet."""
-    x: int; y: int; w: int; h: int
+# 2. TOOL BALANCE
+# Base costs for specific tool types
+BASE_TOOL_COST = {
+    "HOE": 50, "WATERING_CAN": 50, "AXE": 100, "PICKAXE": 100, 
+    "SWORD": 200, "FISHING_ROD": 150, "SCYTHE": 80, "DEFAULT": 100
+}
 
-@dataclass(frozen=True)
-class ScaleRect(SpriteRect):
-    """Defines a region containing multiple tiles of a specific size."""
-    tile_w: int
-    tile_h: int
+# Multipliers for materials
+MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
 
-@dataclass(frozen=True)
-class RectPair:
-    """ Used for Fruits.
-    a: The Fruit Strip (3 frames: Gold, Silver, Bronze)
-    b: The Container (Crate/Basket) """
-    a: SpriteRect 
-    b: SpriteRect
-
-
-@dataclass
-class AnimationGrid(dict):
-    """ A dictionary-like object that auto-slices a SpriteRect into directions.
-        It behaves exactly like dict[Direction, SpriteRect]."""
-    def __init__(self, rect: SpriteRect, directions: list[Direction]|None = None, is_vertical: bool = True):
-        super().__init__() # Initialize the underlying dict
-        if directions is None:
-            for d in Direction:
-                self[d] = rect
-            return
-        count = len(directions)
-        
-        if count == 0: # Empty List: Default to DOWN
-            self[Direction.DOWN] = rect
-            return
-        
-        # 1. Calculate slice dimensions
-        step_h = rect.h // count if is_vertical else rect.h
-        step_w = rect.w // count if not is_vertical else rect.w
-        
-        # 2. Slice and populate self
-        for i, direction in enumerate(directions):
-            new_x = rect.x + (i * step_w if not is_vertical else 0)
-            new_y = rect.y + (i * step_h if is_vertical else 0)
-            
-            # This assigns the key/value into the dictionary itself
-            self[direction] = SpriteRect(new_x, new_y, step_w, step_h)
-    @classmethod
-    def non_directional(cls, rect:SpriteRect, assign_to_all:bool = True):
-        """Creates an animation entry for non-directional actions (e.g., Death).
-        
-        assign_to_all: 
-            If True, maps the SAME rect to Down, Up, Left, Right.
-            (Useful if you want the same anim to play regardless of facing).
-            If False, maps only to Direction.DOWN. """
-        instance = cls(rect, [], True) # Empty init
-        
-        if assign_to_all:
-            # Map the same rectangle to all directions so lookups never fail
-            for d in Direction:
-                instance[d] = rect
-        else:
-            # Just map to Down (default)
-            instance[Direction.DOWN] = rect
-            
-        return instance
-
-class EntityConfig(NamedTuple):
-    """Blueprint for registering a new entity type."""
-    folder: str         # Folder name (e.g. "Player")
-    sheets: list[str]   # List of filenames (e.g. ["Fox", "Cat"])
-    animations: dict[EntityState, AnimationGrid]
-    def get_animation(self, state:EntityState) -> dict[Direction, SpriteRect]:
-        return self.animations.get(state, {})
-
-# ============ Tiles ============ #
-# Constants defining the tool grid structure
-TOOL_TYPES = [
-    "MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", 
-    "BOW", "ARROW", "AXE", "PICKAXE", "SHOVEL", "HOE", 
-    "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"]
+FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
 MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
 
-# ============ Tiles ============ #
+# ============ Data Structures ============ #
 
+def get_item_data(item_id: str) -> ItemData:
+    """Safe way to get item data. Returns a placeholder if missing."""
+    if item_id in ITEMS:
+        return ITEMS[item_id]
+    
+    # Fallback/Error Item
+    print(f"WARNING: Item ID '{item_id}' not found in database.")
+    return ItemData(name="Unknown",  description="misc", category=ItemCategory.MISC,  image_key="None", buy_price=0)
+
+# ============ Tools ============ #
+TOOL_SPRITE_LAYOUT = ["MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", "BOW", "ARROW", "AXE", 
+    "PICKAXE", "SHOVEL", "HOE", "HAMMER", "SCYTHE", "FISHING_ROD", "WATERING_CAN"]
+
+# ============ Tiles ============ #
 GROUND_TILE_REGIONS = {
     "GRASS_A": SpriteRect(0, 176, 160, 48),
     "GRASS_B": SpriteRect(0, 224, 160, 48),
@@ -130,7 +84,6 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
 }
 
 # ============ Fruit ============ #
-
 FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
     "Banana":           RectPair(SpriteRect(0,   176, 48, 16),  SpriteRect(96,  8,   32, 38)),
     "Cauliflower":      RectPair(SpriteRect(0,   192, 48, 16),  SpriteRect(128, 8,   32, 38)),
@@ -152,8 +105,8 @@ FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, norma
     "Melon":            RectPair(SpriteRect(60,  160, 48, 32),  SpriteRect(64,  0,   32, 48)),
 }
 SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
-FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
 
+# ============ Entities (Player, Animals) ============ #
 GAME_ENTITIES = {
     "PLAYER": EntityConfig(
     folder="Player",
@@ -174,187 +127,105 @@ GAME_ENTITIES = {
     )
 }
 
-
-@dataclass(frozen=True)
-class ItemData:
-    """
-    The Master Schema for any item in the game.
-    """
-    name: str
-    price: int
-    category: str  # "seed", "tool", "crop", "misc"
-    description: str
-    
-    # Visual Linking
-    image_key: str  # Keys into FRUIT_TYPES or TOOL_TYPES
-    sprite_type: str = "fruit" # "fruit", "tool", "seed", "single"
-    
-    # Inventory Flags
-    stackable: bool = True
-    max_stack: int = 99
-    
-    # Gameplay Stats (Optional, defaults to 0 or None)
-    energy_gain: int = 0         # For eating
-    grow_time: int = 0           # For seeds (days)
-    sell_value: int = 0          # If 0, generic calculation used (e.g. half price)
-    tool_type: str|None = None # "hoe", "water", etc.
-
-# ==========================================
-# [PART 3] THE DATABASE (ITEMS)
-# ==========================================
-
-ITEMS = {
-    # --- SEEDS ---
-    "tomato_seeds": ItemData(
-        name="Tomato Seeds",
-        price=10,
-        category="seed",
-        description="Plant these in tilled soil. Grows in 4 days.",
-        image_key="Tomato",   # We will match this to your specific seed assets later
-        sprite_type="seed",
-        grow_time=4
-    ),
-    
-    "melon_seeds": ItemData(
-        name="Melon Seeds",
-        price=40,
-        category="seed",
-        description="A summer favorite. Grows big!",
-        image_key="Melon",
-        sprite_type="seed",
-        grow_time=8
-    ),
-
-    # --- CROPS (Produce) ---
-    # Linking to your FRUIT_TYPES keys
-    "tomato": ItemData(
-        name="Tomato",
-        price=25, # Sell value
-        category="crop",
-        description="A bright red, juicy fruit... or vegetable?",
-        image_key="Tomato", # Matches FRUIT_TYPES["Tomato"] (You need to add Tomato to your FRUIT_TYPES)
-        sprite_type="fruit",
-        energy_gain=15
-    ),
-    
-    "banana": ItemData(
-        name="Banana",
-        price=50,
-        category="crop",
-        description="High in potassium.",
-        image_key="Banana", # Matches FRUIT_TYPES["Banana"]
-        sprite_type="fruit",
-        energy_gain=25
-    ),
-
-    # --- TOOLS ---
-    "rusty_hoe": ItemData(
-        name="Rusty Hoe",
-        price=0, # Cannot be bought usually
-        category="tool",
-        description="Used to till the ground.",
-        image_key="HOE", 
-        sprite_type="tool",
-        stackable=False,
-        tool_type="hoe"
-    ),
-
-    "watering_can": ItemData(
-        name="Watering Can",
-        price=0,
-        category="tool",
-        description="Plants need water to grow.",
-        image_key="WATERING_CAN",
-        sprite_type="tool",
-        stackable=False,
-        tool_type="water"
-    )
-}
-
-
-# 1. Define Defaults / Helper Maps
-# Maps UPPERCASE tool names to the lowercase "tool_type" your ToolItem class needs
-TOOL_BEHAVIOR_MAP = {
-    "HOE": "hoe",
-    "WATERING_CAN": "water",
-    "AXE": "axe",
-    "PICKAXE": "pick",
-    "FISHING_ROD": "rod",
-    # Others default to generic tools
-}
-
-# 2. Initialize the Dictionary
+# ============ Items ============ #
 ITEMS = {}
 
 # --- GENERATE SEEDS & CROPS AUTOMATICALLY ---
-# We loop through every fruit defined in FRUIT_TYPES
 for fruit_name in FRUIT_TYPES.keys():
     
     # Clean up name (e.g. "Green Bean" -> "green_bean")
     safe_id = fruit_name.lower().replace(" ", "_")
-    
-    # A. Add the Seed
+    stats = CROP_BALANCE.get(fruit_name, CROP_BALANCE["DEFAULT"])
+
+    # Add the Seed
     ITEMS[f"{safe_id}_seeds"] = ItemData(
         name=f"{fruit_name} Seeds",
-        price=10,  # Default price, you can override later
-        category="seed",
-        description=f"Seeds for {fruit_name}.",
-        image_key=fruit_name, # Passed to get_seed_image("Banana")
-        sprite_type="seed",
-        grow_time=4           # Default grow time
+        description=f"Plant these to grow {fruit_name}. Takes {stats['grow_time']} days.",
+        category=ItemCategory.SEED,
+        image_key=fruit_name,
+
+        buy_price=stats["seed_price"],
+        grow_time=stats["grow_time"]
     )
 
-    # B. Add the Crop/Fruit
+    # Add the Crop/Fruit
     ITEMS[safe_id] = ItemData(
         name=fruit_name,
-        price=50,
-        category="crop", # or "fruit"
-        description=f"Fresh {fruit_name}.",
-        image_key=fruit_name, # Passed to get_fruit_image("BRONZE_Banana")
-        sprite_type="fruit",
-        energy_gain=15
+        buy_price=stats["crop_price"],
+        category=ItemCategory.CROP,
+        description=f"Fresh {fruit_name}. Restores {stats['energy']} energy.",
+        image_key=fruit_name,
+        energy_gain=stats["energy"]
     )
 
 # --- GENERATE TOOLS AUTOMATICALLY ---
-# Loop through Materials (Wood, Copper...) and Types (Hoe, Axe...)
-for mat in MATERIAL_LEVELS:
-    for tool_type in TOOL_TYPES:
-        
-        # skip MATERIAL type (it's likely an icon, not a tool)
-        if tool_type == "MATERIAL": continue
-            
-        # Create IDs: "wood_hoe", "gold_sword"
-        tool_id = f"{mat.lower()}_{tool_type.lower()}"
-        
-        # Create Display Name: "Wood Hoe"
-        display_name = f"{mat.title()} {tool_type.replace('_', ' ').title()}"
-        
-        # Create Image Key: "WOOD_HOE" (Matches AssetLoader expectation)
-        img_key = f"{mat}_{tool_type}"
-        
-        # Determine behavior (hoe, water, etc)
-        behavior = TOOL_BEHAVIOR_MAP.get(tool_type, "generic")
 
-        ITEMS[tool_id] = ItemData(
-            name=display_name,
-            price=0 if mat == "WOOD" else 500, # Basic logic: Wood is free/starter
-            category="tool",
-            description=f"A {mat.lower()} quality tool.",
-            image_key=img_key,
-            sprite_type="tool",
-            tool_type=behavior,
-            stackable=False
-        )
-
-# ==========================================
-# [PART 4] HELPER FUNCTIONS
-# ==========================================
-
-def get_item_data(item_id: str) -> ItemData:
-    """Safe way to get item data. Returns a placeholder if missing."""
-    if item_id in ITEMS:
-        return ITEMS[item_id]
+def _register_material_item(mat: str, sprite_key: str):
+    """Creates raw resources like 'Wood', 'Iron'."""
+    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
     
-    # Fallback/Error Item
-    print(f"WARNING: Item ID '{item_id}' not found in database.")
-    return ItemData("Unknown", 0, "misc", "Error item", "None")
+    # Logic: Materials are named simply "Wood", not "Wood Material"
+    item_id = mat.lower()
+    
+    ITEMS[item_id] = ItemData(
+        name=mat.title(),
+        # Raw materials are cheap but scale up
+        buy_price=10 * multiplier, 
+        category=ItemCategory.MISC,
+        description=f"A raw piece of {mat.lower()}.",
+        image_key=f"{mat}_{sprite_key}",
+        stackable=True
+    )
+
+def _register_ammo_item(mat: str, sprite_key: str):
+    """Creates ammo like 'Wood Arrow', 'Gold Arrow'."""
+    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
+    
+    item_id = f"{mat.lower()}_{sprite_key.lower()}"
+    
+    ITEMS[item_id] = ItemData(
+        name=f"{mat.title()} Arrow",
+        # Ammo is cheaper than tools
+        buy_price=5 * multiplier,
+        category=ItemCategory.MISC, # or ItemCategory.TOOL if you prefer
+        description=f"A {mat.lower()}-tipped arrow.",
+        image_key=f"{mat}_{sprite_key}",
+        stackable=True
+    )
+
+def _register_tool_item(mat: str, sprite_key: str):
+    """Creates weapons and tools like 'Wood Axe', 'Iron Sword'."""
+    multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)
+    base_cost = BASE_TOOL_COST.get(sprite_key, 100)
+    
+    price = int(base_cost * multiplier)
+    if mat == "WOOD": price = 0 # Starter tools are free?
+    
+    item_id = f"{mat.lower()}_{sprite_key.lower()}"
+    
+    # Dynamic behavior lookup
+    behavior = getattr(ToolType, sprite_key, ToolType.GENERIC)
+
+    ITEMS[item_id] = ItemData(
+        name=f"{mat.title()} {sprite_key.replace('_', ' ').title()}",
+        buy_price=price,
+        category=ItemCategory.TOOL,
+        description=f"A {mat.lower()} quality tool.",
+        image_key=f"{mat}_{sprite_key}",
+        tool_type=behavior,
+        stackable=False
+    )
+
+for mat in MATERIAL_LEVELS:
+    for sprite_key in TOOL_SPRITE_LAYOUT:
+        
+        # Traffic Cop Logic: Dispatch to the correct builder
+        if sprite_key == "MATERIAL":
+            _register_material_item(mat, sprite_key)
+            
+        elif sprite_key == "ARROW":
+            _register_ammo_item(mat, sprite_key)
+            
+        else:
+            # Everything else (Axes, Hoes, Swords) is a Tool
+            _register_tool_item(mat, sprite_key)

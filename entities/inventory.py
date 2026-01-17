@@ -1,4 +1,4 @@
-from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU
+from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU, ShopData
 from core.helper import get_image, get_colour
 from .items import Item, ItemFactory
 from Assets.asset_data import ITEMS
@@ -48,11 +48,12 @@ class Inventory:
         large stacks into multiple slots automatically."""
         remaining = new_item.count
         #add to existing slots
-        for slot in self.items:
-            if slot.name == new_item.name:
-                remaining = slot.add_to_stack(remaining)
-                if remaining <=0:
-                    return True
+        if new_item.stackable:
+            for slot in self.items:
+                if slot.name == new_item.name and slot.stackable:
+                    remaining = slot.add_to_stack(remaining)
+                    if remaining <=0:
+                        return True
         #create new slot
         while remaining > 0:
             if self.is_full():
@@ -63,7 +64,11 @@ class Inventory:
             new_slot_item = copy.copy(new_item)
             
             # Determine how many fit in this new slot
-            count_to_add = min(remaining, new_slot_item.stack_size)
+            if not new_item.stackable:
+                # If not stackable, we can ONLY put 1 in this slot
+                count_to_add = 1
+            else:
+                count_to_add = min(remaining, new_slot_item.stack_size)
             
             new_slot_item.count = count_to_add
             self.items.append(new_slot_item)
@@ -90,14 +95,22 @@ class Inventory:
             print(f"Couldn't find {item_name} in inventory")
         elif remaining > 0:
             print(f"Still have {remaining} {item_name} to remove!")
+    def valid_slot(self, slot_id):
+        """Checks if the slot_id is a valid index for the current items list."""
+        if slot_id == -1: return False
+        return 0 <= slot_id < len(self.items)
 
     def draw(self, screen):
-        #draw active item name (centered)
-        name_text = HUD_FONT.render(self.get_active_item_name(), True, self.active_text)
-        name_rect = name_text.get_rect(
-            centerx=self.rect.centerx,
-            bottom=self.rect.top - 5
-        )
+        # Determin Display Name
+        display_name = ""
+
+        if self.valid_slot(self.hover_slot):
+            display_name = self.items[self.hover_slot].name
+        else:
+            display_name = self.get_active_item_name()        
+
+        name_text = HUD_FONT.render(display_name, True, self.active_text)
+        name_rect = name_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.top - 5)
         screen.blit(name_text, name_rect)
 
         # draw slots
@@ -189,9 +202,8 @@ class Inventory:
         else:
             return ""
         
-
 class ShopMenu(Inventory):
-    def __init__(self, player, data=None, columns=4, max_size=16):
+    def __init__(self, player, data:ShopData, columns=4, max_size=16):
         super().__init__(max_size, columns, rect=SHOP_MENU, slot_size=70, padding=20)
         
         # Shop specific properties
@@ -199,7 +211,7 @@ class ShopMenu(Inventory):
         self.shop_data = data
         self.is_open = False
 
-        self.items = []
+        self.items:list[Item]= []
         self.active_slot = -1
 
         self.image = get_image("SHOP_MENU", (SHOP_MENU.width, SHOP_MENU.height), fallback_type="MENU")
@@ -210,19 +222,18 @@ class ShopMenu(Inventory):
         self.items = [] 
 
         # Check if shop_data exists
-        if not self.shop_data or "items" not in self.shop_data:
+        if not self.shop_data:
             return
 
-        # Iterate through the list of IDs (e.g., "tomato_seeds")
-        for item_id in self.shop_data["items"]:
-            # Check if valid ID
-            if item_id not in ITEMS:
-                print(f"Shop Warning: Item ID '{item_id}' not found in database.")
-                continue
-            #Create item via item factory
-            new_item = ItemFactory.create(item_id, count=1)
+        # Iterate through the list of item ids
+        for item_id in self.shop_data.items_ids:
             
-            # Add to shop list
+            if item_id not in ITEMS:
+                print(f"Shop Warning: Item ID '{item_id}' not found.")
+                continue
+
+            # Create the item
+            new_item = ItemFactory.create(item_id, count=1)
             self.items.append(new_item)
             
     def toggle_open(self, hud_ref=None, is_open=None):
@@ -239,7 +250,7 @@ class ShopMenu(Inventory):
 
         title = "Shop"
         if self.shop_data:
-            title = self.shop_data.get("type", "Shop").replace("_", " ").title()
+            title = self.shop_data.store_name
         draw_text(screen, title, HUD_FONT, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
         
         #draw Slots
@@ -264,12 +275,12 @@ class ShopMenu(Inventory):
             price_bg_rect = pygame.Rect(price_x - 15, price_y - 8, 30, 16)
             pygame.draw.rect(screen, (0,0,0), price_bg_rect, border_radius=4)
 
-            draw_text(screen, f"${item.data.price}", SLOT_FONT, price_x, price_y, (255, 215, 0))
+            draw_text(screen, f"${item.data.buy_price}", SLOT_FONT, price_x, price_y, (255, 215, 0))
 
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
         clicked_slot = self.get_slot_from_pos(pos) 
-        if clicked_slot != -1 and clicked_slot < len(self.items):
+        if self.valid_slot(clicked_slot):
             self.active_slot = clicked_slot
             item = self.items[clicked_slot]
             self.try_buy_item(item)
@@ -278,15 +289,10 @@ class ShopMenu(Inventory):
 
     def try_buy_item(self, item:Item):
         """Validates and executes the purchase logic"""
-        cost = item.data.price
+        cost = item.data.buy_price
         # Check Money
         if self.player.money < cost:
             print(f"Cannot afford {item.name}! (Cost: {cost}, Have: {self.player.money})")
-            return False
-
-        # Check Inventory Space
-        if self.player.inventory.is_full():
-            print("Inventory Full!")
             return False
 
         player_item = copy.copy(item)
