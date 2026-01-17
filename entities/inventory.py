@@ -1,10 +1,12 @@
-from settings import  HIGHLIGHT_THICKNESS, HUD_FONT, SLOT_FONT, SHOP_MENU, ShopData
-from core.helper import get_image, get_colour
-from .items import Item, ItemFactory
-from Assets.asset_data import ITEMS
-from core.helper import draw_text
-from Assets.asset_data import ITEMS, get_item_data
 import pygame, copy
+
+from settings import  HIGHLIGHT_THICKNESS, SHOP_MENU
+from entities.items import Item, ItemFactory
+from core.helper import get_image, get_colour, draw_text
+from core.types import ShopData, FontType
+from Assets.asset_data import ITEMS
+from core.asset_loader import AssetLoader
+
 
 class Inventory:
     def __init__(self, max_size = 4, columns = 1, rect = None, slot_size = 40, padding = 5):
@@ -14,7 +16,6 @@ class Inventory:
 
         #Inventory Visuals
         self.slot_size = slot_size
-        self.item_size = self.slot_size - 4
         self.padding = padding
         self.bg_image = get_image("slot_bg", (self.slot_size, self.slot_size), "INVENTORY_SLOT")
 
@@ -89,12 +90,20 @@ class Inventory:
                     del self.items[i] # safely remove empty slot
 
                 if remaining <= 0:
-                    print(f"Successfully removed {amount} {item_name}(s).")
                     return True # Success!
         if remaining == amount:
             print(f"Couldn't find {item_name} in inventory")
         elif remaining > 0:
             print(f"Still have {remaining} {item_name} to remove!")
+    def remove_if_empty(self, item_obj):
+        """ Removes a specific Item Object if its count is 0."""
+        if item_obj.count > 0:
+            return False
+        if item_obj in self.items:
+            self.items.remove(item_obj)
+            print(f"Removed empty stack of {item_obj.name}")
+            return True
+        
     def valid_slot(self, slot_id):
         """Checks if the slot_id is a valid index for the current items list."""
         if slot_id == -1: return False
@@ -102,14 +111,15 @@ class Inventory:
 
     def draw(self, screen):
         # Determin Display Name
-        display_name = ""
-
         if self.valid_slot(self.hover_slot):
             display_name = self.items[self.hover_slot].name
         else:
             display_name = self.get_active_item_name()        
 
-        name_text = HUD_FONT.render(display_name, True, self.active_text)
+        hud_font = AssetLoader.get_font(FontType.HUD)
+        slot_font = AssetLoader.get_font(FontType.SLOT)
+
+        name_text = hud_font.render(display_name, True, self.active_text)
         name_rect = name_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.top - 5)
         screen.blit(name_text, name_rect)
 
@@ -141,7 +151,7 @@ class Inventory:
                 
                 # Draw stack count
                 if item.stack_size > 1: 
-                    count_text = SLOT_FONT.render(str(item.count), True, (255, 255, 255))
+                    count_text = slot_font.render(str(item.count), True, (255, 255, 255))
                     text_rect = count_text.get_rect(bottomright=(slot_rect.right - 2, slot_rect.bottom - 2))
                     screen.blit(count_text, text_rect)
     def update(self, pos):
@@ -251,11 +261,13 @@ class ShopMenu(Inventory):
         title = "Shop"
         if self.shop_data:
             title = self.shop_data.store_name
-        draw_text(screen, title, HUD_FONT, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
+        hud_font = AssetLoader.get_font(FontType.HUD)
+        draw_text(screen, title, hud_font, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
         
         #draw Slots
         super().draw(screen)
         #Drow prices
+        slot_font = AssetLoader.get_font(FontType.SLOT)
         for i, item in enumerate(self.items):
             if i >= len(self.items): break 
             
@@ -275,7 +287,7 @@ class ShopMenu(Inventory):
             price_bg_rect = pygame.Rect(price_x - 15, price_y - 8, 30, 16)
             pygame.draw.rect(screen, (0,0,0), price_bg_rect, border_radius=4)
 
-            draw_text(screen, f"${item.data.buy_price}", SLOT_FONT, price_x, price_y, (255, 215, 0))
+            draw_text(screen, f"${item.data.buy_price}", slot_font, price_x, price_y, (255, 215, 0))
 
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""

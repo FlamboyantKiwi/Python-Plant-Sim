@@ -6,30 +6,23 @@ Default_colour = (150, 150, 150)
 
 class Item:
     def __init__(self, item_id: str, count: int = 1):
-        # 1. Load the Static Data (The Definition)
         self.data: ItemData = get_item_data(item_id)
-        
-        # 2. Set Variable State (The Inventory Instance)
-        # Cap count at stack size immediately
         self.count = min(count, self.data.max_stack)
-        
-        # 3. Auto-Load Image based on Data
         self.image = AssetLoader.get_item_image(self.data)
 
     # --- PROPERTIES (Proxies to the Data) ---
-    # This allows you to do item.name instead of item.data.name
+    # This allows us to do item.name instead of item.data.name
     @property
-    def name(self): return self.data.name
+    def name(self):         return self.data.name
     
     @property
-    def stack_size(self): return self.data.max_stack
+    def stack_size(self):   return self.data.max_stack
     
     @property
-    def sell_value(self): return self.data.sell_price
+    def sell_value(self):   return self.data.sell_price
 
     @property
-    def stackable(self):
-        return self.data.stackable
+    def stackable(self):    return self.data.stackable
 
     # --- INVENTORY LOGIC ---
     def add_to_stack(self, amount):
@@ -79,15 +72,15 @@ class ToolItem(Item):
         print(f"ToolItem Error: Method '{method_name}' not implemented for {self.name}.")
         return False
 
-    def _use_hoe(self, tile):
+    def _use_hoe(self, player, tile, all_tiles):
         print(f"Hoeing {tile}...")
         return True
 
-    def _use_watering_can(self, tile):
+    def _use_watering_can(self, player, tile, all_tiles):
         print(f"Watering {tile}...")
         return True
 
-    def _use_axe(self, tile):
+    def _use_axe(self, player, tile, all_tiles):
         print("Chop chop")
         return True
     
@@ -97,6 +90,7 @@ class ToolItem(Item):
 
 class SeedItem(Item):
     def use(self, player, target_tile, all_tiles):
+        if self.count <= 0: return False
         if not target_tile: return False
         
         print(f"Planting {self.name} which takes {self.data.grow_time} days.")
@@ -106,6 +100,7 @@ class SeedItem(Item):
 
 class FoodItem(Item):
     def use(self, player, target_tile, all_tiles):
+        if self.count <= 0: return False
         print(f"Yum! Ate {self.name} for {self.data.energy_gain} energy.")
         # use for energy or sell?
         self.count -= 1

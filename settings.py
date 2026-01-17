@@ -1,8 +1,6 @@
 # settings.py
 import pygame
-pygame.init()
-pygame.font.init()
-from core.types import ShopData
+
 # Screen & Grid Configuration
 BLOCK_SIZE = 64
 TILES_X = 16
@@ -50,6 +48,13 @@ INV_PADDING = 5
 SLOT_SIZE = 50
 HIGHLIGHT_THICKNESS = 2
 
+# UI / Fonts
+HUD_FONT_SIZE = 20
+HUD_FONT_BOLD = True
+
+SLOT_FONT_SIZE = 14
+SLOT_FONT_BOLD = False
+
 # Shop UI
 SHOP_MENU_WIDTH = 400
 SHOP_MENU_HEIGHT = 450
@@ -60,35 +65,9 @@ SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
 #Shop Button Position
 SHOP_BUTTON = pygame.Rect(BLOCK_SIZE//2, BLOCK_SIZE//2, BLOCK_SIZE, BLOCK_SIZE) 
 
-#Pygame Objects (Fonts)
-try:
-    pygame.font.init()
-    HUD_FONT = pygame.font.Font(None, 36)
-    SLOT_FONT = pygame.font.Font(None, 24)
-except pygame.error:
-    print("Warning: Fonts not initialized in settings (pygame not ready).")
-    HUD_FONT = None
-    SLOT_FONT = None
-
 PLAYER_START_INVENTORY = [
     ("wood_hoe", 1),
     ("wood_watering_can", 1),
     ("red_pepper_seeds", 5),
     ("apple", 3)
 ]
-
-
-SHOPS = {
-    "general_store": ShopData(
-        store_name="General Store",
-        items_ids=[
-            "tomato_seeds",
-            "melon_seeds",
-            "red_pepper_seeds", # Now available because of your generator!
-            "wood_axe", 
-            "wood_sword",
-            "apple"
-        ]
-    ),
-
-}

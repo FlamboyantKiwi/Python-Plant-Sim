@@ -3,8 +3,7 @@ from settings import WIDTH, HEIGHT, FPS
 
 # Import your new Managers
 from core.asset_loader import AssetLoader
-from core.states import MenuState
-from core.state_manager import StateManager
+from core.states import GameState, MenuState
 
 
 class Game:
@@ -19,16 +18,49 @@ class Game:
 
         # 2. Load Assets + States
         AssetLoader()
-        self.state_manager = StateManager(self)
+        self.stack:list[GameState] = []
         #start with playing - will change later to main menu
-        self.state_manager.push(MenuState(self))
-        
+        self.push(MenuState(self))
+
+
+    def push(self, state):
+        """Add a state to the top (e.g., open shop)"""
+        if self.stack:
+            self.stack[-1].exit_state()
+        self.stack.append(state)
+        state.enter_state()
+
+    def pop(self):
+        """Remove the top state (e.g., close shop)"""
+        if self.stack:
+            top = self.stack.pop()
+            top.exit_state()
+        if self.stack:
+            self.stack[-1].enter_state()
+
+    def change(self, state):
+        """Hard switch (e.g., Menu -> Playing)"""
+        if self.stack:
+            self.stack.pop().exit_state()
+        self.stack.append(state)
+        state.enter_state()
+
+    def peek(self):
+        """Returns the current active state"""
+        return self.stack[-1] if self.stack else None
+
+    def draw_previous(self):
+        """Draws the state underneath the current one (for transparent menus)"""
+        if len(self.stack) > 1:
+            # We draw to self.screen directly
+            self.stack[-2].draw(self.screen)
+
     def run(self):
         while self.running:
             self.tick += 1
-            current_state = self.state_manager.current()
+            current_state = self.peek()
             if not current_state: 
-                continue
+                break
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False

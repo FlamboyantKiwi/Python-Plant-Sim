@@ -6,14 +6,13 @@ from entities.inventory import ShopMenu
 from ui.hud import HUD
 from ui.button import Button
 from world.level import Level
-from settings import WIDTH, HEIGHT, SHOPS, ShopData
+from settings import WIDTH, HEIGHT
+from Assets.asset_data import SHOPS, ShopData
 from core.helper import get_colour, draw_text
 import pygame
 
-if TYPE_CHECKING:   from core.game import Game
-
 class GameState(ABC):
-    def __init__(self, game:"Game"):
+    def __init__(self, game):
         self.game = game
 
     @abstractmethod
@@ -29,7 +28,7 @@ class GameState(ABC):
     def exit_state(self): pass
 
 class ShopState(GameState):
-    def __init__(self, game:"Game", player: Player, shop_data: ShopData):
+    def __init__(self, game, player: Player, shop_data: ShopData):
         super().__init__(game)
         self.player = player
        
@@ -51,7 +50,7 @@ class ShopState(GameState):
 
     def draw(self, screen):
         # 1. Draw the game behind the menu (Transparent look)
-        self.game.state_manager.draw_previous(screen)
+        self.game.draw_previous()
         
         # 2. Blit the pre-calculated overlay (Dim the background)
         screen.blit(self.overlay, (0, 0))
@@ -72,10 +71,10 @@ class ShopState(GameState):
                 self.close_menu()
 
     def close_menu(self):
-        self.game.state_manager.pop()
+        self.game.pop()
 
 class PlayingState(GameState):
-    def __init__(self, game: "Game"):
+    def __init__(self, game):
         super().__init__(game)
         self.all_tiles = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()
@@ -92,9 +91,14 @@ class PlayingState(GameState):
         )
 
     def update(self):
-        # Update the actual game world
+        # Calculate Delta Time (dt) in seconds
+        dt = self.game.clock.get_time() / 1000 
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Update world objects
         self.level.update()
-        self.player.update(self.level.all_tiles, self.game.tick)
+        self.player.update(dt, self.level.all_tiles)
+        self.hud.update(mouse_pos)
 
     def draw(self, screen):
         # Draw the game world
@@ -123,20 +127,11 @@ class PlayingState(GameState):
                 elif action:
                     return
 
-        self.handle_player_input(event)
-
-    def handle_player_input(self, event):
-        """Clean separation for player controls"""
-        if event.type == pygame.KEYDOWN:
-            self.player.key_down(event.key, self.level.all_tiles)
-        elif event.type == pygame.KEYUP:
-            self.player.key_up(event.key)
+        self.player.handle_event(event, self.level.all_tiles)
 
     def open_shop(self, shop_id="general_store"): 
-        """
-        Opens the shop state with data loaded from settings.
-        :param shop_id: The key matching a dictionary in settings.SHOPS
-        """
+        """ Opens the shop state with data loaded from settings.
+        :param shop_id: The key matching a dictionary in settings.SHOPS"""
         # 1. Get the data from settings
         shop_data = SHOPS.get(shop_id)
         
@@ -146,9 +141,10 @@ class PlayingState(GameState):
 
         # 2. Push the Shop State, passing the specific data
         print(f"Opening Shop: {shop_data.store_name}")
-        self.game.state_manager.push(ShopState(self.game, self.player, shop_data))
+        self.game.push(ShopState(self.game, self.player, shop_data))
+
 class MenuState(GameState):
-    def __init__(self, game: "Game"):
+    def __init__(self, game):
         super().__init__(game)
         self.title_font = pygame.font.SysFont("arial", 80, bold=True)
         self.menu_actions = {
@@ -186,25 +182,21 @@ class MenuState(GameState):
 
     def draw(self, screen):
         screen.fill(get_colour("MenuBG"))
-        draw_text(screen, 
-                  "Python Plant Sim", 
-                  self.title_font, 
-                  WIDTH//2, 
-                  HEIGHT//4, 
-                  get_colour("MenuTitle"))
+        draw_text(screen, "Python Plant Sim", self.title_font, 
+            WIDTH//2, HEIGHT//4, get_colour("MenuTitle"))
         for btn in self.buttons:
             btn.draw(screen)
 
     def start_new_game(self):
         print("Starting New Game...")
         # Push the playing state to the stack
-        self.game.state_manager.change(PlayingState(self.game))
+        self.game.change(PlayingState(self.game))
     def continue_game(self):
         print("Loading Save...")
         # Create state, load data, then switch
         playing_state = PlayingState(self.game)
         # playing_state.load_save() # implementation depends on your save system
-        self.game.state_manager.change(playing_state)
+        self.game.change(playing_state)
     def open_credits(self):
         print("Opening Credits...")
         # self.game.state_manager.push(CreditsState(self.game))

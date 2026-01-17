@@ -4,7 +4,8 @@ from settings import WIDTH, HEIGHT, ANIMATION_SPEED, PLAYER_START_INVENTORY
 # 1. Core Imports
 from core.helper import calc_pos_rect, get_grid_pos, get_direction, get_colour
 from core.asset_loader import AssetLoader
-
+from core.types import EntityState, Direction
+from core.animation import AnimationController
 # 2. Entity Imports
 from entities.inventory import Inventory
 from entities.items import ItemFactory
@@ -26,11 +27,15 @@ class Player(pygame.sprite.Sprite):
         pygame.K_UP: (0, -1),
         pygame.K_s: (0, 1),     # Down
         pygame.K_DOWN: (0, 1)}
+    FACING_MAP = {
+        (-1, 0): Direction.LEFT,
+        (1, 0):  Direction.RIGHT,
+        (0, -1): Direction.UP,
+        (0, 1):  Direction.DOWN}
     SLOT_KEY_MAP = {
         pygame.K_1: 0, pygame.K_2: 1, pygame.K_3: 2, pygame.K_4: 3,
-        pygame.K_5: 4, pygame.K_6: 5, pygame.K_7: 6, pygame.K_8: 7,
-    }
-    interact_key = pygame.K_SPACE
+        pygame.K_5: 4, pygame.K_6: 5, pygame.K_7: 6, pygame.K_8: 7}
+    INTERACT_KEY = pygame.K_SPACE
     RUN_KEY = pygame.K_LSHIFT
 
     #Inventory Variables
@@ -40,179 +45,167 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x:int|float, y:int|float, type="Fox"):
         super().__init__()
         self.player_type = type
-        self.image = AssetLoader.get_animated_sprite("PLAYER", self.player_type, "Idle", "Down", 0)
-        if not self.image:
-            print("Error occured loading player image")
-            # Create fallback surface to prevent crash
-            self.image = pygame.Surface((32, 64))
-            self.image.fill(get_colour("PLAYER"))
+        self.state = EntityState.IDLE
+        self.facing = Direction.DOWN # start looking down
+        self.image = pygame.Surface((32, 64))
+        self.rect = self.image.get_rect(topleft=(x, y))
 
-        self.rect = self.image.get_rect(x=x, y=y) 
-        self.direction = "Down" # start looking down
-        self.base_speed = 5.0
-        self.speed = self.base_speed
-        self.run_multiplier = 1.5
-        self.state = "Idle"
-        self.dx = 0
-        self.dy = 0      
+        # Create Hitboc
+        self.hitbox = pygame.Rect(0, 0, 20, 10)
+        self.hitbox.midbottom = self.rect.midbottom
+
+        #Movement
+        self.pos = pygame.math.Vector2(self.hitbox.center)
+        self.direction = pygame.math.Vector2()
+        self.animator = AnimationController("PLAYER", type)
+
+        self.base_speed = 200 # pixels per second
+        self.current_speed = 0
+        self.run_multiplier = 1.5  
         
-        #Inventory + Resource Variables
+        #Inventory + Stats
         self.money = 500
+        self.setup_inventory()
+
+    def setup_inventory(self):
+        """Calculates and initializes the UI rect for the inventory."""
         required_width = self.INV_SIZE * (self.SLOT_SIZE + self.INV_PADDING) + self.INV_PADDING
         required_height = self.SLOT_SIZE + self.INV_PADDING * 2
 
         inv_rect = calc_pos_rect(
-            desired_width=required_width,
-            desired_height=required_height,
-            screen_width=WIDTH,
-            screen_height=HEIGHT,
-            x_offset=0,
-            y_offset= ((HEIGHT - required_height) // 2) - 10
-        )
-        self.inventory = Inventory(max_size=self.INV_SIZE, 
-                                   columns=self.INV_SIZE, 
-                                   rect = inv_rect,
-                                   slot_size=self.SLOT_SIZE,
-                                   padding=self.INV_PADDING)
+            required_width, required_height, WIDTH, HEIGHT,
+            x_offset=0, y_offset= ((HEIGHT - required_height) // 2) - 10)
+        
+        self.inventory = Inventory(
+            max_size=self.INV_SIZE, 
+            columns=self.INV_SIZE, 
+            rect = inv_rect,
+            slot_size=self.SLOT_SIZE,
+            padding=self.INV_PADDING)
         
         for item_id, count in PLAYER_START_INVENTORY:
             self.inventory.add_item(ItemFactory.create(item_id, count))
-
-    def recalculate_movement_vectors(self):
-        """Adjusts self.dx and self.dy to match the current self.speed magnitude 
-        while preserving the direction (sign)."""
-        if self.dx != 0:
-            # Set dx to -speed or +speed
-            self.dx = (self.dx / abs(self.dx)) * self.speed
+    def handle_event(self, event, all_tiles):
+        """Handles discrete inputs (clicks). Call this from Game Loop."""
+        if event.type == pygame.KEYDOWN:
+            # Interact
+            if event.key == self.INTERACT_KEY:
+                self.interact(all_tiles)
             
-        if self.dy != 0:
-            # Set dy to -speed or +speed
-            self.dy = (self.dy / abs(self.dy)) * self.speed
+            # Inventory
+            if event.key in self.SLOT_KEY_MAP:
+                index = self.SLOT_KEY_MAP[event.key]
+                self.inventory.set_active_slot(index)
+    def input(self):
+        keys = pygame.key.get_pressed()
+        self.direction.x = 0
+        self.direction.y = 0
 
-    def key_down(self, key, all_tiles=None):
-        if key in self.direction_keys:
-            x, y = self.direction_keys[key]
-            # Set the directional sign (-1 or 1) without speed magnitude
-            if x != 0:      self.dx = x
-            if y != 0:      self.dy = y
-            # Apply the current speed magnitude to any non-zero vector
-            self.recalculate_movement_vectors()
-        if key == self.RUN_KEY:
-            # Only increase speed if currently at base speed 
-            if self.speed == self.base_speed: # Check against base speed to prevent repeated multiplication
-                self.speed *= self.run_multiplier
-            
-            # Apply the new speed magnitude to existing movement vectors
-            self.recalculate_movement_vectors()
+        # Movement
+        for key, (x,y) in self.direction_keys.items():
+            if keys[key]:
+                self.direction.x += x
+                self.direction.y += y
+                if (x,y) in self.FACING_MAP:
+                    self.facing = self.FACING_MAP[(x, y)]
 
-        # Interaction Key Logic
-        if key is self.interact_key:
-            self.interact(all_tiles)
-
-        # Inventory Selection Logic
-        if key in self.SLOT_KEY_MAP:
-            index = self.SLOT_KEY_MAP[key]
-            self.inventory.set_active_slot(index)
-    def key_up(self, key):
-        # Direction Logic
-        if key in self.direction_keys:
-            x, y = self.direction_keys[key]
-            if x != 0 and ((x < 0 and self.dx < 0) or (x > 0 and self.dx > 0)):
-                self.dx = 0
-            if y != 0 and ((y < 0 and self.dy < 0) or (y > 0 and self.dy > 0)):
-                self.dy = 0
-        # Sprint Logic
-        if key == self.RUN_KEY:
-            # Decrease speed magnitude
-            if self.speed != self.base_speed:
-                self.speed /= self.run_multiplier
-            
-            # Recalculate movement vectors if player is still moving
-            if self.dx != 0 or self.dy != 0:
-                self.recalculate_movement_vectors()
-
-    def collision_check(self, all_tiles):
-        # Get a list of all tiles the player is colliding with
-        collided_tiles = pygame.sprite.spritecollide(self, all_tiles, False) # type: ignore
-        for tile in collided_tiles:
-            if hasattr(tile, "obstructed") and tile.obstructed:
-                return True
-        return False
-    def update(self, all_tiles, tick):
-        anim_tick = tick // ANIMATION_SPEED
-        
-        if (self.dx != 0 or self.dy != 0):
-            # Calculate new facing direction (handles alternation tie-breaker)
-            new_direction = get_direction(self.dx, self.dy, anim_tick)
-            if new_direction: 
-                self.direction = new_direction
-            
-            # Determine state based on current speed (check for float tolerance)
-            if self.speed > self.base_speed + 0.001:
-                self.state = "Run"
-            else:
-                self.state = "Walk"
+        # Running Logic
+        if keys[self.RUN_KEY]:
+            self.current_speed = self.base_speed * self.run_multiplier
         else:
-            self.state = "Idle"
+            self.current_speed = self.base_speed
 
-        self.image = AssetLoader.get_animated_sprite(
-            category="PLAYER",
-            name=self.player_type,      # 'Fox', 'BlueBird', etc.
-            state=self.state,           # 'Walk', 'Idle', 'Run'
-            direction=self.direction,   # 'Up', 'Down', etc.
-            tick=anim_tick
-        )
-        
-        # Horizontal Collision Check
-        if self.dx != 0:
-            original_x = self.rect.x
-            self.rect.x += self.dx # type: ignore
-            # Get a list of all tiles the player is colliding with
-            if self.collision_check(all_tiles):
-                self.rect.x = original_x # undo movement
-                self.dx = 0 # Stop horizontal momentum
+        # Normalization (Fixes diagonal speed boost)
+        if self.direction.magnitude() > 0:
+            self.direction = self.direction.normalize()
+            self.state = EntityState.RUN if keys[self.RUN_KEY] else EntityState.WALK
+        else:
+            self.state = EntityState.IDLE
+
+    def move(self, dt, tiles):
+        """Applies movement to Hitbox, checks collision, then syncs Rect."""
+        if self.direction.magnitude() > 0:
+            # Horizontal
+            self.pos.x += self.direction.x * self.current_speed * dt
+            self.hitbox.centerx = round(self.pos.x)
+            self.check_collision("horizontal", tiles)
+
+            # Vertical
+            self.pos.y += self.direction.y * self.current_speed * dt
+            self.hitbox.centery = round(self.pos.y)
+            self.check_collision("vertical", tiles)
+
+            # Boundaries
+            if self.hitbox.left < 0: 
+                self.hitbox.left = 0
+                self.pos.x = self.hitbox.centerx
+            elif self.hitbox.right > WIDTH: 
+                self.hitbox.right = WIDTH
+                self.pos.x = self.hitbox.centerx
                 
-        # Vertical Collision Check
-        if self.dy != 0:
-            original_y = self.rect.y        
-            self.rect.y += self.dy # type: ignore
-            # Get a list of all tiles the player is colliding with
-            if self.collision_check(all_tiles):
-                self.rect.y = original_y # undo movement
-                self.dy = 0 # Stop vertical momentum
+            if self.hitbox.top < 0: 
+                self.hitbox.top = 0
+                self.pos.y = self.hitbox.centery
+            elif self.hitbox.bottom > HEIGHT: 
+                self.hitbox.bottom = HEIGHT
+                self.pos.y = self.hitbox.centery
 
-        # Horizontal boundaries
-        if self.rect.left < 0:
-            self.rect.left = 0
-            self.dx = 0 # Stop movement when hitting a boundary
-        elif self.rect.right > WIDTH:
-            self.rect.right = WIDTH
-            self.dx = 0
-            
-        # Vertical boundaries
-        if self.rect.top < 0: #-BLOCK_SIZE /2: # fit to blocksize
-            self.rect.top = 0 #-BLOCK_SIZE /2
-            self.dy = 0
-        elif self.rect.bottom > HEIGHT:
-            self.rect.bottom = HEIGHT
-            self.dy = 0
-    def interact(self, all_tiles):
-        x, y = get_grid_pos((self.rect.centerx, self.rect.bottom))
+        # 2. VISUAL SYNC (Always Run This!)
+        # This ensures the sprite is pinned to the feet even when standing still.
+        self.rect.centerx = self.hitbox.centerx
+        self.rect.midbottom = self.hitbox.midbottom
+        
+        
+
+    def check_collision(self, axis, tiles):
+        """ hitbox-based collision check. 2 phases: self.rect (fast) and self.hitbox (precise)"""
+        potential_hits = pygame.sprite.spritecollide(self, tiles, False) #type:ignore
+        for obj in potential_hits:
+            if isinstance(obj, Tile) and obj.obstructed:
+                if self.hitbox.colliderect(obj.rect):
+                    if axis == "horizontal":
+                        if self.direction.x > 0: # Moving Right
+                            self.hitbox.right = obj.rect.left
+                        elif self.direction.x < 0: # Moving Left
+                            self.hitbox.left = obj.rect.right
+                        self.pos.x = self.hitbox.centerx
+
+                    elif axis == "vertical":
+                        if self.direction.y > 0: # Moving Down
+                            self.hitbox.bottom = obj.rect.top
+                        elif self.direction.y < 0: # Moving Up
+                            self.hitbox.top = obj.rect.bottom
+                        self.pos.y = self.hitbox.centery
+
+    def update(self, dt, all_tiles):
+        """
+        Main update loop. 
+        Requires dt (delta time) for smooth vector movement.
+        """
+        self.input()
+        self.move(dt, all_tiles)
+
+        frame = self.animator.get_frame(self.state, self.facing, dt)
+        if frame: self.image = frame
+
+    def interact(self, all_tiles:list[Tile]):
+        """Interacts with the tile directly under the player's feet."""
         active_item = self.inventory.get_active_item()
-        if active_item is None:
+        if not active_item: 
             print("Inventory Slot Empty!")
             return
-        active_item.use(self, target_tile=None, all_tiles=all_tiles)
-        return
-        ### ** need to update interaction with tiles!!
-        temp_tile = tile.Tile(x, y, "GROUND")
-        colliding_tiles = pygame.sprite.spritecollide(temp_tile, all_tiles, False)
-        target_tile = colliding_tiles[0] if colliding_tiles else None
 
-        if target_tile is not None:
-            active_item.use(self, target_tile, all_tiles)
-            
-        temp_tile.kill() # remove temporary tile
-
+        # Target Point: Bottom center of the hitbox (The feet)
+        target_point = self.hitbox.midbottom
+        
+        # Simple loop to find what we are standing on/facing
+        # (You could offset this by self.facing to interact with the tile in FRONT of you)
+        for tile in all_tiles:
+            if tile.rect.collidepoint(target_point):
+                print(f"Interacting with tile at {target_point}")
+                used = active_item.use(self, tile, all_tiles)
+                if used:
+                    self.inventory.remove_if_empty(active_item)
+                break
 
         

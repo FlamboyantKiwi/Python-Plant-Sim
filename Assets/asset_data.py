@@ -1,9 +1,9 @@
-from dataclasses import dataclass
-from enum import Enum
-from typing import NamedTuple
-from core.types import (ItemData, ItemCategory, SpriteRect, RectPair, ToolType,
-    ScaleRect, EntityConfig, EntityState, AnimationGrid, UP, DOWN, LEFT, RIGHT)
-
+from core.types import (ItemData, ItemCategory, SpriteRect, RectPair, ToolType, ShopData,
+    ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, UP, DOWN, LEFT, RIGHT)
+from settings import (
+    HUD_FONT_SIZE, HUD_FONT_BOLD,
+    SLOT_FONT_SIZE, SLOT_FONT_BOLD
+)
 # ==========================================
 # GAMEPLAY BALANCE CONFIG
 # ==========================================
@@ -229,3 +229,24 @@ for mat in MATERIAL_LEVELS:
         else:
             # Everything else (Axes, Hoes, Swords) is a Tool
             _register_tool_item(mat, sprite_key)
+
+SHOPS = {
+    "general_store": ShopData(
+        store_name="General Store",
+        items_ids=[
+            "tomato_seeds",
+            "melon_seeds",
+            "red_pepper_seeds", # Now available because of your generator!
+            "wood_axe", 
+            "wood_sword",
+            "apple"
+        ]
+    ),
+
+}
+
+
+FONT_CONFIG = {
+    FontType.HUD:   (HUD_FONT_SIZE, HUD_FONT_BOLD),
+    FontType.SLOT:  (SLOT_FONT_SIZE, SLOT_FONT_BOLD),
+}

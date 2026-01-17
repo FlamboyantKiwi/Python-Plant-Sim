@@ -1,13 +1,15 @@
 import pygame
-from settings import  SLOT_FONT
 from core.helper import get_image, get_colour
+from core.types import FontType
+from core.asset_loader import AssetLoader
 class Button(pygame.sprite.Sprite):
-    def __init__(self, rect, text=None, font = SLOT_FONT, image_filename=""):
+    def __init__(self, rect, text=None, font_type =FontType.SLOT, image_filename=""):
         super().__init__()
         self.rect = rect
         self.text = text
-        self.font = font
         self.is_hovered = False
+
+        self.font = AssetLoader.get_font(font_type)
 
         self.image = get_image(image_filename, (self.rect.width, self.rect.height), "SHOP_BUTTON")
         self.hover_border = get_colour("SHOP_HOVER", "HIGHLIGHT")

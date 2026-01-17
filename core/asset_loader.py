@@ -1,9 +1,12 @@
 # asset_loader.py
 import pygame, os
-from .spritesheet import SpriteSheet
-from .helper import get_colour
-from settings import BLOCK_SIZE
-from Assets.asset_data import *
+from enum import Enum
+
+from core.spritesheet import SpriteSheet
+from core.helper import get_colour
+from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction
+from Assets.asset_data import GAME_ENTITIES, MATERIAL_LEVELS, TILE_DETAILS, FRUIT_TYPES, FRUIT_RANKS, SEED_BAGS_POS, TOOL_SPRITE_LAYOUT, GROUND_TILE_REGIONS
+from settings import BLOCK_SIZE, HUD_FONT_SIZE, SLOT_FONT_SIZE
 
 class AssetLoader:
     """Utility class to load and process all tile-related assets from sprite sheets."""
@@ -24,11 +27,14 @@ class AssetLoader:
     # Cashes
     _SEED_CACHE = {}
     ENTITIES = {}
+    FONTS:dict[FontType,pygame.font.Font] = {}
 
     @classmethod
     def __init__(cls):
         # Prevent double loading if instantiated multiple times
         if cls.TILE_ASSETS: return
+
+        cls.load_resources()
         cls.load_fruit_assets()
         cls.load_tool_assets()
         cls.load_tile_assets()
@@ -38,6 +44,28 @@ class AssetLoader:
             cls.ENTITIES[category] = cls.load_entity_group(config)
         print("--- Assets Loaded ---")
     
+    @classmethod
+    def load_resources(cls):
+        # Initialize font module specifically here if needed, 
+        # though pygame.init() in Game usually covers it.
+        if not pygame.font.get_init():
+            pygame.font.init()
+            
+        font_config = {
+            FontType.HUD:   (HUD_FONT_SIZE, True),
+            FontType.SLOT:  (SLOT_FONT_SIZE, False),
+        }
+
+        # The Loop
+        for font_enum, (size, is_bold) in font_config.items():
+            try:
+                # You can swap "arial" for a custom .ttf path here if you want
+                cls.FONTS[font_enum] = pygame.font.SysFont("arial", size, bold=is_bold)
+            except Exception as e:
+                print(f"AssetLoader Error: Could not load font {font_enum.name}: {e}")
+                # Create a generic fallback to prevent crashes
+                cls.FONTS[font_enum] = pygame.font.SysFont("arial", 20)
+
     @classmethod
     def load_spritesheet(cls, name, path = None):
         """Helper to load a sprite sheet safely."""
@@ -206,7 +234,7 @@ class AssetLoader:
         return group_assets
 
     @classmethod
-    def get_animated_sprite(cls, category: str, name: str, state: str, direction: str, tick: int):
+    def get_animated_sprite(cls, category: str, name: str, state: EntityState, direction: Direction, frame: int):
         """ Universal function to get the correct frame for ANY moving entity. """
        # 1. Retrieve the specific entity's library
         entity_library = cls.ENTITIES.get(category, {}) 
@@ -215,21 +243,21 @@ class AssetLoader:
 
         # 2. Retrieve the State Dictionary (e.g. "Walk")
         # Handles cases where input might be an Enum or String
-        s_key = state.value if isinstance(state, Enum) else state
+        s_key = state.value
         state_data = sheet_data.get(s_key)
         if not state_data: return None # Error
 
         # Retrieve the Direction List (e.g. "Down")
-        d_key = direction.value if isinstance(direction, Enum) else direction
+        d_key = direction.value
         
         # Fallback to DOWN if the specific direction is missing
         frames = state_data.get(d_key)
         if not frames:
-            frames = state_data.get("Down") 
+            frames = state_data.get(Direction.DOWN) 
             if not frames: return None # Error
 
         # Calculate current frame (based on tick and total frames) 
-        current_frame = int(tick) % len(frames)
+        current_frame = int(frame) % len(frames)
         return frames[current_frame]
 
     # ==================================================
@@ -248,13 +276,21 @@ class AssetLoader:
         elif cat == ItemCategory.SEED:
             return cls.get_seed_image(key)
             
-        elif cat == ItemCategory.CROP or cat == ItemCategory.FRUIT:
-            # Crops default to the 'Bronze' rank visual for the generic item
+        elif cat in (ItemCategory.CROP, ItemCategory.FRUIT):
+            # Crops default to the 'Bronze' rank visual for the inventory icon
             return cls.get_fruit_image(f"BRONZE_{key}")
 
+        elif cat == ItemCategory.MISC:
+            # Try tool sheet first (Materials usually live there)
+            img = cls.get_tool_image(key)
+            if img: return img
+            
+            # Fallback: Try fruit sheet
+            return cls.get_fruit_image(f"BRONZE_{key}")
+        
         # Fallback Error
-        print(f"AssetLoader: No image loader defined for category '{cat}'")
-        return cls.TILE_ASSETS["DIRT_IMAGE"]
+        print(f"AssetLoader: No image loader defined for category: {cat}, key: {key}")
+        return cls.TILE_ASSETS.get("DIRT_IMAGE")
 
     @classmethod
     def get_tool_image(cls, tool_name: str):
@@ -284,3 +320,14 @@ class AssetLoader:
         comp.blit(fruit, (bx - fx//2, by - fy//2 - 2))
         cls._SEED_CACHE[key] = comp
         return comp
+
+    @classmethod
+    def get_font(cls, font_type: FontType):
+        """ Returns the requested font or a default system font if missing."""
+        # Try to get the specific font
+        font = cls.FONTS.get(font_type)
+        if font: return font
+            
+        # Fallback
+        print(f"AssetLoader Warning: Font '{font_type}' not found. Using default.")
+        return pygame.font.SysFont("arial", 20)

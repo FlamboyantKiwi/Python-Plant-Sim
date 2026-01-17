@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Dict
+from typing import NamedTuple
 
 # ============ ENUMS ============ #
 class EntityState(Enum):
@@ -40,6 +40,10 @@ class ToolType(Enum):
     
     # Fallback
     GENERIC = "generic"
+
+class FontType(Enum):
+    HUD = "HUD"
+    SLOT = "SLOT"
 
 # ============ GEOMETRY ============ #
 @dataclass(frozen=True)
