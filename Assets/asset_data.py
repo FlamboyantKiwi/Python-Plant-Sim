@@ -256,14 +256,47 @@ FONT_CONFIG = {
     FontType.SLOT:  (SLOT_FONT_SIZE, SLOT_FONT_BOLD),
 }
 
-
-
 TEXT = {
     "default": TextConfig(),
     "HUD": TextConfig(size=20, bold=True),
     "ACTIVE": TextConfig(size=20, bold=True, colour=(50, 50, 50)),
     "SLOT": TextConfig(size=14, colour=(255, 215, 0)),
     "TITLE": TextConfig(size=80, bold=True, colour=(255, 255, 255)),
+    "MenuTitle": TextConfig(size=60, bold=True, colour=(255, 215, 0)),
 }
 
         
+# --- COLOUR PALETTE ---
+COLOURS = {
+    # UI & System
+    "DEFAULT":       (255, 0, 255), # Magenta for errors
+    "DEBUG":         (255, 0, 255),
+    "TEXT":          (255, 255, 255),
+    "HIGHLIGHT":     (255, 255, 0),
+    "HOVER":         (150, 150, 255),
+    "SPRITESHEET":   (255, 0, 255), # Fallback for missing sheets
+
+    # Player & Inventory
+    "PLAYER":        (0, 0, 255),
+    "INVENTORY_SLOT":(150, 150, 150),
+    "INV_TEXT":      (255, 255, 255),
+    "MONEY":         (255, 215, 0),
+    "GOLD":          (255, 215, 0),
+
+    # Farming / World
+    "UNTILLED":      (92, 204, 97),
+    "TILLED":        (66, 31, 19),
+    "PLANTED":       (70, 100, 30),
+    "WATER":         (56, 220, 245),
+    "SEED":          (0, 150, 0),
+    
+    # Shop
+    "SHOP_MENU":     (250, 250, 250),
+    "SHOP_BUTTON":   (100, 194, 37),
+    "SHOP_HOVER":    (36, 66, 16),
+    "SHOP_TITLE":    (0,  0,  0),
+    
+    # Menu
+    "MenuBG":    (30, 30, 30),      # Dark Grey
+    "MenuTitle": (255, 215, 0),     # Gold
+}

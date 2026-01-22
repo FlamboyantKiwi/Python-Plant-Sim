@@ -31,9 +31,4 @@ class AnimationController:
         # 3. Ask AssetLoader for the specific frame
         # We pass frame_index as the "tick"
         return AssetLoader.get_animated_sprite(
-            self.category, 
-            self.name, 
-            state, 
-            direction, 
-            self.frame_index
-        )
+            self.category, self.name, state, direction, self.frame_index)

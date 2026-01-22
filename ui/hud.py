@@ -1,8 +1,4 @@
-import pygame
 from settings import WIDTH, SHOP_BUTTON, MONEY_RECT
-from core.helper import get_colour
-from Assets.asset_data import TEXT
-from core.asset_loader import AssetLoader
 from ui.ui_elements import Button, TextBox
 
 
@@ -21,7 +17,7 @@ class HUD:
             TextBox(
                 rect=MONEY_RECT,
                 text_getter=lambda: f"Money: {self.player.money}",
-                config="HUD")
+                config="HUD"),
         ]
 
     def draw(self, screen):

@@ -1,7 +1,6 @@
 import pygame, random
-from settings import QUAD_SIZE, BLOCK_SIZE, DEFAULT_COLOUR
-from core.helper import get_colour
-from core.asset_loader import TileGroup
+from settings import QUAD_SIZE, BLOCK_SIZE
+from core.asset_loader import TileGroup, AssetLoader
 
 MARCHING_TILES = {
     # Marching Squares Map Config
@@ -59,14 +58,14 @@ class Tile(pygame.sprite.Sprite):
             self.image = dirt_asset.copy()
         else: # Fallback if DIRT_TILE failed to load in AssetLoader
             self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-            self.image.fill(get_colour("DIRT")) # Dirt Brown
+            self.image.fill(AssetLoader.get_colour("DIRT")) # Dirt Brown
 
         self.rect = self.image.get_rect(topleft=self.position)
         # Assemble Marching Squares
         if not tileset:
             # If tileset is None or empty list, assign a distinct failure surface.
             self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-            self.image.fill(DEFAULT_COLOUR) # Magenta failure color
+            self.image.fill(AssetLoader.get_colour("DEFAULT")) # Magenta failure color
             self.tileset = [] # Ensure it's not None for safety later
             print(f"ERROR: Tileset for {tile_type} is missing or empty.")
         else:

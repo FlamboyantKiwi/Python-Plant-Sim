@@ -1,6 +1,5 @@
 # core/states.py
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 from entities.player import Player
 from entities.inventory import ShopMenu
 from entities.Plant import Plant
@@ -9,7 +8,8 @@ from ui.ui_elements import Button
 from world.level import Level
 from settings import WIDTH, HEIGHT
 from Assets.asset_data import SHOPS, ShopData
-from core.helper import get_colour, draw_text
+from core.helper import  draw_text
+from core.asset_loader import AssetLoader
 import pygame
 
 class GameState(ABC):
@@ -28,7 +28,7 @@ class GameState(ABC):
     @abstractmethod
     def draw(self, screen): pass
 
-    def handle_event(self, event): 
+    def handle_event(self, event) -> bool: 
         if event.type == pygame.KEYDOWN:
             action = self.key_binds.get(event.key)
             if action: action()
@@ -36,6 +36,7 @@ class GameState(ABC):
         elif event.type == pygame.MOUSEBUTTONDOWN:
             action = self.mouse_binds.get(event.button)
             if action: action(event.pos)
+        return False
 
     def enter_state(self): pass
     def exit_state(self): pass
@@ -166,7 +167,8 @@ class PlayingState(GameState):
 
     def draw(self, screen):
         # Draw the game world
-        screen.fill(get_colour("WATER")) # Or use settings.COLOURS
+        
+        screen.fill(AssetLoader.get_colour("WATER")) # Or use settings.COLOURS
         self.all_tiles.draw(screen)
         self.all_sprites.draw(screen)
         for plant in self.plants:
@@ -174,9 +176,8 @@ class PlayingState(GameState):
         self.hud.draw(screen)
 
     def handle_event(self, event):
-        super().handle_event(event)
-
         self.player.handle_event(event, self.level.all_tiles)
+        return super().handle_event(event)
 
     def on_left_click(self, pos):
         action = self.hud.handle_click(pos)
@@ -187,8 +188,9 @@ class PlayingState(GameState):
         elif action:
             return  
         
-    def on_right_click(self):
+    def on_right_click(self, pos):
         print("Right Click detected! (Maybe cancel action?)")
+        AssetLoader.debug_assets()
   
         
     ### Actions
@@ -238,10 +240,10 @@ class MenuState(BaseUIState):
         return buttons
 
     def draw(self, screen):
-        screen.fill(get_colour("MenuBG"))
+        screen.fill(AssetLoader.get_colour("MenuBG"))
 
         draw_text(screen, "Python Plant Sim", "TITLE", x=WIDTH//2, y=HEIGHT//4, 
-                  colour=get_colour("MenuTitle"), align="center")
+                  colour_name="MenuTitle", align="center")
         
         super().draw(screen)
 

@@ -14,30 +14,7 @@ QUAD_SIZE = BLOCK_SIZE // 2
 
 FPS = 60
 ANIMATION_SPEED = 5 # Lower is faster (ticks per frame)
-
-# Visuals & Colors
-COLOURS = {
-    "PLAYER": (0, 0, 255),
-    "UNTILLED": (92, 204, 97),
-    "INVENTORY_SLOT": (150, 150, 150),
-    "HIGHLIGHT": (255, 255, 0),
-    "HOVER": (150, 150, 255),
-    "SEED": (0, 150, 0),
-    "TOOL": (69, 50, 31),
-    "INV_TEXT": (255, 255, 255),
-    "DEBUG": (255, 0, 255),
-    "TILLED": (66, 31, 19),
-    "PLANTED": (70, 100, 30),
-    "WATER": (56, 220, 245),
-    "SHOP_BUTTON": (100, 194, 37),
-    "SHOP_HOVER": (36, 66, 16),
-    "SHOP_MENU": (250, 250, 250),
-    "GOLD": (255, 215, 0),
-    "MONEY": (255, 215, 0),
-    "TEXT": (255, 255, 255)}
-DEFAULT_COLOUR = (255, 0, 255) # Magenta For Errors
-
-IMAGE_LOAD_FAILURES = set()
+INTERACTION_DISTANCE = 20
 
 # Gameplay Config
 DETAIL_CHANCE = 0.2

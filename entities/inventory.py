@@ -1,10 +1,10 @@
 import pygame, copy
 
-from settings import  HIGHLIGHT_THICKNESS, SHOP_MENU
+from settings import SHOP_MENU
 from entities.items import Item, ItemFactory
-from core.helper import get_image, get_colour, draw_text
+from core.helper import draw_text
 from core.types import ShopData, FontType
-from Assets.asset_data import ITEMS, TEXT
+from Assets.asset_data import ITEMS
 from ui.ui_elements import Slot, TextBox, UIElement
 from core.asset_loader import AssetLoader
 
@@ -212,21 +212,20 @@ class ShopMenu(Inventory):
             
         draw_text(screen, title, "HUD", 
                   x=self.rect.centerx, y=self.rect.top + 10, 
-                  colour=(0,0,0), align="midtop")
+                  colour_name="SHOP_TITLE", align="midtop")
         
         #draw Slots
         super().draw(screen)
   
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
-        if not self.is_open: return None
+        if not self.is_open: return False
 
         for slot in self.slots:
             if slot.is_click(pos) and slot.item:
                 # We found the target, now pass it to logic
-                result = self.try_buy_item(slot.item)
-                return "SLOT_CLICKED"
-        return None
+                return self.try_buy_item(slot.item)
+        return False
 
     def try_buy_item(self, item:Item):
         """Validates and executes the purchase logic"""

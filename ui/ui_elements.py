@@ -1,5 +1,6 @@
 import pygame
-from core.helper import get_image, get_colour, align_rect, draw_text
+from core.helper import align_rect
+from core.asset_loader import AssetLoader
 from core.types import TextConfig
 
 # --- PARENT CLASS ---
@@ -15,7 +16,7 @@ class UIElement(pygame.sprite.Sprite):
 
         # Create Background
         if image_file: # Load and scale sprite
-            self.image = get_image(image_file, rect.size, "UI").copy()
+            self.image = AssetLoader.load_image(image_file, scale=rect.size).copy()
         elif colour: # Solid Colour
             self.image = pygame.Surface(rect.size)
             self.image.fill(colour)
@@ -34,7 +35,7 @@ class UIElement(pygame.sprite.Sprite):
         if self.is_visible and self.image:
             screen.blit(self.image, self.rect)
 
-    def update(self, *args):
+    def update(self, mouse_pos=None):
         pass
 
     def is_click(self, mouse_pos):
@@ -90,11 +91,11 @@ class TextBox(UIElement):
         # of the text rect to the same anchor on the target container.
         try:
             anchor_point = getattr(self.rect, self.align)
-            setattr(self.text_rect, self.align, anchor_point)
         except AttributeError:
-            self.text_rect.center = self.rect.center
+            anchor_point = self.rect.center
+        align_rect(self.text_rect, *anchor_point, align=self.align)
 
-    def update(self, *args):
+    def update(self, mouse_pos=None):
         """ If a getter exists, run it. If the result changed, re-render. """
         if self.text_getter:
             # Call the function to get the current value
@@ -137,7 +138,7 @@ class StateElement(UIElement):
         # Start State
         self.image = self.surf_normal
 
-    def update(self, mouse_pos):
+    def update(self, mouse_pos=None):
         """Standard State Switching Logic"""
         if mouse_pos:
             self.is_hovered = self.rect.collidepoint(mouse_pos)
@@ -162,7 +163,7 @@ class Button(StateElement):
         # Pass button rect as container, so text centers automatically.
         self.text_box = TextBox(rect=rect, text=text, config=config)
 
-    def update(self, mouse_pos, *args):
+    def update(self, mouse_pos=None):
         # Run State Logic (Swap Images)
         super().update(mouse_pos)
         
@@ -207,8 +208,8 @@ class Slot(Button):
     def __init__(self, rect, index, slot_size):
         # 1. DEFINE VISUALS
         bg = "slot_bg"
-        col_hover = get_colour("HOVER_COLOUR", fallback_type="HIGHLIGHT")
-        col_active = get_colour("ACTIVE_COLOUR", fallback_type="HIGHLIGHT")
+        col_hover = AssetLoader.get_colour("HOVER_COLOUR", fallback="HIGHLIGHT")
+        col_active = AssetLoader.get_colour("ACTIVE_COLOUR", fallback="HIGHLIGHT")
 
         v_normal = UIElement(rect, image_file=bg)
         v_hover  = UIElement(rect, image_file=bg, border_colour=col_hover)

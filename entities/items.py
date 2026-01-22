@@ -25,7 +25,7 @@ class Item:
     def stackable(self):    return self.data.stackable
 
     # --- INVENTORY LOGIC ---
-    def add_to_stack(self, amount):
+    def add_to_stack(self, amount) -> int:
         space = self.stack_size - self.count
         to_add = min(amount, space)
         self.count += to_add
@@ -39,7 +39,7 @@ class Item:
         self.count -= amount
         return amount
 
-    def use(self, player, target_tile, all_tiles):
+    def use(self, player, target_tile, all_tiles) -> bool:
         """Default behavior: Do nothing."""
         return False
         
