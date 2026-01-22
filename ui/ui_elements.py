@@ -43,7 +43,6 @@ class UIElement(pygame.sprite.Sprite):
     def handle_click(self):
         return None
 
-
 # --- TEXTBOX CLASS ---
 class TextBox(UIElement):
     def __init__(self, rect, text:str=" ", text_getter=None, config:str = "default", align="center", 
@@ -222,20 +221,20 @@ class Slot(Button):
         self.item = None 
         
         # COMPONENT: Stack Count
-        self.count_text = TextBox(
+        self.info_text = TextBox(
             rect=self.rect.inflate(-4, -4), 
             text="", config="SLOT", align="bottomright"
         )
-        self.count_text.is_visible = False
+        self.info_text.is_visible = False
 
     def set_item(self, item):
         """Updates the slot's data."""
         self.item = item
 
         if self.item and self.item.stack_size > 1:
-            self.count_text.set_text(self.item.count)
+            self.info_text.set_text(self.item.count)
         else:
-            self.count_text.set_text("") # Auto-hide
+            self.info_text.set_text("") # Auto-hide
 
     def draw(self, screen):
         # Draw Background (State managed by parent)
@@ -248,4 +247,7 @@ class Slot(Button):
             item_rect = self.item.image.get_rect(center=self.rect.center)
             screen.blit(self.item.image, item_rect)
 
-            self.count_text.draw(screen)
+            self.info_text.draw(screen)
+    def set_price(self, price: int):
+        """Shop Mode: Overrides the text to show price."""
+        self.info_text.set_text(f"${price}")
