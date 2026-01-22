@@ -4,7 +4,7 @@ from settings import  HIGHLIGHT_THICKNESS, SHOP_MENU
 from entities.items import Item, ItemFactory
 from core.helper import get_image, get_colour, draw_text
 from core.types import ShopData, FontType
-from Assets.asset_data import ITEMS
+from Assets.asset_data import ITEMS, TEXT
 from core.asset_loader import AssetLoader
 
 
@@ -116,12 +116,9 @@ class Inventory:
         else:
             display_name = self.get_active_item_name()        
 
-        hud_font = AssetLoader.get_font(FontType.HUD)
-        slot_font = AssetLoader.get_font(FontType.SLOT)
-
-        name_text = hud_font.render(display_name, True, self.active_text)
-        name_rect = name_text.get_rect(centerx=self.rect.centerx, bottom=self.rect.top - 5)
-        screen.blit(name_text, name_rect)
+        draw_text(screen, display_name, "HUD", 
+                  x=self.rect.centerx, y=self.rect.top - 5, 
+                  colour=self.active_text, align="midbottom")
 
         # draw slots
         for i in range(self.max_size):
@@ -151,9 +148,9 @@ class Inventory:
                 
                 # Draw stack count
                 if item.stack_size > 1: 
-                    count_text = slot_font.render(str(item.count), True, (255, 255, 255))
-                    text_rect = count_text.get_rect(bottomright=(slot_rect.right - 2, slot_rect.bottom - 2))
-                    screen.blit(count_text, text_rect)
+                    draw_text(screen, str(item.count), "SLOT", 
+                              x=slot_rect.right - 2, y=slot_rect.bottom - 2, 
+                              align="bottomright")
     def update(self, pos):
         self.mouse_pos = pos
         self.hover_slot = self.get_slot_from_pos(pos)
@@ -261,13 +258,14 @@ class ShopMenu(Inventory):
         title = "Shop"
         if self.shop_data:
             title = self.shop_data.store_name
-        hud_font = AssetLoader.get_font(FontType.HUD)
-        draw_text(screen, title, hud_font, x=self.rect.centerx, y=self.rect.top+10, colour=(0,0,0))
+        draw_text(screen, title, "HUD", 
+                  x=self.rect.centerx, y=self.rect.top + 10, 
+                  colour=(0,0,0), align="midtop")
         
         #draw Slots
         super().draw(screen)
+
         #Drow prices
-        slot_font = AssetLoader.get_font(FontType.SLOT)
         for i, item in enumerate(self.items):
             if i >= len(self.items): break 
             
@@ -282,13 +280,12 @@ class ShopMenu(Inventory):
             price_x = slot_x + self.slot_size - 15
             price_y = slot_y + self.slot_size - 10
             
-            # Optional: Draw a small black box behind the price for readability
-            # (You can remove these 2 lines if you want just text)
+            # Price BG
             price_bg_rect = pygame.Rect(price_x - 15, price_y - 8, 30, 16)
             pygame.draw.rect(screen, (0,0,0), price_bg_rect, border_radius=4)
 
-            draw_text(screen, f"${item.data.buy_price}", slot_font, price_x, price_y, (255, 215, 0))
-
+            draw_text(screen, f"${item.data.buy_price}", "SLOT", x=price_x, y=price_y, align="center")
+            
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
         clicked_slot = self.get_slot_from_pos(pos) 

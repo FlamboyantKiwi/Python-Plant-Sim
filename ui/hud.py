@@ -1,46 +1,45 @@
 import pygame
-from settings import WIDTH, SHOP_BUTTON
+from settings import WIDTH, SHOP_BUTTON, MONEY_RECT
 from core.helper import get_colour
-from core.types import FontType
+from Assets.asset_data import TEXT
 from core.asset_loader import AssetLoader
-from ui.button import Button
+from ui.ui_elements import Button, TextBox
 
 
 class HUD:
     def __init__(self, player):
         self.player = player
-        self.all_buttons = pygame.sprite.Group()
-        self.shop_button = Button(
-            rect=SHOP_BUTTON, 
-            text="SHOP", 
-            image_filename="SHOP_ICON",
-            font_type=FontType.HUD)
-        self.all_buttons.add(self.shop_button)
+
+        self.ui_elements = [
+           Button.create_bordered_button(
+                rect=SHOP_BUTTON, 
+                text="SHOP", 
+                function=lambda: "OPEN_SHOP",
+                bg_colour=(40, 40, 40),       # Dark Grey
+                border_colour=(100, 100, 100),# Light Grey Outline
+                hover_colour=(255, 255, 0)),    # Yellow on Hover
+            TextBox(
+                rect=MONEY_RECT,
+                text_getter=lambda: f"Money: {self.player.money}",
+                config="HUD")
+        ]
 
     def draw(self, screen):
-        text = f"Money: {self.player.money}"
-        
-        font = AssetLoader.get_font(FontType.HUD)
-        text_surface = font.render(text, True, get_colour("Gold","Money"))
-        
-        text_rect = text_surface.get_rect(
-            centerx=WIDTH // 2,
-            top=10
-        )
-        screen.blit(text_surface, text_rect)
-        self.all_buttons.draw(screen)
+        for element in self.ui_elements:
+            element.draw(screen)
 
         self.player.inventory.draw(screen)
 
     def update(self, mouse_pos):
-        self.all_buttons.update(mouse_pos)
+        for element in self.ui_elements:
+            element.update(mouse_pos)
         self.player.inventory.update(mouse_pos)
 
     def handle_click(self, pos):
-        # Open/Close shop menu
-        if self.shop_button.is_click(pos):
-            print("HUD: Shop Button Clicked")
-            return "OPEN_SHOP"
+        for element in self.ui_elements:
+            if element.is_click(pos):
+                return element.handle_click() 
+            
         if self.player.inventory.handle_click(pos):
             return "INVENTORY_CLICK"
         return None

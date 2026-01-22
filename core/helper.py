@@ -144,9 +144,31 @@ def get_direction(dx, dy, tick = 0):
         # Vertical axis has the greatest speed
         return get_axis(dy, "Up", "Down")
     
+def align_rect(rect, x, y, align="center"):
+    """Moves a rect so its specific anchor point matches the (x, y) coordinate.
+    Example: align_rect(r, 100, 100, "topright") moves r so its topright is at 100,100."""
+    try: # Dynamic handling: equivalent to rect.center = (x,y) or rect.topleft = (x,y)
+        setattr(rect, align, (x, y))
+    except AttributeError:
+        print(f"Align Error: '{align}' is not a valid Rect attribute. Defaulting to center.")
+        rect.center = (x, y)
+    return rect
 
-def draw_text(screen, text, font, x, y, colour):
-    text = font.render(text, True, colour)
-    rect = text.get_rect(center=(x, y))
-    screen.blit(text, rect)
+def draw_text(screen, text, font_key: str, x, y, colour=None, align="center"):
+    """ Renders text using the global TEXT dict and aligns it to (x, y)."""
+    from Assets.asset_data import TEXT
+    
+    if font_key not in TEXT: 
+        print(f"{font_key} is not a valid font!")
+        return
+
+    # Render 
+    # The config handles font loading and default colours
+    text_surf = TEXT[font_key].render(str(text), custom_colour=colour)
+    
+    # Align 
+    rect = align_rect(text_surf.get_rect(), x, y, align)
+
+    # Draw
+    screen.blit(text_surf, rect)
 

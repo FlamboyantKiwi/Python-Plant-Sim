@@ -5,7 +5,7 @@ from entities.player import Player
 from entities.inventory import ShopMenu
 from entities.Plant import Plant
 from ui.hud import HUD
-from ui.button import Button
+from ui.ui_elements import Button
 from world.level import Level
 from settings import WIDTH, HEIGHT
 from Assets.asset_data import SHOPS, ShopData
@@ -15,63 +15,111 @@ import pygame
 class GameState(ABC):
     def __init__(self, game):
         self.game = game
-
+        # Event Mapping Dict
+        self.key_binds = {} # e.g. pygame.K_ESCAPE: self.func
+        self.mouse_binds = {
+            1: self.on_left_click,
+            2: self.on_middle_click,
+            3: self.on_right_click}
+        
     @abstractmethod
     def update(self): pass
 
     @abstractmethod
     def draw(self, screen): pass
 
-    @abstractmethod
-    def handle_event(self, event): pass
+    def handle_event(self, event): 
+        if event.type == pygame.KEYDOWN:
+            action = self.key_binds.get(event.key)
+            if action: action()
+        
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            action = self.mouse_binds.get(event.button)
+            if action: action(event.pos)
 
     def enter_state(self): pass
     def exit_state(self): pass
 
-class ShopState(GameState):
-    def __init__(self, game, player: Player, shop_data: ShopData):
+    #Click actions - override in child classes
+    def on_left_click(self, pos): pass
+    def on_right_click(self, pos): pass
+    def on_middle_click(self, pos): pass
+
+class BaseUIState(GameState):
+    """Parent class for any state that primarily manages a list of UI elements
+    (Menu, Shop, Inventory, Credits, etc)."""
+    def __init__(self, game):
         super().__init__(game)
-        self.player = player
-       
         self.ui_elements = []
 
-        self.shop_menu = ShopMenu(self.player, data=shop_data) 
-        self.shop_menu.is_open = True
-        self.ui_elements.append(self.shop_menu)
-
-        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
-
-    def update(self):  
+    def update(self):
         mouse_pos = pygame.mouse.get_pos()
-        # Update all UI elements (Grid, Buttons, potentially Dialogue later)
         for element in self.ui_elements:
             if hasattr(element, "update"):
                 element.update(mouse_pos)
 
     def draw(self, screen):
-        # 1. Draw the game behind the menu (Transparent look)
-        self.game.draw_previous()
-        
-        # 2. Blit the pre-calculated overlay (Dim the background)
-        screen.blit(self.overlay, (0, 0))
-
-        # 3. Draw all UI elements
         for element in self.ui_elements:
             element.draw(screen)
 
-    def handle_event(self, event): #### Improve
-        if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_ESCAPE, pygame.K_p):
-                self.close_menu()
-        
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.shop_menu.rect.collidepoint(event.pos):
-                self.shop_menu.handle_click(event.pos)
-            else:
-                self.close_menu()
+    def handle_event(self, event):
+        # Handle UI Clicks
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            for element in self.ui_elements:
+                if element.is_click(event.pos):
+                    element.handle_click()
+                    return True # Stop processing if we clicked something
+                
+        super().handle_event(event)
+        return False
 
-    def close_menu(self):
+class ShopState(BaseUIState):
+    def __init__(self, game, player: Player, shop_data: ShopData):
+        super().__init__(game)
+        self.player = player
+       
+        self.key_binds = {
+            pygame.K_ESCAPE: self.close_menu,
+            pygame.K_p: self.close_menu
+        }
+
+        self.shop_menu = ShopMenu(self.player, data=shop_data) 
+        self.shop_menu.is_open = True
+
+        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
+    def update(self):
+        # Update Buttons
+        super().update()
+        
+        # Update Shop Menu explicitly
+        mouse_pos = pygame.mouse.get_pos()
+        if hasattr(self.shop_menu, "update"):
+            self.shop_menu.update(mouse_pos)
+
+    def draw(self, screen):
+        # Draw the game behind the menu (Transparent look)
+        self.game.draw_previous()
+        
+        # Blit the pre-calculated overlay (Dim the background)
+        screen.blit(self.overlay, (0, 0))
+
+        self.shop_menu.draw(screen)
+        
+        # Draw Buttons
+        super().draw(screen)
+
+    def on_left_click(self, pos):
+        # Check if we clicked inside the shop menu (slots/buying)
+        if self.shop_menu.rect.collidepoint(pos):
+            self.shop_menu.handle_click(pos)
+        
+        # Clicked OUTSIDE the shop menu -> Close Shop
+        else:
+            self.close_menu()
+    def on_right_click(self, pos):
+        self.close_menu()
+    def close_menu(self, *args):
         self.game.pop()
 
 class PlayingState(GameState):
@@ -95,6 +143,11 @@ class PlayingState(GameState):
             Plant("Apple", 5, 5),   # A Tree
             Plant("Onion", 6, 5)    # A Crop
         ]
+
+        self.key_binds = {
+            pygame.K_ESCAPE: self.quit_game,
+            pygame.K_p: lambda: self.open_shop("general_store")
+        }
 
     def update(self):
         # Calculate Delta Time (dt) in seconds
@@ -121,52 +174,46 @@ class PlayingState(GameState):
         self.hud.draw(screen)
 
     def handle_event(self, event):
-        """ Handles user input while the game is running (Movement, Interaction, UI). """
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.game.running = False
-                return # Stop processing
-            elif event.key == pygame.K_p:
-                self.open_shop("general_store")
-                return # Stop processing
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1: # Left Click
-                # Check if we hit a button or inventory slot
-                action = self.hud.handle_click(event.pos)
-                
-                if action == "OPEN_SHOP":
-                    self.open_shop("general_store")
-                    return
-                elif action:
-                    return
+        super().handle_event(event)
 
         self.player.handle_event(event, self.level.all_tiles)
 
+    def on_left_click(self, pos):
+        action = self.hud.handle_click(pos)
+        
+        if action == "OPEN_SHOP":
+            self.open_shop("general_store")
+            return 
+        elif action:
+            return  
+        
+    def on_right_click(self):
+        print("Right Click detected! (Maybe cancel action?)")
+  
+        
+    ### Actions
     def open_shop(self, shop_id="general_store"): 
         """ Opens the shop state with data loaded from settings.
         :param shop_id: The key matching a dictionary in settings.SHOPS"""
         # 1. Get the data from settings
         shop_data = SHOPS.get(shop_id)
         
-        if not shop_data:
-            print(f"Error: Shop ID '{shop_id}' not found in settings.")
-            return
+        if shop_data:
+            self.game.push(ShopState(self.game, self.player, shop_data))
+        
+    def quit_game(self):
+        self.game.running = False
 
-        # 2. Push the Shop State, passing the specific data
-        print(f"Opening Shop: {shop_data.store_name}")
-        self.game.push(ShopState(self.game, self.player, shop_data))
-
-class MenuState(GameState):
+class MenuState(BaseUIState):
     def __init__(self, game):
         super().__init__(game)
-        self.title_font = pygame.font.SysFont("arial", 80, bold=True)
         self.menu_actions = {
             "New Game": self.start_new_game,
             "Continue": self.continue_game,
             "Credits": self.open_credits,
             "Quit": self.quit_game
         }
-        self.buttons = self.create_buttons()
+        self.ui_elements = self.create_buttons()
     
     def create_buttons(self):
         buttons = []
@@ -176,30 +223,29 @@ class MenuState(GameState):
         gap = 60
         btn_width, btn_height = 200, 50
 
-        for i, option in enumerate(self.menu_actions.keys()):
-            x = center_x - (btn_width // 2)
-            y = start_y + (i * gap)
-            rect = pygame.Rect(x, y, btn_width, btn_height)
+        for i, (text, func) in enumerate(self.menu_actions.items()):
+            rect = pygame.Rect(0, 0, btn_width, btn_height)
+            rect.center = (center_x, start_y + (i * gap))
             
-            # Create the Button Instance
-            # Ensure "button_bg" exists in your assets, or pass a fallback image
-            btn = Button(rect, text=option, image_filename="button_bg") 
-            buttons.append(btn)
+            # --- FACTORY METHOD USAGE ---
+            # Creates a consistent styled button in one line!
+            buttons.append(Button.create_bordered_button(
+                rect=rect, text=text, function=func,
+                bg_colour=(40, 40, 40),        # Dark Grey Background
+                border_colour=(100, 100, 100), # Light Grey Idle Border
+                hover_colour=(255, 215, 0),    # Gold Hover Border
+                thickness=2))
         return buttons
-    
-    def update(self):
-        # Update hover states for all buttons
-        mouse_pos = pygame.mouse.get_pos()
-        for btn in self.buttons:
-            btn.update(mouse_pos)
 
     def draw(self, screen):
         screen.fill(get_colour("MenuBG"))
-        draw_text(screen, "Python Plant Sim", self.title_font, 
-            WIDTH//2, HEIGHT//4, get_colour("MenuTitle"))
-        for btn in self.buttons:
-            btn.draw(screen)
 
+        draw_text(screen, "Python Plant Sim", "TITLE", x=WIDTH//2, y=HEIGHT//4, 
+                  colour=get_colour("MenuTitle"), align="center")
+        
+        super().draw(screen)
+
+    # button actions:
     def start_new_game(self):
         print("Starting New Game...")
         # Push the playing state to the stack
@@ -216,11 +262,3 @@ class MenuState(GameState):
     def quit_game(self):
         print("Quitting...")
         self.game.running = False
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #left click
-            for btn in self.buttons:
-                if btn.is_click(event.pos):
-                    action = self.menu_actions.get(btn.text)
-                    if action:
-                        action()

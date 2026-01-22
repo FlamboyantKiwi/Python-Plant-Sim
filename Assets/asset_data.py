@@ -258,4 +258,12 @@ FONT_CONFIG = {
 
 
 
+TEXT = {
+    "default": TextConfig(),
+    "HUD": TextConfig(size=20, bold=True),
+    "ACTIVE": TextConfig(size=20, bold=True, colour=(50, 50, 50)),
+    "SLOT": TextConfig(size=14, colour=(255, 215, 0)),
+    "TITLE": TextConfig(size=80, bold=True, colour=(255, 255, 255)),
+}
+
         

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from core.spritesheet import SpriteSheet
 from core.helper import get_colour
-from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction
+from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction, TextConfig
 from Assets.asset_data import GAME_ENTITIES, MATERIAL_LEVELS, TILE_DETAILS, FRUIT_TYPES, FRUIT_RANKS, SEED_BAGS_POS, GROUND_TILE_REGIONS, TOOL_SPRITE_LAYOUT, PLANT_SPRITE_REGIONS, TREE_SPRITE_REGIONS, TREE_FRAME_SLICES
 from settings import BLOCK_SIZE, HUD_FONT_SIZE, SLOT_FONT_SIZE
 
@@ -147,9 +147,27 @@ class EntityGroup(AssetGroup):
                                 frames.append(sheet.get_image(rect.x + (c*32), rect.y + (r*32), 32, 32, (64, 64)))
                         cls.STORAGE[category][name][s_key][d_key] = frames
 
-class AssetLoader:
-    FONTS: dict[FontType, pygame.font.Font] = {}
+class FontGroup:
+    """ Internal helper class to manage font caching.
+    Separated to keep AssetLoader clean."""
+    STORAGE = {} 
 
+    @classmethod
+    def get_font(cls, config: TextConfig) -> pygame.font.Font:
+        # Create a unique key for the cache
+        key = (config.name, config.size, config.bold, config.italic)
+        
+        if key not in cls.STORAGE:
+            if not pygame.font.get_init(): pygame.font.init()
+            # Load and store
+            cls.STORAGE[key] = pygame.font.SysFont(
+                config.name, config.size, config.bold, config.italic
+            )
+            
+        return cls.STORAGE[key]
+
+
+class AssetLoader:
     @classmethod
     def __init__(cls):
         if TileGroup.STORAGE: return # Singleton check
@@ -163,16 +181,9 @@ class AssetLoader:
         print(f"Plants Loaded: {len(PlantGroup.STORAGE) > 0}")
         FruitGroup.load()
         EntityGroup.load()
-        cls._load_fonts()
         
         print("--- All Asset Sub-Groups Loaded ---")
-
-    @classmethod
-    def _load_fonts(cls):
-        if not pygame.font.get_init(): pygame.font.init()
-        cls.FONTS[FontType.HUD] = pygame.font.SysFont("arial", HUD_FONT_SIZE, bold=True)
-        cls.FONTS[FontType.SLOT] = pygame.font.SysFont("arial", SLOT_FONT_SIZE)
-
+        
     # --- UNIVERSAL GETTERS ---
 
     @classmethod
@@ -229,5 +240,7 @@ class AssetLoader:
         except: return None
 
     @classmethod
-    def get_font(cls, font_type: FontType):
-        return cls.FONTS.get(font_type, pygame.font.SysFont("arial", 20))
+    def get_font(cls, config: TextConfig) -> pygame.font.Font:
+        """ Universal entry point for getting a font.
+        Delegates to FontGroup to handle the caching details."""
+        return FontGroup.get_font(config)

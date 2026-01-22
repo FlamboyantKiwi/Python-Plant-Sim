@@ -291,4 +291,25 @@ class ArrowBP(ItemBlueprint):
             item_id=f"{material.lower()}_{self.sprite_suffix.lower()}"
         )
     
-    
+import pygame
+@dataclass
+class TextConfig:
+    """Defines the styling for a specific type of text."""
+    size: int = 20
+    name: str = "arial"
+    colour: tuple = (255, 255, 255)
+    bold: bool = False
+    italic: bool = False
+    antialias: bool = True
+
+    def render(self, text: str, custom_colour=None) -> pygame.Surface:
+        """Convenience method: Asks AssetLoader for the cached font, then renders."""
+        # Local import avoids circular dependency errors at startup
+        from core.asset_loader import AssetLoader
+        
+        # 1. Get the heavy Font object from the Loader (cached)
+        font = AssetLoader.get_font(self)
+        
+        # 2. Render the text
+        col = custom_colour if custom_colour else self.colour
+        return font.render(text, self.antialias, col)
