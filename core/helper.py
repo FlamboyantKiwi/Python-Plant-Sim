@@ -86,3 +86,23 @@ def draw_text(screen, text, font_key: str, x, y, colour_name=None, align="center
     # Align + Draw
     rect = align_rect(text_surf.get_rect(), x, y, align)
     screen.blit(text_surf, rect)
+
+def get_grid_pos(index:int, cols:int=2, start:tuple=(10, 130), size:tuple=(50, 50), gap:tuple=(10, 10)):
+        """ Calculates the top-left (x, y) for an item in a grid.
+        Args:
+            index (int): The item number (0, 1, 2...)
+            cols (int):  How many items before wrapping to the next row?
+            start (tuple): (x, y) pixel coordinates of the top-left corner.
+            size (tuple):  (width, height) of the item itself.
+            gap (tuple):   (x_gap, y_gap) space between items.
+        """
+        # 1. Logic: Convert linear index (0,1,2,3) to Grid (col, row)
+        current_col = index % cols  
+        current_row = index // cols 
+
+        # 2. Math: Calculate pixel position
+        # Position = Start + (Which Column * (Item Width + Gap Width))
+        x = start[0] + (current_col * (size[0] + gap[0]))
+        y = start[1] + (current_row * (size[1] + gap[1]))
+        
+        return x, y

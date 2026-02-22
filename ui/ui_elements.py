@@ -1,5 +1,5 @@
 import pygame
-from core.helper import align_rect
+from core.helper import align_rect, get_grid_pos 
 from core.asset_loader import AssetLoader
 from core.types import TextConfig
 
@@ -220,6 +220,8 @@ class Slot(Button):
 
         self.index = index
         self.item = None 
+        self.last_count = 0
+        self.price = None
         
         # COMPONENT: Stack Count
         self.info_text = TextBox(
@@ -230,12 +232,13 @@ class Slot(Button):
 
     def set_item(self, item):
         """Updates the slot's data."""
-        self.item = item
-
-        if self.item and self.item.stack_size > 1:
-            self.info_text.set_text(self.item.count)
-        else:
-            self.info_text.set_text("") # Auto-hide
+        current_count = item.count if item else 0
+        
+        # Check if it's a completely new item, OR if the existing item's count changed
+        if self.item != item or self.last_count != current_count:
+            self.item = item
+            self.last_count = current_count
+            self._update_text()
 
     def draw(self, screen):
         # Draw Background (State managed by parent)
@@ -250,5 +253,48 @@ class Slot(Button):
 
             self.info_text.draw(screen)
     def set_price(self, price: int):
-        """Shop Mode: Overrides the text to show price."""
-        self.info_text.set_text(f"${price}")
+        """Sets the slot to Shop Mode and remembers the price."""
+        self.price = price
+        self._update_text()
+        
+    def _update_text(self):
+        """Internal helper to figure out what text to display."""
+        if self.item is None:
+            self.info_text.set_text("")
+            self.info_text.is_visible = False
+            return
+
+        # PRIORITY 1: Shop Price
+        if self.price is not None:
+            self.info_text.set_text(f"${self.price}")
+            self.info_text.is_visible = True
+            
+        # PRIORITY 2: Stack Count
+        elif self.item.stack_size > 1:
+            self.info_text.set_text(self.item.count)
+            self.info_text.is_visible = True
+            
+        # PRIORITY 3: Nothing (Unstackable item in a normal inventory)
+        else:
+            self.info_text.set_text("") 
+            self.info_text.is_visible = False
+        
+    @classmethod
+    def create_grid(cls, max_size: int, columns: int, start_pos: tuple, slot_size: int, padding: int) -> list['Slot']:
+        """Factory method: Generates a list of Slot objects arranged in a grid."""
+        
+        slots = []
+        for i in range(max_size):
+            x, y = get_grid_pos(
+                index=i, 
+                cols=columns, 
+                start=start_pos, 
+                size=(slot_size, slot_size), 
+                gap=(padding, padding)
+            )
+            
+            slot_rect = pygame.Rect(x, y, slot_size, slot_size)
+            # Create a new instance of the class (Slot) and append it
+            slots.append(cls(slot_rect, i, slot_size))
+            
+        return slots

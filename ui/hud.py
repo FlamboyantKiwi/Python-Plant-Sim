@@ -24,19 +24,19 @@ class HUD:
         for element in self.ui_elements:
             element.draw(screen)
 
-        self.player.inventory.draw(screen)
+        self.player.inventory_ui.draw(screen)
 
     def update(self, mouse_pos):
         for element in self.ui_elements:
             element.update(mouse_pos)
-        self.player.inventory.update(mouse_pos)
+        self.player.inventory_ui.update(mouse_pos)
 
     def handle_click(self, pos):
         for element in self.ui_elements:
             if element.is_click(pos):
                 return element.handle_click() 
             
-        if self.player.inventory.handle_click(pos):
-            return "INVENTORY_CLICK"
+        if self.player.handle_click(pos):
+            return True
         return None
             
