@@ -4,11 +4,216 @@ from settings import (
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
 )
 from dataclasses import dataclass
-# ==========================================
-# GAMEPLAY BALANCE CONFIG
-# ==========================================
+
+@dataclass
+class CropAsset:
+    # --- Logic / Balance ---
+    seed_price: int
+    crop_price: int
+    grow_time: int
+    energy: int
+    
+    # --- Visuals ---
+    fruit_container_image: SpriteRect  # The crate/seed bag
+    fruit_image: SpriteRect            # The actual fruit sprite
+    world_art: SpriteRect              # The growing plant sprite
+    
+    # --- Flags (Optional) ---
+    regrows: bool|None = None
+    is_tree: bool = False
+    
+    def __post_init__(self):
+        """Runs automatically after the object is created."""
+        if self.regrows is None:
+            # If the user didn't specify, default to True for trees, False for plants
+            self.regrows = self.is_tree
+            
+    def generate_seed_data(self, name: str, image_key: str) -> ItemData:
+        return ItemData(
+            name=f"{name} Seeds",
+            description=f"Takes {self.grow_time} days to grow.",
+            category=ItemCategory.SEED,
+            image_key=f"{image_key}_seeds", 
+            buy_price=self.seed_price,
+            # Pass grow_time so the logic knows how long it takes
+            grow_time=self.grow_time 
+        )
+
+    def generate_crop_data(self, name: str, image_key: str) -> ItemData:
+        return ItemData(
+            name=name,
+            description=f"A fresh {name}. Restores energy.",
+            category=ItemCategory.CROP,
+            image_key=image_key,
+            # We set buy_price to 0 (cannot be bought), 
+            # but we explicitly set sell_price to override the __post_init__ halving logic
+            buy_price=0,
+            sell_price=self.crop_price,
+            energy_gain=self.energy
+        )
+
+    def generate_plant_data(self, name: str, harvest_id: str) -> PlantData:
+        if self.is_tree:    stage_count = 5
+        else:               stage_count = 4
+        return PlantData(
+            name=name,
+            grow_time=self.grow_time,
+            harvest_item=harvest_id,
+            
+            image_stages=stage_count,     # The Integer (for math)
+            image_rect=self.world_art,    # The Sprite (for rendering)
+            
+            is_tree=self.is_tree,
+            regrows=self.regrows or False
+        )
+    
+
+CROPS = {
+    # --- SINGLE HARVEST VEGETABLES ---
+    "Beet": CropAsset(
+        10, 22, 3, 8,
+        fruit_container_image=SpriteRect(240, 192, 48, 16),
+        fruit_image=SpriteRect(224, 60, 16, 32),
+        world_art=SpriteRect(144, 404, 64, 36)),
+    "Onion": CropAsset(
+        12, 28, 4, 10,
+        fruit_container_image=SpriteRect(48, 208, 48, 16),
+        fruit_image=SpriteRect(192, 60, 16, 32),
+        world_art=SpriteRect(144, 368, 64, 36)),
+    "Cabbage": CropAsset(
+        20, 55, 6, 15,
+        fruit_container_image=SpriteRect(48, 192, 48, 16),
+        fruit_image=SpriteRect(260, 11, 24, 32),
+        world_art=SpriteRect(0, 211, 128, 24)),
+    "Squash": CropAsset(
+        30, 75, 7, 20,
+        fruit_container_image=SpriteRect(96, 208, 48, 16),
+        fruit_image=SpriteRect(0, 0, 32, 48),
+        world_art=SpriteRect(0, 235, 128, 36)),
+    "Cauliflower": CropAsset(
+        40, 95, 9, 30,
+        fruit_container_image=SpriteRect(0, 192, 48, 16),
+        fruit_image=SpriteRect(128, 8, 32, 38),
+        world_art=SpriteRect(0, 133, 128, 24)),
+    "Melon": CropAsset(
+        50, 130, 10, 50,
+        fruit_container_image=SpriteRect(60, 160, 48, 32),
+        fruit_image=SpriteRect(64, 0, 32, 48),
+        world_art=SpriteRect(0, 280, 128, 36)),
+    
+    # --- REGROWING CROPS ---
+    "Green Bean": CropAsset(
+        30, 20, 5, 12,
+        fruit_container_image=SpriteRect(0, 208, 48, 16),
+        fruit_image=SpriteRect(160, 60, 16, 32),
+        world_art=SpriteRect(0, 171, 128, 36),
+        regrows=True),
+    "Cucumber": CropAsset(
+        35, 25, 5, 15,
+        fruit_container_image=SpriteRect(240, 144, 48, 16),
+        fruit_image=SpriteRect(100, 60, 24, 32),
+        world_art=SpriteRect(0, 53, 128, 42),
+        regrows=True),
+    "Red Pepper": CropAsset(
+        40, 45, 7, 22,
+        fruit_container_image=SpriteRect(192, 160, 48, 16),
+        fruit_image=SpriteRect(4, 60, 24, 32),
+        world_art=SpriteRect(0, 95, 128, 36),
+        regrows=True),
+    "Grape": CropAsset(
+        45, 50, 8, 25,
+        fruit_container_image=SpriteRect(240, 208, 48, 16),
+        fruit_image=SpriteRect(196, 11, 24, 32),
+        world_art=SpriteRect(0, 6, 128, 42),
+        regrows=True),
+    "Pineapple": CropAsset(
+        150, 350, 14, 100,
+        fruit_container_image=SpriteRect(240, 160, 48, 32),
+        fruit_image=SpriteRect(32, 0, 32, 48),
+        world_art=SpriteRect(0, 316, 128, 36),
+        regrows=True),
+
+    # --- MUSHROOMS ---
+    "Mushroom": CropAsset(
+        20, 40, 3, 20,
+        fruit_container_image=SpriteRect(192, 192, 48, 16),
+        fruit_image=SpriteRect(68, 60, 24, 32),
+        world_art=SpriteRect(224, 404, 64, 36),
+        regrows=True),
+    "Chestnut Mushroom": CropAsset(
+        25, 55, 4, 25,
+        fruit_container_image=SpriteRect(144, 208, 48, 16),
+        fruit_image=SpriteRect(36, 60, 24, 32),
+        world_art=SpriteRect(224, 368, 64, 36),
+        regrows=True),
+
+    # --- TREES ---
+    "Apple": CropAsset(
+        100, 60, 10, 25,
+        fruit_container_image=SpriteRect(192, 144, 48, 16),
+        fruit_image=SpriteRect(228, 11, 24, 32),
+        world_art=SpriteRect(128, 146, 255, 64),
+        is_tree=True),
+    "Lemon": CropAsset(
+        120, 70, 11, 30,
+        fruit_container_image=SpriteRect(240, 128, 48, 16),
+        fruit_image=SpriteRect(128, 60, 16, 32),
+        world_art=SpriteRect(128, 82, 255, 64),
+        is_tree=True),
+    "Plum": CropAsset(
+        130, 75, 11, 30,
+        fruit_container_image=SpriteRect(192, 208, 48, 16),
+        fruit_image=SpriteRect(256, 60, 16, 32),
+        world_art=SpriteRect(128, 4, 255, 78),
+        is_tree=True),
+    "Coconut": CropAsset(
+        150, 90, 12, 40,
+        fruit_container_image=SpriteRect(192, 176, 48, 16),
+        fruit_image=SpriteRect(160, 8, 32, 38),
+        world_art=SpriteRect(128, 290, 255, 78),
+        is_tree=True),
+    "Banana": CropAsset(
+        180, 110, 13, 50,
+        fruit_container_image=SpriteRect(0, 176, 48, 16),
+        fruit_image=SpriteRect(96, 8, 32, 38),
+        world_art=SpriteRect(128, 212, 255, 78),
+        is_tree=True),
+
+    # --- OTHERS  ---
+    # WARNING: Corn/Sunflower are missing Inventory Art. Will look into later
+    "Corn": CropAsset(
+        10, 20, 4, 15,
+        fruit_container_image=SpriteRect(0, 0, 16, 16), # MISSING
+        fruit_image=SpriteRect(0, 0, 16, 16),           # MISSING
+        world_art=SpriteRect(0, 352, 128, 36)
+    ),
+    "Sunflower": CropAsset(
+        15, 40, 5, 20,
+        fruit_container_image=SpriteRect(0, 0, 16, 16), # MISSING
+        fruit_image=SpriteRect(0, 0, 16, 16),           # MISSING
+        world_art=SpriteRect(0, 396, 128, 36)
+    ),
+    # WARNING: wheat/tomato are missing art!
+    "Wheat": CropAsset(
+        5, 10, 2, 5, 
+        fruit_container_image=SpriteRect(0,0,16,16), # MISSING
+        fruit_image=SpriteRect(0,0,16,16), # MISSING
+        world_art=SpriteRect(0,0,16,16)),# MISSING
+    "Tomato": CropAsset(
+        25, 30, 6, 18, 
+        fruit_container_image=SpriteRect(0,0,16,16), # MISSING
+        fruit_image=SpriteRect(0,0,16,16), # MISSING
+        world_art=SpriteRect(0,0,16,16), # MISSING
+        regrows=True),
+}
+
+DEFAULT_CROP = CropAsset(10, 20, 3, 10, SpriteRect(0,0,1,1), SpriteRect(0,0,1,1), SpriteRect(0,0,1,1))
+SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 
 FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
+TREE_FRAME_SLICES = [(0, 30), (32, 30), (66, 60), (131, 60), (195, 60) ]
+PLANT_FRAME_ORDER = [0, 1, 3, 2]
+
 CROP_BALANCE = {
     # --- SINGLE HARVEST CROPS (Standard) ---
     "Beet":             CropConfig(seed_price=10, crop_price=22, grow_time=3, energy=8),
@@ -44,7 +249,6 @@ CROP_BALANCE = {
     "Sunflower":        CropConfig(seed_price=15, crop_price=40, grow_time=5, energy=20),
 }
 DEFAULT_CROP = CropConfig(seed_price=10, crop_price=20, grow_time=3, energy=10)
-
 PLANT_SPRITE_REGIONS = {
     "Grape":        SpriteRect(0, 6,   128, 42),
     "Cucumber":     SpriteRect(0, 53,  128, 42),
@@ -63,14 +267,6 @@ PLANT_SPRITE_REGIONS = {
     "Beet":              SpriteRect(144, 404, 64, 36),
     "Mushroom":          SpriteRect(224, 404, 64, 36),
 }
-
-TREE_FRAME_SLICES = [
-    (0, 30),    # Stage 0: Seed
-    (32, 30),   # Stage 1: Sapling
-    (66, 60),   # Stage 2: Growing
-    (131, 60),  # Stage 3: Mature
-    (195, 60)   # Stage 4: Fruiting
-]
 TREE_SPRITE_REGIONS = {
     "Plum":     SpriteRect(128, 4,   255, 78),
     "Lemon":    SpriteRect(128, 82,  255, 64),
@@ -78,6 +274,28 @@ TREE_SPRITE_REGIONS = {
     "Banana":   SpriteRect(128, 212, 255, 78),
     "Coconut":  SpriteRect(128, 290, 255, 78), 
 }
+FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
+    "Banana":           RectPair(SpriteRect(0,   176, 48, 16),  SpriteRect(96,  8,   32, 38)),
+    "Cauliflower":      RectPair(SpriteRect(0,   192, 48, 16),  SpriteRect(128, 8,   32, 38)),
+    "Cabbage":          RectPair(SpriteRect(48,  192, 48, 16),  SpriteRect(260, 11,  24, 32)),
+    "Green Bean":       RectPair(SpriteRect(0,   208, 48, 16),  SpriteRect(160, 60,  16, 32)),
+    "Onion":            RectPair(SpriteRect(48,  208, 48, 16),  SpriteRect(192, 60,  16, 32)),
+    "Squash":           RectPair(SpriteRect(96,  208, 48, 16),  SpriteRect(0,   0,   32, 48)),
+    "Chestnut Mushroom":RectPair(SpriteRect(144, 208, 48, 16),  SpriteRect(36,  60,  24, 32)),
+    "Plum":             RectPair(SpriteRect(192, 208, 48, 16),  SpriteRect(256, 60,  16, 32)),
+    "Grape":            RectPair(SpriteRect(240, 208, 48, 16),  SpriteRect(196, 11,  24, 32)),
+    "Mushroom":         RectPair(SpriteRect(192, 192, 48, 16),  SpriteRect(68,  60,  24, 32)),
+    "Beet":             RectPair(SpriteRect(240, 192, 48, 16),  SpriteRect(224, 60,  16, 32)),
+    "Coconut":          RectPair(SpriteRect(192, 176, 48, 16),  SpriteRect(160, 8,   32, 38)),
+    "Red Pepper":       RectPair(SpriteRect(192, 160, 48, 16),  SpriteRect(4,   60,  24, 32)),
+    "Apple":            RectPair(SpriteRect(192, 144, 48, 16),  SpriteRect(228, 11,  24, 32)),
+    "Cucumber":         RectPair(SpriteRect(240, 144, 48, 16),  SpriteRect(100, 60,  24, 32)),
+    "Lemon":            RectPair(SpriteRect(240, 128, 48, 16),  SpriteRect(128, 60,  16, 32)),
+    "Pineapple":        RectPair(SpriteRect(240, 160, 48, 32),  SpriteRect(32,  0,   32, 48)),
+    "Melon":            RectPair(SpriteRect(60,  160, 48, 32),  SpriteRect(64,  0,   32, 48)),
+}
+
+
 
 # Materials
 MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
@@ -128,7 +346,7 @@ def get_item_data(item_id: str) -> ItemData:
     return get_data(item_id, ITEMS, fallback_item)
 def get_plant_data(plant_name: str) -> PlantData:
     fallback_plant = PlantData(name="Unknown Plant", grow_time=1, 
-        harvest_item="none", image_stages=1, is_tree=False, regrows=False)
+        harvest_item="none", image_stages=1, image_rect=SEED_BAGS_POS, is_tree=False, regrows=False)
     return get_data(plant_name, PLANT_DATA, fallback_plant)
 
 # ============ Tiles ============ #
@@ -165,29 +383,6 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
         ScaleRect(120, 256, 32,  32, 32, 32),
         ScaleRect(276, 224, 48,  48, 48, 48)]
 }
-
-# ============ Fruit ============ #
-FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
-    "Banana":           RectPair(SpriteRect(0,   176, 48, 16),  SpriteRect(96,  8,   32, 38)),
-    "Cauliflower":      RectPair(SpriteRect(0,   192, 48, 16),  SpriteRect(128, 8,   32, 38)),
-    "Cabbage":          RectPair(SpriteRect(48,  192, 48, 16),  SpriteRect(260, 11,  24, 32)),
-    "Green Bean":       RectPair(SpriteRect(0,   208, 48, 16),  SpriteRect(160, 60,  16, 32)),
-    "Onion":            RectPair(SpriteRect(48,  208, 48, 16),  SpriteRect(192, 60,  16, 32)),
-    "Squash":           RectPair(SpriteRect(96,  208, 48, 16),  SpriteRect(0,   0,   32, 48)),
-    "Chestnut Mushroom":RectPair(SpriteRect(144, 208, 48, 16),  SpriteRect(36,  60,  24, 32)),
-    "Plum":             RectPair(SpriteRect(192, 208, 48, 16),  SpriteRect(256, 60,  16, 32)),
-    "Grape":            RectPair(SpriteRect(240, 208, 48, 16),  SpriteRect(196, 11,  24, 32)),
-    "Mushroom":         RectPair(SpriteRect(192, 192, 48, 16),  SpriteRect(68,  60,  24, 32)),
-    "Beet":             RectPair(SpriteRect(240, 192, 48, 16),  SpriteRect(224, 60,  16, 32)),
-    "Coconut":          RectPair(SpriteRect(192, 176, 48, 16),  SpriteRect(160, 8,   32, 38)),
-    "Red Pepper":       RectPair(SpriteRect(192, 160, 48, 16),  SpriteRect(4,   60,  24, 32)),
-    "Apple":            RectPair(SpriteRect(192, 144, 48, 16),  SpriteRect(228, 11,  24, 32)),
-    "Cucumber":         RectPair(SpriteRect(240, 144, 48, 16),  SpriteRect(100, 60,  24, 32)),
-    "Lemon":            RectPair(SpriteRect(240, 128, 48, 16),  SpriteRect(128, 60,  16, 32)),
-    "Pineapple":        RectPair(SpriteRect(240, 160, 48, 32),  SpriteRect(32,  0,   32, 48)),
-    "Melon":            RectPair(SpriteRect(60,  160, 48, 32),  SpriteRect(64,  0,   32, 48)),
-}
-SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 
 # ============ Entities (Player, Animals) ============ #
 GAME_ENTITIES = {
@@ -240,7 +435,6 @@ SHOPS = {
     "general_store": ShopData(
         store_name="General Store",
         items_ids=[
-            "tomato_seeds",
             "melon_seeds",
             "red_pepper_seeds", # Now available because of your generator!
             "wood_axe", 
@@ -278,6 +472,7 @@ COLOURS = {
 
     # Player & Inventory
     "PLAYER":        (0, 0, 255),
+    "SLOT":          (150, 150, 150),
     "INVENTORY_SLOT":(150, 150, 150),
     "INV_TEXT":      (255, 255, 255),
     "MONEY":         (255, 215, 0),
@@ -299,4 +494,13 @@ COLOURS = {
     # Menu
     "MenuBG":    (30, 30, 30),      # Dark Grey
     "MenuTitle": (255, 215, 0),     # Gold
+    
+    # Button
+    "ButtonBG": (40, 40, 40),           # Dark Grey Background
+    "ButtonBorder": (100, 100, 100),    # Light Grey Idle Border
+    "ButtonHover": (255, 215, 0),       # Gold Hover Border
+    "ButtonActive": (255,255,255),       # White
+   
+    "HOVER_COLOUR": (255,255,255),
+    "ACTIVE_COLOUR": (255, 215, 0),
 }

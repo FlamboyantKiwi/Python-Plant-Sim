@@ -43,7 +43,7 @@ SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
 SHOP_BUTTON = pygame.Rect(BLOCK_SIZE//2, BLOCK_SIZE//2, BLOCK_SIZE, BLOCK_SIZE) 
 MONEY_RECT = pygame.Rect(0, 10, WIDTH, 30)
 PLAYER_START_INVENTORY = [
-    ("wood_hoe", 1),
+    ("gold_hoe", 1),
     ("wood_watering_can", 1),
     ("red_pepper_seeds", 5),
     ("apple", 3)

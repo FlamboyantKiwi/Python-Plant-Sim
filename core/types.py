@@ -113,8 +113,8 @@ class ItemData:
     category: ItemCategory
     image_key: str 
     buy_price: int
-    
     # optional Fields
+    
     sell_price: int|None = None
     stackable: bool = True
     max_stack: int = 99
@@ -126,7 +126,7 @@ class ItemData:
     def __post_init__(self):
         # Runs after __init__ 
         # used to calculate defaults based on other fields
-        if self.sell_price == None:
+        if self.buy_price and self.sell_price == None:
             self.sell_price = self.buy_price // 2
 
 @dataclass
@@ -135,7 +135,8 @@ class PlantData:
     grow_time:int       # Total days to reach harvest
     harvest_item:str    # The Item ID produced (e.g., "apple")
 
-    image_stages: int   # number of images in the spritesheet
+    image_stages: int          # Count of frames (needed for math)
+    image_rect: SpriteRect     # The sprite sheet location (needed for drawing)
 
     is_tree: bool = False # True = Tree behavior (collision?), False = Crop (walkable)
     regrows: bool = False # True = Returns to previous stage after harvest (like berries)
@@ -209,6 +210,7 @@ class CropConfig:
             grow_time=self.grow_time,
             harvest_item=harvest_id,
             image_stages=self.stages,
+            image_rect=SpriteRect(0,0,0,0), # to prevent errors between change-over
             is_tree=self.is_tree,
             regrows=self.regrows
         )

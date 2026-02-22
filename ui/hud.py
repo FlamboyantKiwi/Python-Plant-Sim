@@ -11,9 +11,9 @@ class HUD:
                 rect=SHOP_BUTTON, 
                 text="SHOP", 
                 function=lambda: "OPEN_SHOP",
-                bg_colour=(40, 40, 40),       # Dark Grey
-                border_colour=(100, 100, 100),# Light Grey Outline
-                hover_colour=(255, 255, 0)),    # Yellow on Hover
+                bg_colour="ButtonBG",        # Dark Grey Background
+                border_colour= "ButtonBorder", # Light Grey Idle Border
+                hover_colour="ButtonHover"),    # Gold Hover Border
             TextBox(
                 rect=MONEY_RECT,
                 text_getter=lambda: f"Money: {self.player.money}",

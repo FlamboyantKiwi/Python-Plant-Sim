@@ -233,9 +233,9 @@ class MenuState(BaseUIState):
             # Creates a consistent styled button in one line!
             buttons.append(Button.create_bordered_button(
                 rect=rect, text=text, function=func,
-                bg_colour=(40, 40, 40),        # Dark Grey Background
-                border_colour=(100, 100, 100), # Light Grey Idle Border
-                hover_colour=(255, 215, 0),    # Gold Hover Border
+                bg_colour="ButtonBG",        # Dark Grey Background
+                border_colour= "ButtonBorder", # Light Grey Idle Border
+                hover_colour="ButtonHover",    # Gold Hover Border
                 thickness=2))
         return buttons
 

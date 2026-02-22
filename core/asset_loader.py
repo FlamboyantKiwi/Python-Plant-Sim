@@ -1,5 +1,5 @@
 # asset_loader.py
-import pygame, os
+import pygame, os, inspect
 from enum import Enum
 from abc import ABC
 
@@ -45,10 +45,27 @@ class ConfigGroup(AssetGroup):
 
         # 2. Handle Missing
         if key not in cls.MISSING:
-            print(f"[{cls.__name__}] Warning: Missing Key '{key}'")
+            # --- NEW DEBUG LOGIC ---
+            caller_info = "Unknown source"
+            try:
+                # Look back through the stack to find who called this
+                for frame in inspect.stack():
+                    filename = os.path.basename(frame.filename)
+                    # Skip these files to find the 'real' culprit
+                    ignore_files = ["asset_loader.py", "ui_elements.py", "helper.py"]
+                    
+                    if filename not in ignore_files:
+                        # Format: filename:line_number
+                        filename = os.path.basename(frame.filename)
+                        caller_info = f"{filename}:{frame.lineno}"
+                        break
+            except Exception:
+                pass
+
+            print(f"[{cls.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")
+            # -----------------------
+            
             cls.MISSING.add(key)
-        
-        return cls.DEFAULT
 
     @classmethod
     def debug_print(cls):
@@ -167,23 +184,31 @@ class PlantGroup(SpriteGroup):
         sheet = cls.load_spritesheet("Plants")
         if not sheet: return
 
-        # 1. Regular Crops (4 stages)
-        for name, rect in PLANT_SPRITE_REGIONS.items():
-            frame_w = rect.w // 4
-            for i in range(4):
-                cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
-                    rect.x + (i * frame_w), rect.y, frame_w, rect.h,
-                    (frame_w * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
-                )
-
-        # 2. Trees (Manual Slices)
-        for name, rect in TREE_SPRITE_REGIONS.items():
-            for i, (offset, width) in enumerate(TREE_FRAME_SLICES):
-                cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
-                    rect.x + offset, rect.y, width, rect.h,
-                    (width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
-                )
-
+        # Define loading tasks: (Source Dict, Data List)
+        # 1. Crops: Pass the ORDER indices [0, 1, 3, 2] (Reorders Dead/Ripe)
+        # 2. Trees: Pass the SLICE tuples [(0,30), (32,30)...] (Exact pixels)
+        load_jobs = [
+            (PLANT_SPRITE_REGIONS, PLANT_FRAME_ORDER),
+            (TREE_SPRITE_REGIONS,  TREE_FRAME_SLICES)
+        ]
+        
+        for region_dict, data_list in load_jobs:
+            for name, rect in region_dict.items():
+                # Normalize: check type to decide how to process
+                if isinstance(data_list[0], int):
+                    # Dynamic Crops (List of Integers)
+                    frame_w = rect.w // len(data_list)
+                    slices = [(idx * frame_w, frame_w) for idx in data_list]    
+                else:
+                    # Static Trees (List of Tuples)
+                    slices = data_list
+                    
+                for i, (offset, width) in enumerate(slices):
+                    cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
+                        rect.x + offset, rect.y, width, rect.h,
+                        (width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
+                    )
+        
 class FruitGroup(SpriteGroup):
     CONTAINERS = {}
     SEED_BAGS = {}

@@ -19,7 +19,7 @@ class UIElement(pygame.sprite.Sprite):
             self.image = AssetLoader.load_image(image_file, scale=rect.size).copy()
         elif colour: # Solid Colour
             self.image = pygame.Surface(rect.size)
-            self.image.fill(colour)
+            self.image.fill(AssetLoader.get_colour(colour))
         elif border_colour: # Transparent container
             self.image = pygame.Surface(rect.size, pygame.SRCALPHA)
         else: # Invisible / Container only
@@ -28,7 +28,8 @@ class UIElement(pygame.sprite.Sprite):
         # Create Borders
         if self.image and border_colour:
             # Draw border inside the existing surface
-            pygame.draw.rect(self.image, border_colour, self.image.get_rect(), border_width)
+            col = AssetLoader.get_colour(border_colour)
+            pygame.draw.rect(self.image, col, self.image.get_rect(), border_width)
 
     def draw(self, screen):
         # Only draw if we have a valid surface
@@ -186,8 +187,8 @@ class Button(StateElement):
     def handle_click(self):
         if self.function:   return self.function()
     @classmethod
-    def create_bordered_button(cls, rect, text, function, bg_colour=(50, 50, 50), 
-            border_colour=(200, 200, 200), hover_colour=(255, 215, 0), thickness=2):
+    def create_bordered_button(cls, rect, text, function, bg_colour="dark_grey", 
+            border_colour="light_grey", hover_colour="gold", active_colour="white", thickness=2):
         """Factory: Creates a button with a solid background and a changing border."""
         # 1. Base Visual (Dark BG + Grey Border)
         v_normal = UIElement(rect, colour=bg_colour, border_colour=border_colour, border_width=thickness)
@@ -196,8 +197,7 @@ class Button(StateElement):
         v_hover = UIElement(rect, colour=bg_colour, border_colour=hover_colour, border_width=thickness)
         
         # Active Visual (Lighter BG + Gold Border)
-        active_bg = tuple(min(c + 20, 255) for c in bg_colour) # Background slightly lighter when clicked
-        v_active = UIElement(rect, colour=active_bg, border_colour=hover_colour, border_width=thickness+1)
+        v_active = UIElement(rect, colour=active_colour, border_colour=hover_colour, border_width=thickness + 1)
 
         # Return the fully assembled Button
         return cls(rect, text=text, function=function, 
@@ -207,13 +207,13 @@ class Button(StateElement):
 class Slot(Button):
     def __init__(self, rect, index, slot_size):
         # 1. DEFINE VISUALS
-        bg = "slot_bg"
-        col_hover = AssetLoader.get_colour("HOVER_COLOUR", fallback="HIGHLIGHT")
-        col_active = AssetLoader.get_colour("ACTIVE_COLOUR", fallback="HIGHLIGHT")
+        colour = "SLOT"
+        hover_colour = "HOVER_COLOUR"
+        active_colour = "ACTIVE_COLOUR"
 
-        v_normal = UIElement(rect, image_file=bg)
-        v_hover  = UIElement(rect, image_file=bg, border_colour=col_hover)
-        v_active = UIElement(rect, image_file=bg, border_colour=col_active, border_width=3)
+        v_normal = UIElement(rect, colour=colour)
+        v_hover  = UIElement(rect, colour=colour, border_colour=hover_colour)
+        v_active = UIElement(rect, colour=colour, border_colour=active_colour, border_width=3)
 
         # INIT BUTTON (Which Inits StatefulElement)
         super().__init__(rect, base_visual=v_normal, hover_visual=v_hover, active_visual=v_active)
