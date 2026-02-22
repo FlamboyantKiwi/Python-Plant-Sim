@@ -3,8 +3,9 @@ from settings import WIDTH, HEIGHT
 
 class PhysicsEntity(pygame.sprite.Sprite):
     """Base class for any entity that moves and respects collisions."""
-    def __init__(self, initial_rect, initial_hitbox, base_speed):
+    def __init__(self, image:pygame.Surface, initial_rect, initial_hitbox, base_speed):
         super().__init__()
+        self.image = image
         
         self.rect = initial_rect
         self.hitbox = initial_hitbox
@@ -81,3 +82,12 @@ class PhysicsEntity(pygame.sprite.Sprite):
         # 3. Snap the visual rendering rect to the final physics hitbox
         self.rect.centerx = self.hitbox.centerx
         self.rect.midbottom = self.hitbox.midbottom
+        self.rect.bottom = self.hitbox.bottom + 10
+    
+    def draw(self, surface: pygame.Surface, offset_x=0, offset_y=0):
+        """Standard drawing logic for all physical entities."""
+        if self.image is None: return
+        draw_rect = self.rect.copy()
+        draw_rect.x -= offset_x
+        draw_rect.y -= offset_y
+        surface.blit(self.image, draw_rect)

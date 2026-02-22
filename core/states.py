@@ -144,6 +144,10 @@ class PlayingState(GameState):
             Plant("Apple", 5, 5),   # A Tree
             Plant("Onion", 6, 5)    # A Crop
         ]
+        
+        self.collidables = pygame.sprite.Group()
+        self.collidables.add(self.level.all_tiles.sprites()) # Add all map tiles
+        self.collidables.add(self.plants) # Add all plants
 
         self.key_binds = {
             pygame.K_ESCAPE: self.quit_game,
@@ -157,7 +161,7 @@ class PlayingState(GameState):
 
         # Update world objects
         self.level.update()
-        self.player.update(dt, self.level.all_tiles)
+        self.player.update(dt, self.collidables)
         self.hud.update(mouse_pos)
 
         keys = pygame.key.get_pressed()
@@ -170,9 +174,27 @@ class PlayingState(GameState):
         
         screen.fill(AssetLoader.get_colour("WATER")) # Or use settings.COLOURS
         self.all_tiles.draw(screen)
-        self.all_sprites.draw(screen)
-        for plant in self.plants:
-            plant.draw(screen, 0, 0)
+        
+        # 1. Combine everything that can overlap into one temporary list
+        render_list = [self.player] + self.plants
+        
+        # 2. Sort the list based on the bottom of their hitboxes
+        # Entities higher up the screen (lower Y value) get drawn first!
+        render_list.sort(key=lambda entity: entity.hitbox.top)
+        
+        # 3. Draw them in the sorted order
+        for entity in render_list:
+            if hasattr(entity, 'draw'):
+                entity.draw(screen) # Use the plant's custom draw
+            else:
+                screen.blit(entity.image, entity.rect) # Normal Sprite draw
+                
+            # DEBUG TRICK: Uncomment this line to literally see your hitboxes!
+            pygame.draw.rect(screen, (0,255,0), entity.rect, 2)
+            pygame.draw.rect(screen, (255, 0, 0), entity.hitbox, 2)
+            
+        
+            
         self.hud.draw(screen)
 
     def handle_event(self, event):

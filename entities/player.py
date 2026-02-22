@@ -22,14 +22,17 @@ class Player(PhysicsEntity):
     SLOT_SIZE = 50
     def __init__(self, x:int|float, y:int|float, type="Racoon"):
        # 1. Figure out the unique player visuals and sizes first
-        self.image = pygame.Surface((32, 64))
-        start_rect = self.image.get_rect(topleft=(x, y))
+        initial_image = pygame.Surface((32, 64))
+        start_rect = initial_image.get_rect(topleft=(x, y))
         
         start_hitbox = pygame.Rect(0, 0, 20, 10)
         start_hitbox.midbottom = start_rect.midbottom
         
         # 2. Hand them to the PhysicsEntity to do the rest!
-        super().__init__(initial_rect=start_rect, initial_hitbox=start_hitbox, base_speed=200)
+        super().__init__(image=initial_image, 
+                         initial_rect=start_rect, 
+                         initial_hitbox=start_hitbox, 
+                         base_speed=200)
         
         self.player_type = type
         self.state = EntityState.IDLE
@@ -153,10 +156,14 @@ class Player(PhysicsEntity):
         """Main update loop. 
             Requires dt (delta time) for smooth vector movement."""
         self.input()
-        self.move(dt, all_tiles)
+        
         
         frame = self.animator.get_frame(self.state, self.facing, dt)
-        if frame: self.image = frame
+        if frame: 
+            self.image = frame
+            self.rect = self.image.get_rect()
+        
+        self.move(dt, all_tiles)
 
     def interact(self, all_tiles:list[Tile]):
         """Interacts with the tile directly under the player's feet."""
