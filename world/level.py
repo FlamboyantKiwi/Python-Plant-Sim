@@ -65,33 +65,23 @@ class Level:
                 y = map_tile_y * BLOCK_SIZE
 
                 detail_key = None
-                current_tileset = None
+                random_detail_image = None
                 
                 # If dirt, use the DIRT tileset and Dirt details
                 if center_node_material == Level.DIRT_NODE:
                     tile_type_key = "DIRT"
                     detail_key = "DETAIL_DIRT" 
-                    current_tileset = self.tilesets.get("GRASS_A")
 
                 # If grass, randomly choose between GRASS_A and GRASS_B tilesets
                 elif center_node_material == Level.GRASS_NODE:
                     tile_type_key = "GRASS_A"
                     detail_key = "DETAIL_GRASS"
-                    current_tileset = self.tilesets.get(tile_type_key)
                 
                 # Handle other types like WATER or fallback
                 else: 
                     tile_type_key = "WATER" 
-                    current_tileset = None
-                
-                # Safety check: skip if tileset is not loaded/found
-                if not current_tileset and tile_type_key != "WATER":
-                    print(f"Warning: Tileset '{tile_type_key}' not found.")
-                    map_tile_x += 1
-                    continue
                 
                 # Check if we have a detail key and the random chance succeeds
-                random_detail_image = None
                 if detail_key and same_type_count >= 6 and random.random() < DETAIL_CHANCE:
                     detail_list = self.tilesets.get(detail_key)
                     
@@ -100,14 +90,11 @@ class Level:
                         random_detail_image = random.choice(detail_list)
 
                 # --- 3. Create the Marching Tile ---
-                new_tile = Tile(
-                    x, y,
-                    tile_type=tile_type_key , 
-                    neighbors=nine_nodes_status, # The 9 boolean nodes
-                    tileset=current_tileset,
-                    detail_image = random_detail_image)
+                new_tile = Tile.create(self, x, y, tile_type_key, nine_nodes_status, random_detail_image)
+                
+                # Add to grid and sprite groups
                 self.all_tiles.add(new_tile)
-                self.tile_grid[(map_tile_x, map_tile_y)]=new_tile
+                self.tile_grid[(map_tile_x, map_tile_y)] = new_tile
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---
                 if map_tile_x == 1 and map_tile_y == 1:
@@ -122,13 +109,56 @@ class Level:
         self.MAP_WIDTH = map_tile_x 
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
+    def till_map_node(self, grid_x: int, grid_y: int):
+        """Converts a grass grid tile into dirt and updates the surrounding visuals."""
+        
+        # 1. Convert Grid Coordinates to Node Map Coordinates
+        # (Remember your node map is twice as big as your tile grid!)
+        node_center_x = (grid_x * 2) + 1
+        node_center_y = (grid_y * 2) + 1
+        
+        # Safety Check
+        if node_center_x >= len(self.node_map[0]) -1 or node_center_y >= len(self.node_map) -1:
+            return
 
+        # 2. Update the Node Map (Set the center and surrounding 8 nodes to DIRT)
+        for y_offset in [-1, 0, 1]:
+            for x_offset in [-1, 0, 1]:
+                self.node_map[node_center_y + y_offset][node_center_x + x_offset] = Level.DIRT_NODE
+
+        # 3. Refresh Visuals for the Target Tile AND its 8 Neighbors
+        for y_offset in [-1, 0, 1]:
+            for x_offset in [-1, 0, 1]:
+                target_x = grid_x + x_offset
+                target_y = grid_y + y_offset
+                
+                tile_to_update = self.get_tile(target_x, target_y)
+                
+                # If the tile exists and is not water
+                if tile_to_update and getattr(tile_to_update, 'tile_type_key', None) != "WATER":
+                    
+                    # Recalculate the 9-node status for THIS specific neighbor
+                    n_center_x = (target_x * 2) + 1
+                    n_center_y = (target_y * 2) + 1
+                    
+                    new_nodes = []
+                    for ny in range(3):
+                        for nx in range(3):
+                            # Make sure we don't index out of bounds on the edges
+                            try:
+                                val = self.node_map[n_center_y - 1 + ny][n_center_x - 1 + nx]
+                                new_nodes.append(val == Level.GRASS_NODE)
+                            except IndexError:
+                                new_nodes.append(False) # Treat out-of-bounds as dirt
+                                
+                    # Tell the tile to redraw itself!
+                    tile_to_update.refresh_terrain(new_nodes)
     def get_tile(self, grid_x:int, grid_y:int) -> Tile|None:
         return self.tile_grid.get((grid_x, grid_y))
-    
     def update(self):
         """Updates all entities within the level (tiles, water animations, etc)."""
         self.all_tiles.update()
+    
     @staticmethod
     def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):
         """Randomly selects a center point, calculates a noise-distorted boundary, 
@@ -168,21 +198,6 @@ class Level:
                 # 4. Check against the effective radius squared
                 if distance_sq < effective_radius**2:
                     node_map[y][x] = passive_material
-    @staticmethod # REMOVED (for now)
-    def draw_pond(node_map: list[list[int]], min_radius: int = 1, max_radius: int = 2):
-        """ Carves a randomly sized, organically shaped pond (Water Node = 2) 
-        into the node map."""
-        
-        # 1. Randomly select the radius
-        radius = random.randint(min_radius, max_radius)
-        
-        # 2. Call draw_blob with the Water Node value
-        Level.draw_blob( # Need to call the static method via the class name
-            node_map,
-            radius=radius,
-            passive_material=Level.WATER_NODE,
-            padding=0
-        )
     @staticmethod
     def create_node_map(map_size=32, active=1, passive=0):
         """Generates the initial node map with grass, dirt patches, and a pond."""
@@ -201,3 +216,19 @@ class Level:
     
     
     
+    
+""" @staticmethod # REMOVED (for now)
+    def draw_pond(node_map: list[list[int]], min_radius: int = 1, max_radius: int = 2):
+        # Carves a randomly sized, organically shaped pond (Water Node = 2) 
+        #into the node map.
+        
+        # 1. Randomly select the radius
+        radius = random.randint(min_radius, max_radius)
+        
+        # 2. Call draw_blob with the Water Node value
+        Level.draw_blob( # Need to call the static method via the class name
+            node_map,
+            radius=radius,
+            passive_material=Level.WATER_NODE,
+            padding=0
+        )"""

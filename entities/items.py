@@ -84,9 +84,15 @@ class ToolItem(Item):
             return False
             
         print(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
+        
+        # Set the farming flag so seeds know this tile is ready!
         tile.is_tilled = True
         
-        # Optional: update the tile's image here so it looks like dark dirt!
+        # Tell the Level to update the Marching Squares map and refresh the visuals
+        if hasattr(tile, 'level'):
+            tile.level.till_map_node(tile.grid_x, tile.grid_y)
+        else:
+            print("Warning: Tile doesn't have a reference to the Level!")
         
         return True
 

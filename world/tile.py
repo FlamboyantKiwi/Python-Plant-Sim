@@ -1,173 +1,91 @@
-import pygame, random
-from settings import QUAD_SIZE, BLOCK_SIZE
-from core.asset_loader import TileGroup, AssetLoader
-
-MARCHING_TILES = {
-    # Marching Squares Map Config
-    # Format: Bitmask -> (Row, Col, Rotation)
-
-    # 1-Sided Corners
-    1: (2, 2),  # NW active
-    2: (2, 0),  # NE active
-    4: (0, 2),  # SW active
-    8: (0, 0),  # SE active
-    
-    # 2-Sided Adjacent Corners (| Shapes)
-    3: [(2, 1, 0), (2, 8, 0), (2, 9, 0)],  # NW, NE active
-    5: [(1, 2, 0), (2, 8, 90), (2, 9, 90)],  # NW, SW active
-    10: [(1, 0, 0), (1, 8, 90), (1, 9, 90), (0, 5, 0)], # NE, SE active
-    12: [(0, 1, 0), (1, 8, 0), (1, 9, 0), (0, 5, -90)], # SW, SE active
-    
-    # Negative Mappings (Inverted/Not Grass)  (L Shape)
-    # These masks represent when only the specified corner is DIRT (or inactive).
-    # Mask is calculated as: 15 - Corner_Bit
-    14: (1, 4),  # NOT NW active
-    13: (1, 3),  # NOT NE active
-    11: (0, 4),  # NOT SW active
-    7: (0, 3),   # NOT SE active
-    
-    # Diagonal Mappings (Specific two-corner pattern) ( \ or / Shape)
-    9: [(0, 7, 0), (0, 8, 0), (1, 6, 0)], # NW, SE active
-    6: [(0, 6, 0), (0, 9, 0), (1, 7, 0)], # NE, SW active
-    
-    # All / Nothing
-    15: (1, 1), # All active (Full Grass)
-    0: (2,3),   # None active (All Dirt) - Fallback
-}
+import pygame
+from settings import  BLOCK_SIZE
+from core.asset_loader import AssetLoader
 
 class Tile(pygame.sprite.Sprite):
-    BLIT_POS = [(0, 0), 
-                (QUAD_SIZE, 0), 
-                (0, QUAD_SIZE), 
-                (QUAD_SIZE, QUAD_SIZE)]
-    
-    def __init__(self, x, y, tile_type, neighbors, tileset, detail_image:pygame.Surface|None=None , sheet_width = 10):
+    """The Base Class. Holds the factory method and basic visual/position data."""
+    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], detail_image=None):
+        self.level = level
         super().__init__()
-        self.tile_type = tile_type
-        self.sheet_width = sheet_width
+        self.grid_x = int(x // BLOCK_SIZE)
+        self.grid_y = int(y // BLOCK_SIZE)
         self.position = (x, y)
-        
-        self.grid_x = int(x//BLOCK_SIZE)
-        self.grid_y = int(y//BLOCK_SIZE)
-        self.plant = None
-        
+        self.tile_type_key = tile_type_key
         self.detail_image = detail_image
+        
+        # Base variables EVERY tile needs
+        if not hasattr(self, 'obstructed'): 
+            self.obstructed = False
 
-        self.obstructed = False # Default unobstructed
-        self.is_tilled = (tile_type == "DIRT")
-        self.tillable = (tile_type == "GRASS_A")
-        self.watered = False
-
-        #Initialise 64x64 Tile Surface
-        dirt_asset = TileGroup.STORAGE.get("DIRT_IMAGE")
-        if dirt_asset:
-            self.image = dirt_asset.copy()
-        else: # Fallback if DIRT_TILE failed to load in AssetLoader
-            self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-            self.image.fill(AssetLoader.get_colour("DIRT")) # Dirt Brown
-
+        # Generate initial visual
+        self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
+        self.refresh_terrain(neighbors)
         self.rect = self.image.get_rect(topleft=self.position)
-        # Assemble Marching Squares
-        if not tileset:
-            # If tileset is None or empty list, assign a distinct failure surface.
-            self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
-            self.image.fill(AssetLoader.get_colour("DEFAULT")) # Magenta failure color
-            self.tileset = [] # Ensure it's not None for safety later
-            print(f"ERROR: Tileset for {tile_type} is missing or empty.")
+
+    @classmethod
+    def create(cls, level, x, y, tile_type_key: str, neighbors: list[bool], detail_image=None):
+        """THE FACTORY: Looks at the key and returns the correct subclass!"""
+        if tile_type_key == "WATER":
+            return WaterTile(level, x, y, tile_type_key, neighbors, detail_image)
         else:
-            self.tileset = tileset
-            if any(neighbors):
-                # create Tile's image (from 4 Sub-Tiles) using Marching Squares logic
-                self.assemble_tile(neighbors)
-        #Add details
+            return GroundTile(level, x, y, tile_type_key, neighbors, detail_image)
+
+    def refresh_terrain(self, new_neighbors: list[bool]):
+        """Generates the base visual. Subclasses will extend this."""
+        pass
+    
+# Subclasses 
+    
+class GroundTile(Tile):
+    """Tile containing all farming logic."""
+    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], detail_image=None):
+        
+        # Only GroundTiles get farming variables!
+        self.plant = None
+        self.is_tilled = False
+        self.tillable = (tile_type_key in ["GRASS_A", "GRASS_B", "DIRT"])
+        self.watered = False
+        
+        # Call the parent __init__ to set up position and visuals
+        super().__init__(level, x, y, tile_type_key, neighbors, detail_image)
+        
+
+    def refresh_terrain(self, new_neighbors: list[bool]):
+        dirt_img = AssetLoader.get_image("DIRT_IMAGE")
+        self.base_image = dirt_img.copy() if dirt_img else pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
+        if not dirt_img: self.base_image.fill((139, 69, 19)) # Fallback brown
+        
+        # LAYER 2: Draw the Grass marching squares over the dirt
+        if any(new_neighbors):
+            # Crucial Fix: Always use a GRASS tileset to draw the grass overlay!
+            grass_key = self.tile_type_key if "GRASS" in self.tile_type_key else "GRASS_A"
+            grass_overlay = AssetLoader.get_marching_tile(grass_key, new_neighbors)
+            self.base_image.blit(grass_overlay, (0, 0))
+
+        self.image = self.base_image.copy()
+
+        # LAYER 3: Draw static details (Pebbles, flowers, etc.)
         if self.detail_image:
-            detail_rect = self.detail_image.get_rect(
-                center = (self.image.get_width() // 2, self.image.get_height() // 2))
+            detail_rect = self.detail_image.get_rect(center=(BLOCK_SIZE // 2, BLOCK_SIZE // 2))
             self.image.blit(self.detail_image, detail_rect)
-        #Add Water
-        if self.tile_type == "WATER":
-            self.obstructed = True
-            self.tillable = False
-
-    def assemble_tile(self, node):
-        # Node List Layout (3x3 Grid):
-            # 0 1 2
-            # 3 4 5
-            # 6 7 8
-        quads = [ # Define the four sets of 4-bit inputs (NW, NE, SW, SE) for the quadrants
-            (node[0], node[1], node[3], node[4]), # Top-Left
-            (node[1], node[2], node[4], node[5]), # Top-Right
-            (node[3], node[4], node[6], node[7]), # Bottom-Left
-            (node[4], node[5], node[7], node[8]), # Bottom-Right
-        ]
-
-        # Iterate through the four quadrants, calculating the mask, looking up coordinates, and blitting
-        for i, inputs in enumerate(quads):
-            # Inputs is a tuple of 4 booleans: (NW, NE, SW, SE)
-            # The bit values are 1, 2, 4, 8. We multiply the boolean (True=1, False=0) by its value.
-            mask = (inputs[0] * 1) + \
-                   (inputs[1] * 2) + \
-                   (inputs[2] * 4) + \
-                   (inputs[3] * 8)
-            # Get row, col coords from loopup table
-            result = MARCHING_TILES.get(mask, (2,3))
-
-            if isinstance(result, list):
-                row, col, rotation = random.choice(result)
-            else:
-                row, col = result
-                rotation = 0
-
-            # Calculate linear index
-            index = row * self.sheet_width + col
-            # Extract + blit sub-tile onto final tile image
-            sub_tile_image = self.tileset[index]
-
-            #Apply Rotation
-            if rotation != 0:
-                sub_tile_image = pygame.transform.rotate(sub_tile_image, rotation)
-
-            self.image.blit(sub_tile_image, self.BLIT_POS[i])
-
-
-
-"""
-    def till_soil(self):
-        #Logic for using the Hoe tool.
-        if self.tillable and self.tile_type == "GRASS":
-            self.tile_type = "SOIL"
-            self.tillable = False
             
-            # Simplified visual update for now:
-            # In a full marching squares system, tilling is hard because 
-            # you'd need to re-calculate neighbors for this tile AND all surrounding tiles.
-            # For now, we revert to the base dirt image.
-            if DIRT_TILE:
-                self.image = DIRT_TILE.copy()
-            
-            print("Tile tilled to soil!")
-            return True
-        return False
+        # LAYER 4: Draw farming overlays (Tilled soil, water)
+        if self.is_tilled:
+            tilled_img = AssetLoader.get_image("tilled_soil")
+            if tilled_img:
+                self.image.blit(tilled_img, tilled_img.get_rect(center=(BLOCK_SIZE//2, BLOCK_SIZE//2)))
 
-class Water(Tile):
-    def __init__(self, x, y):
-        super().__init__(x, y, "Water")
+
+class WaterTile(Tile):
+    """Tile representing water. Blocks movement."""
+    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], detail_image=None):
         self.obstructed = True
-
-class Ground(Tile):
-    def __init__(self, x, y):
-        super().__init__(x, y, TileState.UNTILLED)
-        self.state = TileState.UNTILLED
-    def set_state(self, new_state):
-        if new_state in TileState:
-            self.state = new_state
-            self.update_visuals(new_state.name)
-        else:
-            print(f"Warning: Unknown tile state {new_state}")
-"""
-
-
-
-
-
+        super().__init__(level, x, y, tile_type_key, neighbors, detail_image)
+        
+        
+    def refresh_terrain(self, new_neighbors: list[bool]):
+        # A simple, static block of water. (Keeps memory low!)
+        self.base_image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
+        self.base_image.fill((56, 220, 245)) # Cyan Water
+        self.image = self.base_image.copy()
 

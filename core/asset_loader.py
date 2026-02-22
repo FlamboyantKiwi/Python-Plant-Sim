@@ -1,12 +1,12 @@
 # asset_loader.py
-import pygame, os, inspect
+import pygame, os, inspect, random
 from enum import Enum
 from abc import ABC
 
 from core.spritesheet import SpriteSheet
 from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction, TextConfig
 from Assets.asset_data import *
-from settings import BLOCK_SIZE
+from settings import BLOCK_SIZE, QUAD_SIZE
 
 ### Parent Classes
 
@@ -160,7 +160,42 @@ class TileGroup(SpriteGroup):
                     cls.STORAGE[f"DETAIL_{key.upper()}"].extend(
                         detail_sheet.extract_tiles_by_dimensions(r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, cls.SCALE_FACTOR)
                     )
+    @classmethod
+    def build_marching_tile(cls, tileset_key:str, neighbors: list[bool], sheet_width=10)->pygame.Surface:
+        """Dynamically builds a 64x64 surface based on the 9-node neighborhood."""
+        surface = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE), pygame.SRCALPHA)
+        tileset = cls.STORAGE.get(tileset_key)
+        
+        # Fallback if tileset is missing
+        if not tileset:
+            surface.fill(ColourGroup.get_colour("DEFAULT"))
+            return surface
 
+        quads = [
+            (neighbors[0], neighbors[1], neighbors[3], neighbors[4]), # NW
+            (neighbors[1], neighbors[2], neighbors[4], neighbors[5]), # NE
+            (neighbors[3], neighbors[4], neighbors[6], neighbors[7]), # SW
+            (neighbors[4], neighbors[5], neighbors[7], neighbors[8]), # SE
+        ]
+        blit_pos = [(0, 0), (QUAD_SIZE, 0), (0, QUAD_SIZE), (QUAD_SIZE, QUAD_SIZE)]
+
+        for i, inputs in enumerate(quads):
+            mask = (inputs[0]*1) + (inputs[1]*2) + (inputs[2]*4) + (inputs[3]*8)
+            result = MARCHING_TILES.get(mask, (2,3))
+
+            if isinstance(result, list): row, col, rotation = random.choice(result)
+            else:                        row, col, rotation = result[0], result[1], 0
+
+            index = row * sheet_width + col
+            sub_tile = tileset[index]
+
+            if rotation != 0:
+                sub_tile = pygame.transform.rotate(sub_tile, rotation)
+
+            surface.blit(sub_tile, blit_pos[i])
+            
+        return surface
+    
 class ToolGroup(SpriteGroup):
     ITEM_SIZE = 36
     @classmethod
@@ -446,6 +481,9 @@ class AssetLoader:
             return frames[int(frame) % len(frames)]
         except (KeyError, IndexError): # Only return None if the animation/frame is actually missing
             return None
+    @classmethod
+    def get_marching_tile(cls, tileset_key:str, neighbors: list[bool]) -> pygame.Surface:
+        return TileGroup.build_marching_tile(tileset_key, neighbors)   
     
     @classmethod
     def load_image(cls, filename: str, scale=None):             return ImageGroup.get_image(filename, scale)
