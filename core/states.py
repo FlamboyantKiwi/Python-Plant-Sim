@@ -165,7 +165,11 @@ class PlayingState(GameState):
         # Link the plant to the tile!
         target_tile = self.level.get_tile(plant.grid_x, plant.grid_y)
         if target_tile:
-            target_tile.plant = plant
+            if hasattr(target_tile, 'plant'):
+                # 2. Use setattr to assign the plant, which makes Pylance perfectly happy!
+                setattr(target_tile, 'plant', plant)
+            else:
+                print(f"Warning: Cannot place a plant on a non-farmable tile at {plant.grid_x}, {plant.grid_y}")
         else:
             print(f"Warning: Tried to place a plant out of bounds at {plant.grid_x}, {plant.grid_y}")
     

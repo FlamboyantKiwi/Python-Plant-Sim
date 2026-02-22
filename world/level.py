@@ -111,48 +111,54 @@ class Level:
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
     def till_map_node(self, grid_x: int, grid_y: int):
         """Converts a grass grid tile into dirt and updates the surrounding visuals."""
+        node_cx = (grid_x * 2) + 1
+        node_cy = (grid_y * 2) + 1
         
-        # 1. Convert Grid Coordinates to Node Map Coordinates
-        # (Remember your node map is twice as big as your tile grid!)
-        node_center_x = (grid_x * 2) + 1
-        node_center_y = (grid_y * 2) + 1
-        
-        # Safety Check
-        if node_center_x >= len(self.node_map[0]) -1 or node_center_y >= len(self.node_map) -1:
+        if node_cx >= len(self.node_map[0]) or node_cy >= len(self.node_map):
             return
 
-        # 2. Update the Node Map (Set the center and surrounding 8 nodes to DIRT)
-        for y_offset in [-1, 0, 1]:
-            for x_offset in [-1, 0, 1]:
-                self.node_map[node_center_y + y_offset][node_center_x + x_offset] = Level.DIRT_NODE
+        # 1. Turn the center node to dirt
+        self.node_map[node_cy][node_cx] = Level.DIRT_NODE
+        
+        # Keep track of which tiles need their images redrawn
+        tiles_to_refresh = {(grid_x, grid_y)}
+        
+        # 2. Check Cardinals (North, South, East, West)
+        # Format: (grid_offset_x, grid_offset_y, node_offset_x, node_offset_y)
+        cardinals = [(0, -1, 0, -1), (0, 1, 0, 1), (-1, 0, -1, 0), (1, 0, 1, 0)]
+        for dx, dy, ndx, ndy in cardinals:
+            adj_tile = self.get_tile(grid_x + dx, grid_y + dy)
+            if getattr(adj_tile, 'is_tilled', False):
+                # If the neighbor is also tilled, turn the shared edge into dirt!
+                self.node_map[node_cy + ndy][node_cx + ndx] = Level.DIRT_NODE
+                tiles_to_refresh.add((grid_x + dx, grid_y + dy))
 
-        # 3. Refresh Visuals for the Target Tile AND its 8 Neighbors
-        for y_offset in [-1, 0, 1]:
-            for x_offset in [-1, 0, 1]:
-                target_x = grid_x + x_offset
-                target_y = grid_y + y_offset
+        # 3. Check Diagonals (Fills in the inner corners so you get perfect squares)
+        diagonals = [(1, -1, 1, -1), (1, 1, 1, 1), (-1, 1, -1, 1), (-1, -1, -1, -1)]
+        for dx, dy, ndx, ndy in diagonals:
+            adj_tile = self.get_tile(grid_x + dx, grid_y + dy)
+            # Only remove the corner node if the diagonal AND the two adjacent edges are tilled
+            if getattr(adj_tile, 'is_tilled', False) and \
+               getattr(self.get_tile(grid_x + dx, grid_y), 'is_tilled', False) and \
+               getattr(self.get_tile(grid_x, grid_y + dy), 'is_tilled', False):
+                self.node_map[node_cy + ndy][node_cx + ndx] = Level.DIRT_NODE
+                tiles_to_refresh.add((grid_x + dx, grid_y + dy))
+
+        # 4. Tell the affected tiles to redraw themselves!
+        for tx, ty in tiles_to_refresh:
+            tile = self.get_tile(tx, ty)
+            if tile and getattr(tile, 'tile_type_key', None) != "WATER":
+                tcx, tcy = (tx * 2) + 1, (ty * 2) + 1
+                new_nodes = []
+                for ny in range(3):
+                    for nx in range(3):
+                        try:
+                            val = self.node_map[tcy - 1 + ny][tcx - 1 + nx]
+                            new_nodes.append(val == Level.GRASS_NODE)
+                        except IndexError:
+                            new_nodes.append(False) 
                 
-                tile_to_update = self.get_tile(target_x, target_y)
-                
-                # If the tile exists and is not water
-                if tile_to_update and getattr(tile_to_update, 'tile_type_key', None) != "WATER":
-                    
-                    # Recalculate the 9-node status for THIS specific neighbor
-                    n_center_x = (target_x * 2) + 1
-                    n_center_y = (target_y * 2) + 1
-                    
-                    new_nodes = []
-                    for ny in range(3):
-                        for nx in range(3):
-                            # Make sure we don't index out of bounds on the edges
-                            try:
-                                val = self.node_map[n_center_y - 1 + ny][n_center_x - 1 + nx]
-                                new_nodes.append(val == Level.GRASS_NODE)
-                            except IndexError:
-                                new_nodes.append(False) # Treat out-of-bounds as dirt
-                                
-                    # Tell the tile to redraw itself!
-                    tile_to_update.refresh_terrain(new_nodes)
+                tile.refresh_terrain(new_nodes)
     def get_tile(self, grid_x:int, grid_y:int) -> Tile|None:
         return self.tile_grid.get((grid_x, grid_y))
     def update(self):

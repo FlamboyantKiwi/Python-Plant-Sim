@@ -1,6 +1,7 @@
 import pygame
 from settings import  BLOCK_SIZE
-from core.asset_loader import AssetLoader
+from core.asset_loader import AssetLoader, GRASS_LAYOUT
+
 
 class Tile(pygame.sprite.Sprite):
     """The Base Class. Holds the factory method and basic visual/position data."""
@@ -51,30 +52,31 @@ class GroundTile(Tile):
         
 
     def refresh_terrain(self, new_neighbors: list[bool]):
+        # LAYER 1: Base Dirt Background
         dirt_img = AssetLoader.get_image("DIRT_IMAGE")
         self.base_image = dirt_img.copy() if dirt_img else pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
         if not dirt_img: self.base_image.fill((139, 69, 19)) # Fallback brown
         
-        # LAYER 2: Draw the Grass marching squares over the dirt
-        if any(new_neighbors):
-            # Crucial Fix: Always use a GRASS tileset to draw the grass overlay!
+        # LAYER 2: Draw farming overlays (Tilled soil) BEFORE the grass!
+        # This allows the grass to curve perfectly over the edges of your tilled dirt.
+        if self.is_tilled:
+            tilled_img = AssetLoader.get_image("tilled_soil")
+            if tilled_img:
+                self.base_image.blit(tilled_img, tilled_img.get_rect(center=(BLOCK_SIZE//2, BLOCK_SIZE//2)))
+
+        # LAYER 3: Draw the Grass marching squares OVER the dirt and tilled soil
+        if any(new_neighbors) and self.tile_type_key != "WATER":
             grass_key = self.tile_type_key if "GRASS" in self.tile_type_key else "GRASS_A"
-            grass_overlay = AssetLoader.get_marching_tile(grass_key, new_neighbors)
+            # Assumes GRASS_LAYOUT is imported/available!
+            grass_overlay = AssetLoader.get_marching_tile(grass_key, GRASS_LAYOUT, new_neighbors)
             self.base_image.blit(grass_overlay, (0, 0))
 
         self.image = self.base_image.copy()
 
-        # LAYER 3: Draw static details (Pebbles, flowers, etc.)
-        if self.detail_image:
+        # LAYER 4: Draw static details (Pebbles, flowers, etc.) ON TOP of everything
+        if self.detail_image and not self.is_tilled:
             detail_rect = self.detail_image.get_rect(center=(BLOCK_SIZE // 2, BLOCK_SIZE // 2))
             self.image.blit(self.detail_image, detail_rect)
-            
-        # LAYER 4: Draw farming overlays (Tilled soil, water)
-        if self.is_tilled:
-            tilled_img = AssetLoader.get_image("tilled_soil")
-            if tilled_img:
-                self.image.blit(tilled_img, tilled_img.get_rect(center=(BLOCK_SIZE//2, BLOCK_SIZE//2)))
-
 
 class WaterTile(Tile):
     """Tile representing water. Blocks movement."""

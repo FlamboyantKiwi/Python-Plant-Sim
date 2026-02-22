@@ -3,7 +3,8 @@ from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import random
 
 @dataclass
 class CropAsset:
@@ -419,35 +420,87 @@ COLOURS = {
 }
 
 
-MARCHING_TILES = {
-    # Marching Squares Map Config
-    # Format: Bitmask -> (Row, Col, Rotation)
+@dataclass
+class MarchingLayout:
+    """Blueprint for mapping bitmasks to spritesheet coordinates."""
+    raw_mapping: dict
+    
+    # We will automatically build this in __post_init__
+    mapping: dict = field(init=False)
+    
+    def __post_init__(self):
+        self.mapping = {}
+        for mask, data in self.raw_mapping.items():
+            # 1. Convert everything to a list (even single tuples)
+            if not isinstance(data, list):
+                data = [data]
+                
+            # 2. Ensure every tuple has exactly 3 values: (row, col, rotation)
+            cleaned_variants = []
+            for item in data:
+                if len(item) == 3:
+                    cleaned_variants.append(item)
+                else:
+                    # Add a default rotation of 0
+                    cleaned_variants.append((item[0], item[1], 0))
+                    
+            self.mapping[mask] = cleaned_variants
 
+    def get_variant(self, mask: int, fallback_mask: int = 0) -> tuple[int, int, int]:
+        """Returns a random (row, col, rotation) for the given mask."""
+        # Try the requested mask. If missing, try the fallback mask (usually 0).
+        variants = self.mapping.get(mask, self.mapping.get(fallback_mask, [(0, 0, 0)]))
+        return random.choice(variants)
+
+GRASS_LAYOUT = MarchingLayout({
     # 1-Sided Corners
-    1: (2, 2),  # NW active
-    2: (2, 0),  # NE active
-    4: (0, 2),  # SW active
-    8: (0, 0),  # SE active
+    1: (2, 2),  
+    2: (2, 0),  
+    4: (0, 2),  
+    8: (0, 0),
     
-    # 2-Sided Adjacent Corners (| Shapes)
-    3: [(2, 1, 0), (2, 8, 0), (2, 9, 0)],  # NW, NE active
-    5: [(1, 2, 0), (2, 8, 90), (2, 9, 90)],  # NW, SW active
-    10: [(1, 0, 0), (1, 8, 90), (1, 9, 90), (0, 5, 0)], # NE, SE active
-    12: [(0, 1, 0), (1, 8, 0), (1, 9, 0), (0, 5, -90)], # SW, SE active
+    # 2-Sided Adjacent Corners
+    3: [(2, 1, 0), (2, 8, 0), (2, 9, 0)],
+    5: [(1, 2, 0), (2, 8, 90), (2, 9, 90)],
+    10: [(1, 0, 0), (1, 8, 90), (1, 9, 90), (0, 5, 0)],
+    12: [(0, 1, 0), (1, 8, 0), (1, 9, 0), (0, 5, -90)],
     
-    # Negative Mappings (Inverted/Not Grass)  (L Shape)
-    # These masks represent when only the specified corner is DIRT (or inactive).
-    # Mask is calculated as: 15 - Corner_Bit
-    14: (1, 4),  # NOT NW active
-    13: (1, 3),  # NOT NE active
-    11: (0, 4),  # NOT SW active
-    7: (0, 3),   # NOT SE active
+    # Negative Mappings
+    14: (1, 4), 13: (1, 3), 11: (0, 4), 7: (0, 3),
     
-    # Diagonal Mappings (Specific two-corner pattern) ( \ or / Shape)
-    9: [(0, 7, 0), (0, 8, 0), (1, 6, 0)], # NW, SE active
-    6: [(0, 6, 0), (0, 9, 0), (1, 7, 0)], # NE, SW active
+    # Diagonal Mappings
+    9: [(0, 7, 0), (0, 8, 0), (1, 6, 0)],
+    6: [(0, 6, 0), (0, 9, 0), (1, 7, 0)],
     
     # All / Nothing
-    15: (1, 1), # All active (Full Grass)
-    0: (2,3),   # None active (All Dirt) - Fallback
-}
+    15: (1, 1), 
+    0: (2, 3),  
+})
+
+DIRT_LAYOUT = MarchingLayout({
+    # 1-Sided Corners
+    1: (2, 2),  
+    2: (2, 0),  
+    4: (0, 2),  
+    8: (0, 0),
+    
+    # 2-Sided Adjacent Corners (| Shapes)
+    3: [(2, 1, 0), (1, 9, 0), (1, 8, 0)], 
+    5: [(1, 2, 0), (1, 9, 90), (1, 8, 90)], 
+    10: [(1, 0, 0), (0, 9, 90), (0, 8, 90), (0, 5, 0)], 
+    12: [(0, 1, 0), (0, 9, 0), (0, 8, 0), (0, 5, -90)], 
+    
+    # Negative Mappings (L Shapes)
+    14: (1, 4), 
+    13: (1, 3), 
+    11: (0, 4), 
+    7: (0, 3),
+    
+    # Diagonal Mappings
+    9: [(0, 7, 0), (1, 6, 0)], 
+    6: [(0, 6, 0), (1, 7, 0)], 
+    
+    # All / Nothing
+    15: (1, 1), 
+    0: (2, 3),
+})

@@ -1,5 +1,5 @@
 # asset_loader.py
-import pygame, os, inspect, random
+import pygame, os, inspect
 from enum import Enum
 from abc import ABC
 
@@ -161,7 +161,7 @@ class TileGroup(SpriteGroup):
                         detail_sheet.extract_tiles_by_dimensions(r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, cls.SCALE_FACTOR)
                     )
     @classmethod
-    def build_marching_tile(cls, tileset_key:str, neighbors: list[bool], sheet_width=10)->pygame.Surface:
+    def build_marching_tile(cls, tileset_key:str, layout:MarchingLayout, neighbors: list[bool], sheet_width=10)->pygame.Surface:
         """Dynamically builds a 64x64 surface based on the 9-node neighborhood."""
         surface = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE), pygame.SRCALPHA)
         tileset = cls.STORAGE.get(tileset_key)
@@ -181,11 +181,8 @@ class TileGroup(SpriteGroup):
 
         for i, inputs in enumerate(quads):
             mask = (inputs[0]*1) + (inputs[1]*2) + (inputs[2]*4) + (inputs[3]*8)
-            result = MARCHING_TILES.get(mask, (2,3))
-
-            if isinstance(result, list): row, col, rotation = random.choice(result)
-            else:                        row, col, rotation = result[0], result[1], 0
-
+            row, col, rotation = layout.get_variant(mask)
+            
             index = row * sheet_width + col
             sub_tile = tileset[index]
 
@@ -482,8 +479,8 @@ class AssetLoader:
         except (KeyError, IndexError): # Only return None if the animation/frame is actually missing
             return None
     @classmethod
-    def get_marching_tile(cls, tileset_key:str, neighbors: list[bool]) -> pygame.Surface:
-        return TileGroup.build_marching_tile(tileset_key, neighbors)   
+    def get_marching_tile(cls, tileset_key:str, layout:MarchingLayout, neighbors: list[bool]) -> pygame.Surface:
+        return TileGroup.build_marching_tile(tileset_key, layout, neighbors)   
     
     @classmethod
     def load_image(cls, filename: str, scale=None):             return ImageGroup.get_image(filename, scale)
