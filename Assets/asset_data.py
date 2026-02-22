@@ -207,95 +207,11 @@ CROPS = {
         regrows=True),
 }
 
-DEFAULT_CROP = CropAsset(10, 20, 3, 10, SpriteRect(0,0,1,1), SpriteRect(0,0,1,1), SpriteRect(0,0,1,1))
 SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 
 FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
 TREE_FRAME_SLICES = [(0, 30), (32, 30), (66, 60), (131, 60), (195, 60) ]
 PLANT_FRAME_ORDER = [0, 1, 3, 2]
-
-CROP_BALANCE = {
-    # --- SINGLE HARVEST CROPS (Standard) ---
-    "Beet":             CropConfig(seed_price=10, crop_price=22, grow_time=3, energy=8),
-    "Onion":            CropConfig(seed_price=12, crop_price=28, grow_time=4, energy=10),
-    "Cabbage":          CropConfig(seed_price=20, crop_price=55, grow_time=6, energy=15),
-    "Squash":           CropConfig(seed_price=30, crop_price=75, grow_time=7, energy=20),
-    "Cauliflower":      CropConfig(seed_price=40, crop_price=95, grow_time=9, energy=30),
-    "Melon":            CropConfig(seed_price=50, crop_price=130, grow_time=10, energy=50),
-    "Wheat":            CropConfig(seed_price=5,  crop_price=10,  grow_time=2, energy=5),
-
-    # --- REGROWING CROPS (Harvest multiple times) ---
-    # These usually cost more upfront but pay off over time
-    "Green Bean":       CropConfig(seed_price=30, crop_price=20, grow_time=5, energy=12, regrows=True),
-    "Cucumber":         CropConfig(seed_price=35, crop_price=25, grow_time=5, energy=15, regrows=True),
-    "Tomato":           CropConfig(seed_price=25, crop_price=30, grow_time=6, energy=18, regrows=True),
-    "Red Pepper":       CropConfig(seed_price=40, crop_price=45, grow_time=7, energy=22, regrows=True),
-    "Grape":            CropConfig(seed_price=45, crop_price=50, grow_time=8, energy=25, regrows=True),
-    "Pineapple":        CropConfig(seed_price=150, crop_price=350, grow_time=14, energy=100, regrows=True),
-
-    # --- MUSHROOMS (Fast growers, good energy) ---
-    "Mushroom":         CropConfig(seed_price=20, crop_price=40, grow_time=3, energy=20, regrows=True),
-    "Chestnut Mushroom":CropConfig(seed_price=25, crop_price=55, grow_time=4, energy=25, regrows=True),
-
-    # --- TREES (Permanent, long growth, high yield) ---
-    # Note: is_tree=True usually implies it blocks movement and takes 5 stages
-    "Apple":            CropConfig(seed_price=100, crop_price=60, grow_time=10, energy=25, is_tree=True, regrows=True),
-    "Lemon":            CropConfig(seed_price=120, crop_price=70, grow_time=11, energy=30, is_tree=True, regrows=True),
-    "Plum":             CropConfig(seed_price=130, crop_price=75, grow_time=11, energy=30, is_tree=True, regrows=True),
-    "Coconut":          CropConfig(seed_price=150, crop_price=90, grow_time=12, energy=40, is_tree=True, regrows=True),
-    "Banana":           CropConfig(seed_price=180, crop_price=110, grow_time=13, energy=50, is_tree=True, regrows=True),
-    # Others
-    "Corn":             CropConfig(seed_price=10, crop_price=20, grow_time=4, energy=15),
-    "Sunflower":        CropConfig(seed_price=15, crop_price=40, grow_time=5, energy=20),
-}
-DEFAULT_CROP = CropConfig(seed_price=10, crop_price=20, grow_time=3, energy=10)
-PLANT_SPRITE_REGIONS = {
-    "Grape":        SpriteRect(0, 6,   128, 42),
-    "Cucumber":     SpriteRect(0, 53,  128, 42),
-    "Red Pepper":   SpriteRect(0, 95,  128, 36),
-    "Cauliflower":  SpriteRect(0, 133, 128, 24),
-    "Green Bean":   SpriteRect(0, 171, 128, 36),
-    "Cabbage":      SpriteRect(0, 211, 128, 24),
-    "Squash":       SpriteRect(0, 235, 128, 36),
-    "Melon":        SpriteRect(0, 280, 128, 36),
-    "Pineapple":    SpriteRect(0, 316, 128, 36),
-    "Corn":         SpriteRect(0, 352, 128, 36),
-    "Sunflower":    SpriteRect(0, 396, 128, 36),
-
-    "Onion":             SpriteRect(144, 368, 64, 36),
-    "Chestnut Mushroom": SpriteRect(224, 368, 64, 36),
-    "Beet":              SpriteRect(144, 404, 64, 36),
-    "Mushroom":          SpriteRect(224, 404, 64, 36),
-}
-TREE_SPRITE_REGIONS = {
-    "Plum":     SpriteRect(128, 4,   255, 78),
-    "Lemon":    SpriteRect(128, 82,  255, 64),
-    "Apple":    SpriteRect(128, 146, 255, 64),
-    "Banana":   SpriteRect(128, 212, 255, 78),
-    "Coconut":  SpriteRect(128, 290, 255, 78), 
-}
-FRUIT_TYPES = { # type: rect - rect can be split into 3 fruit images: big, normal, small
-    "Banana":           RectPair(SpriteRect(0,   176, 48, 16),  SpriteRect(96,  8,   32, 38)),
-    "Cauliflower":      RectPair(SpriteRect(0,   192, 48, 16),  SpriteRect(128, 8,   32, 38)),
-    "Cabbage":          RectPair(SpriteRect(48,  192, 48, 16),  SpriteRect(260, 11,  24, 32)),
-    "Green Bean":       RectPair(SpriteRect(0,   208, 48, 16),  SpriteRect(160, 60,  16, 32)),
-    "Onion":            RectPair(SpriteRect(48,  208, 48, 16),  SpriteRect(192, 60,  16, 32)),
-    "Squash":           RectPair(SpriteRect(96,  208, 48, 16),  SpriteRect(0,   0,   32, 48)),
-    "Chestnut Mushroom":RectPair(SpriteRect(144, 208, 48, 16),  SpriteRect(36,  60,  24, 32)),
-    "Plum":             RectPair(SpriteRect(192, 208, 48, 16),  SpriteRect(256, 60,  16, 32)),
-    "Grape":            RectPair(SpriteRect(240, 208, 48, 16),  SpriteRect(196, 11,  24, 32)),
-    "Mushroom":         RectPair(SpriteRect(192, 192, 48, 16),  SpriteRect(68,  60,  24, 32)),
-    "Beet":             RectPair(SpriteRect(240, 192, 48, 16),  SpriteRect(224, 60,  16, 32)),
-    "Coconut":          RectPair(SpriteRect(192, 176, 48, 16),  SpriteRect(160, 8,   32, 38)),
-    "Red Pepper":       RectPair(SpriteRect(192, 160, 48, 16),  SpriteRect(4,   60,  24, 32)),
-    "Apple":            RectPair(SpriteRect(192, 144, 48, 16),  SpriteRect(228, 11,  24, 32)),
-    "Cucumber":         RectPair(SpriteRect(240, 144, 48, 16),  SpriteRect(100, 60,  24, 32)),
-    "Lemon":            RectPair(SpriteRect(240, 128, 48, 16),  SpriteRect(128, 60,  16, 32)),
-    "Pineapple":        RectPair(SpriteRect(240, 160, 48, 32),  SpriteRect(32,  0,   32, 48)),
-    "Melon":            RectPair(SpriteRect(60,  160, 48, 32),  SpriteRect(64,  0,   32, 48)),
-}
-
-
 
 # Materials
 MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
@@ -410,18 +326,15 @@ ITEMS = {}
 PLANT_DATA = {}
 
 # --- GENERATE SEEDS & CROPS AUTOMATICALLY ---
-for fruit_name in FRUIT_TYPES.keys():
+for fruit_name, asset in CROPS.items():
     
-    config = CROP_BALANCE.get(fruit_name, DEFAULT_CROP)
-
     # Clean up name (e.g. "Green Bean" -> "green_bean")
     safe_id = fruit_name.lower().replace(" ", "_")
 
-    # Generate Data using the Class Methods
-    ITEMS[f"{safe_id}_seeds"] = config.generate_seed_data(name=fruit_name, image_key=fruit_name)
-    ITEMS[safe_id] = config.generate_crop_data(name=fruit_name, image_key=fruit_name)
-    PLANT_DATA[fruit_name] = config.generate_plant_data(name=fruit_name, harvest_id=safe_id)
-
+    # Generate Data using the unified CropAsset
+    ITEMS[f"{safe_id}_seeds"] = asset.generate_seed_data(name=fruit_name, image_key=safe_id)
+    ITEMS[safe_id] = asset.generate_crop_data(name=fruit_name, image_key=safe_id)
+    PLANT_DATA[fruit_name] = asset.generate_plant_data(name=fruit_name, harvest_id=safe_id)
 
 for mat in MATERIAL_LEVELS:
     multiplier = MATERIAL_MULTIPLIERS.get(mat, 1)

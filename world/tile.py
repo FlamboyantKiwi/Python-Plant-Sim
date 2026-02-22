@@ -46,10 +46,16 @@ class Tile(pygame.sprite.Sprite):
         self.tile_type = tile_type
         self.sheet_width = sheet_width
         self.position = (x, y)
+        
+        self.grid_x = int(x//BLOCK_SIZE)
+        self.grid_y = int(y//BLOCK_SIZE)
+        self.plant = None
+        
         self.detail_image = detail_image
 
         self.obstructed = False # Default unobstructed
-        self.tillable = (tile_type == "GRASS")
+        self.is_tilled = (tile_type == "DIRT")
+        self.tillable = (tile_type == "GRASS_A")
         self.watered = False
 
         #Initialise 64x64 Tile Surface

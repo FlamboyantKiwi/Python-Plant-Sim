@@ -8,14 +8,14 @@ from core.controls import controls
 from core.animation import AnimationController
 # 2. Entity Imports
 from entities.items import ItemFactory
-from entities.physicsEntity import PhysicsEntity
+from entities.physicsEntity import MovingEntity
 
 from ui.InventoryUI import InventoryUI, Inventory
 
 # 3. World Imports
 from world.tile import Tile
 
-class Player(PhysicsEntity):
+class Player(MovingEntity):
     #Inventory Variables
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5

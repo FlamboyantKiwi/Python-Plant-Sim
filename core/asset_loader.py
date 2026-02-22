@@ -184,30 +184,24 @@ class PlantGroup(SpriteGroup):
         sheet = cls.load_spritesheet("Plants")
         if not sheet: return
 
-        # Define loading tasks: (Source Dict, Data List)
-        # 1. Crops: Pass the ORDER indices [0, 1, 3, 2] (Reorders Dead/Ripe)
-        # 2. Trees: Pass the SLICE tuples [(0,30), (32,30)...] (Exact pixels)
-        load_jobs = [
-            (PLANT_SPRITE_REGIONS, PLANT_FRAME_ORDER),
-            (TREE_SPRITE_REGIONS,  TREE_FRAME_SLICES)
-        ]
-        
-        for region_dict, data_list in load_jobs:
-            for name, rect in region_dict.items():
-                # Normalize: check type to decide how to process
-                if isinstance(data_list[0], int):
-                    # Dynamic Crops (List of Integers)
-                    frame_w = rect.w // len(data_list)
-                    slices = [(idx * frame_w, frame_w) for idx in data_list]    
-                else:
-                    # Static Trees (List of Tuples)
-                    slices = data_list
-                    
-                for i, (offset, width) in enumerate(slices):
-                    cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
-                        rect.x + offset, rect.y, width, rect.h,
-                        (width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
-                    )
+        for name, asset in CROPS.items():
+            rect = asset.world_art
+            
+            # Use the asset's built-in flag to decide how to slice the sprite!
+            if asset.is_tree:
+                # Static Trees (Use the predefined tuple slices)
+                slices = TREE_FRAME_SLICES
+            else:
+                # Dynamic Crops (Calculate widths and reorder based on PLANT_FRAME_ORDER)
+                frame_w = rect.w // len(PLANT_FRAME_ORDER)
+                slices = [(idx * frame_w, frame_w) for idx in PLANT_FRAME_ORDER]    
+                
+            # Extract and store each stage of the plant/tree
+            for i, (offset, width) in enumerate(slices):
+                cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
+                    rect.x + offset, rect.y, width, rect.h,
+                    (width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
+                )
         
 class FruitGroup(SpriteGroup):
     CONTAINERS = {}
@@ -219,10 +213,12 @@ class FruitGroup(SpriteGroup):
         sheet = cls.load_spritesheet("Supplies")
         if not sheet: return
 
-        for name, pair in FRUIT_TYPES.items():
+        for name, asset in CROPS.items():
             num = 2 if name == "Melon" else 3
-            cls.STORAGE[name] = cls._create_strip(sheet, pair.a, FRUIT_RANKS, num, 2)
-            cls.CONTAINERS[name] = sheet.get_image(pair.b.x, pair.b.y, pair.b.w, pair.b.h)
+            cls.STORAGE[name] = cls._create_strip(sheet, asset.fruit_container_image, FRUIT_RANKS, num, 2)
+            cls.CONTAINERS[name] = sheet.get_image(
+                asset.fruit_image.x, asset.fruit_image.y, 
+                asset.fruit_image.w, asset.fruit_image.h)
             
         cls.SEED_BAGS = cls._create_strip(sheet, SEED_BAGS_POS, ["1", "2"], 2, 3)
 
@@ -422,7 +418,8 @@ class AssetLoader:
         elif data.category == ItemCategory.SEED:
             return cls.get_seed_image(data.image_key)
         elif data.category in (ItemCategory.CROP, ItemCategory.FRUIT):
-            return FruitGroup.STORAGE.get(data.image_key.title(), {}).get("BRONZE")
+            formatted_name = data.image_key.replace("_", " ").title()
+            return FruitGroup.STORAGE.get(formatted_name, {}).get("BRONZE")
         return TileGroup.STORAGE.get("DIRT_IMAGE")
     @classmethod
     def get_seed_image(cls, seed_name: str, bag_id="1") -> pygame.Surface | None:
@@ -430,7 +427,9 @@ class AssetLoader:
         if cache_key in FruitGroup.CACHE: return FruitGroup.CACHE[cache_key]
         
         bag = FruitGroup.SEED_BAGS.get(bag_id)
-        fruit = FruitGroup.STORAGE.get(seed_name.title(), {}).get("BRONZE")
+        
+        formatted_name = seed_name.replace("_", " ").title()
+        fruit = FruitGroup.STORAGE.get(formatted_name, {}).get("BRONZE")
         
         if not bag or not fruit: return bag
         

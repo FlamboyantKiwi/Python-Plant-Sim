@@ -147,13 +147,28 @@ class PlayingState(GameState):
         
         self.collidables = pygame.sprite.Group()
         self.collidables.add(self.level.all_tiles.sprites()) # Add all map tiles
-        self.collidables.add(self.plants) # Add all plants
+        
+        self.plants = []
+        self.add_plant_to_world(Plant("Apple", 5, 5))
+        self.add_plant_to_world(Plant("Onion", 6, 5))
 
         self.key_binds = {
             pygame.K_ESCAPE: self.quit_game,
             pygame.K_p: lambda: self.open_shop("general_store")
         }
 
+    def add_plant_to_world(self, plant):
+        """Adds a plant to the game and links it to its tile."""
+        self.plants.append(plant)
+        self.collidables.add(plant)
+        
+        # Link the plant to the tile!
+        target_tile = self.level.get_tile(plant.grid_x, plant.grid_y)
+        if target_tile:
+            target_tile.plant = plant
+        else:
+            print(f"Warning: Tried to place a plant out of bounds at {plant.grid_x}, {plant.grid_y}")
+    
     def update(self):
         # Calculate Delta Time (dt) in seconds
         dt = self.game.clock.get_time() / 1000 

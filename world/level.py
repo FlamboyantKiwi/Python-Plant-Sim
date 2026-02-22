@@ -11,9 +11,10 @@ class Level:
 
     def __init__(self, all_tiles_group, player_sprite, map_data: list[list[int]]|None = None):
         self.tilesets = TileGroup.STORAGE
-        #self.details = AssetLoader.TILE_DETAILS
         self.all_tiles = all_tiles_group
         self.player_sprite = player_sprite
+        
+        self.tile_grid = {}
         
         if map_data:
             print("loading existing map data")
@@ -31,6 +32,7 @@ class Level:
         """ Iterates over the node map to calculate the 9-node status for each 
         64x64 tile and creates the Tile object. """
         self.all_tiles.empty() # Clear existing tiles
+        self.tile_grid.clear()
         
         # Initialize the screen tile counters
         map_tile_x = 0
@@ -105,6 +107,7 @@ class Level:
                     tileset=current_tileset,
                     detail_image = random_detail_image)
                 self.all_tiles.add(new_tile)
+                self.tile_grid[(map_tile_x, map_tile_y)]=new_tile
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---
                 if map_tile_x == 1 and map_tile_y == 1:
@@ -120,6 +123,9 @@ class Level:
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
 
+    def get_tile(self, grid_x:int, grid_y:int) -> Tile|None:
+        return self.tile_grid.get((grid_x, grid_y))
+    
     def update(self):
         """Updates all entities within the level (tiles, water animations, etc)."""
         self.all_tiles.update()

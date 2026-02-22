@@ -1,6 +1,7 @@
 from core.asset_loader import AssetLoader
 from Assets.asset_data import get_item_data, ItemData
 from core.types import ItemCategory
+from entities.Plant import Plant
 
 Default_colour = (150, 150, 150)
 
@@ -73,7 +74,20 @@ class ToolItem(Item):
         return False
 
     def _use_hoe(self, player, tile, all_tiles):
-        print(f"Hoeing {tile}...")
+        # Can only till tillable ground (Dirt/Grass)
+        if not getattr(tile, 'tillable', False):
+            print("You can't till this ground!")
+            return False
+            
+        # If it's already tilled, don't waste the action
+        if getattr(tile, 'is_tilled', False):
+            return False
+            
+        print(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
+        tile.is_tilled = True
+        
+        # Optional: update the tile's image here so it looks like dark dirt!
+        
         return True
 
     def _use_watering_can(self, player, tile, all_tiles):
@@ -93,8 +107,34 @@ class SeedItem(Item):
         if self.count <= 0: return False
         if not target_tile: return False
         
-        print(f"Planting {self.name} which takes {self.data.grow_time} days.")
-        # Logic: check if tile is tilled -> place plant -> reduce count
+         # 1. Check if the tile is ready for a seed
+        if not getattr(target_tile, 'is_tilled', False):
+            print("You must till the dirt with a hoe first!")
+            return False
+            
+        # 2. Check if something is already planted here
+        if target_tile.plant is not None:
+            print("Something is already growing here!")
+            return False
+            
+        # 3. Figure out the plant name. 
+        # (e.g., If item is "Apple Seed", we just want "Apple" for the Plant class)
+        plant_name = self.data.name.replace(" Seeds", "").replace(" Seed", "")
+        print(f"Planting {plant_name}...")
+        
+        # 4. Create the Plant entity using the tile's grid coordinates
+        new_plant = Plant(plant_name, target_tile.grid_x, target_tile.grid_y)
+        
+        # 5. Link it to the tile so we can easily find it later!
+        target_tile.plant = new_plant
+        
+        # 6. The Pygame Magic Trick: 
+        # Add the new plant to every Sprite Group that the ground tile belongs to!
+        # This automatically puts it in your drawing and collision groups.
+        for group in target_tile.groups():
+            group.add(new_plant)
+            
+        # 7. Consume the seed
         self.count -= 1
         return True
 
