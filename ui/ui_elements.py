@@ -187,8 +187,8 @@ class Button(StateElement):
     def handle_click(self):
         if self.function:   return self.function()
     @classmethod
-    def create_bordered_button(cls, rect, text, function, bg_colour="dark_grey", 
-            border_colour="light_grey", hover_colour="gold", active_colour="white", thickness=2):
+    def create_bordered_button(cls, rect, text, function, bg_colour="ButtonBG", 
+            border_colour="ButtonBorder", hover_colour="ButtonHover", active_colour="ButtonActive", thickness=2):
         """Factory: Creates a button with a solid background and a changing border."""
         # 1. Base Visual (Dark BG + Grey Border)
         v_normal = UIElement(rect, colour=bg_colour, border_colour=border_colour, border_width=thickness)

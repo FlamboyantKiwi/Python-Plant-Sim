@@ -16,6 +16,9 @@ class Level:
         
         self.tile_grid = {}
         
+        self.active_plants = []
+        self.entities = pygame.sprite.Group()
+        
         if map_data:
             print("loading existing map data")
             self.node_map = map_data
@@ -28,6 +31,7 @@ class Level:
         self.MAP_WIDTH = len(self.node_map[0]) - 2 
 
         self.generate_level()
+        self.entities.add(self.all_tiles.sprites())
     def generate_level(self):
         """ Iterates over the node map to calculate the 9-node status for each 
         64x64 tile and creates the Tile object. """

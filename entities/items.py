@@ -113,34 +113,32 @@ class SeedItem(Item):
         if self.count <= 0: return False
         if not target_tile: return False
         
-         # 1. Check if the tile is ready for a seed
+        # Check if the tile is ready for a seed
         if not getattr(target_tile, 'is_tilled', False):
             print("You must till the dirt with a hoe first!")
             return False
             
-        # 2. Check if something is already planted here
+        # Check if something is already planted here
         if target_tile.plant is not None:
             print("Something is already growing here!")
             return False
             
-        # 3. Figure out the plant name. 
+        # Figure out the plant name. 
         # (e.g., If item is "Apple Seed", we just want "Apple" for the Plant class)
         plant_name = self.data.name.replace(" Seeds", "").replace(" Seed", "")
         print(f"Planting {plant_name}...")
         
-        # 4. Create the Plant entity using the tile's grid coordinates
+        # Create the Plant entity using the tile's grid coordinates
         new_plant = Plant(plant_name, target_tile.grid_x, target_tile.grid_y)
         
-        # 5. Link it to the tile so we can easily find it later!
+        # Link it to the tile so we can easily find it later!
         target_tile.plant = new_plant
         
-        # 6. The Pygame Magic Trick: 
-        # Add the new plant to every Sprite Group that the ground tile belongs to!
-        # This automatically puts it in your drawing and collision groups.
-        for group in target_tile.groups():
-            group.add(new_plant)
-            
-        # 7. Consume the seed
+        # Instantly notify the Level that a plant was born!
+        target_tile.level.active_plants.append(new_plant)
+        target_tile.level.entities.add(new_plant)
+        
+        # Consume the seed
         self.count -= 1
         return True
 

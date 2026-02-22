@@ -139,15 +139,7 @@ class PlayingState(GameState):
             player_sprite=self.player,
             map_data=None 
         )
-
-        self.plants = [
-            Plant("Apple", 5, 5),   # A Tree
-            Plant("Onion", 6, 5)    # A Crop
-        ]
-        
-        self.collidables = pygame.sprite.Group()
-        self.collidables.add(self.level.all_tiles.sprites()) # Add all map tiles
-        
+     
         self.plants = []
         self.add_plant_to_world(Plant("Apple", 5, 5))
         self.add_plant_to_world(Plant("Onion", 6, 5))
@@ -159,28 +151,20 @@ class PlayingState(GameState):
 
     def add_plant_to_world(self, plant):
         """Adds a plant to the game and links it to its tile."""
-        self.plants.append(plant)
-        self.collidables.add(plant)
-        
-        # Link the plant to the tile!
         target_tile = self.level.get_tile(plant.grid_x, plant.grid_y)
-        if target_tile:
-            if hasattr(target_tile, 'plant'):
-                # 2. Use setattr to assign the plant, which makes Pylance perfectly happy!
-                setattr(target_tile, 'plant', plant)
-            else:
-                print(f"Warning: Cannot place a plant on a non-farmable tile at {plant.grid_x}, {plant.grid_y}")
-        else:
-            print(f"Warning: Tried to place a plant out of bounds at {plant.grid_x}, {plant.grid_y}")
-    
+        if target_tile and hasattr(target_tile, 'plant'):
+            setattr(target_tile, 'plant', plant)
+            # Instantly push to the Level's trackers
+            self.level.active_plants.append(plant)
+            self.level.entities.add(plant)
     def update(self):
         # Calculate Delta Time (dt) in seconds
         dt = self.game.clock.get_time() / 1000 
         mouse_pos = pygame.mouse.get_pos()
-
+        
         # Update world objects
         self.level.update()
-        self.player.update(dt, self.collidables)
+        self.player.update(dt, self.level.entities)
         self.hud.update(mouse_pos)
 
         keys = pygame.key.get_pressed()
@@ -190,12 +174,11 @@ class PlayingState(GameState):
 
     def draw(self, screen):
         # Draw the game world
-        
         screen.fill(AssetLoader.get_colour("WATER")) # Or use settings.COLOURS
         self.all_tiles.draw(screen)
         
-        # 1. Combine everything that can overlap into one temporary list
-        render_list = [self.player] + self.plants
+        # Combine everything that can overlap into one temporary list
+        render_list = [self.player] + self.level.active_plants
         
         # 2. Sort the list based on the bottom of their hitboxes
         # Entities higher up the screen (lower Y value) get drawn first!
@@ -203,16 +186,12 @@ class PlayingState(GameState):
         
         # 3. Draw them in the sorted order
         for entity in render_list:
-            if hasattr(entity, 'draw'):
-                entity.draw(screen) # Use the plant's custom draw
-            else:
-                screen.blit(entity.image, entity.rect) # Normal Sprite draw
+            if hasattr(entity, 'draw'): entity.draw(screen) # Use the plant's custom draw
+            else:                       screen.blit(entity.image, entity.rect) # Normal Sprite draw
                 
             # DEBUG TRICK: Uncomment this line to literally see your hitboxes!
             pygame.draw.rect(screen, (0,255,0), entity.rect, 2)
             pygame.draw.rect(screen, (255, 0, 0), entity.hitbox, 2)
-            
-        
             
         self.hud.draw(screen)
 
@@ -273,11 +252,7 @@ class MenuState(BaseUIState):
             # --- FACTORY METHOD USAGE ---
             # Creates a consistent styled button in one line!
             buttons.append(Button.create_bordered_button(
-                rect=rect, text=text, function=func,
-                bg_colour="ButtonBG",        # Dark Grey Background
-                border_colour= "ButtonBorder", # Light Grey Idle Border
-                hover_colour="ButtonHover",    # Gold Hover Border
-                thickness=2))
+                rect=rect, text=text, function=func))
         return buttons
 
     def draw(self, screen):
