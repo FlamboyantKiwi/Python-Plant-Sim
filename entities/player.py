@@ -8,7 +8,7 @@ from core.controls import controls
 from core.animation import AnimationController
 # 2. Entity Imports
 from entities.items import ItemFactory
-from entities.physicsEntity import MovingEntity
+from entities.entity import MovingEntity
 
 from ui.InventoryUI import InventoryUI, Inventory
 

@@ -1,6 +1,6 @@
 import pygame
 from dataclasses import dataclass
-from abc import ABC, abstractmethod
+from abc import ABC
 from enum import Enum
 from typing import NamedTuple
 
@@ -43,6 +43,17 @@ class ToolType(Enum):
     SHOVEL = "shovel"
     # Fallback
     GENERIC = "generic"
+    
+class Material(Enum):
+    WOOD = "WOOD"
+    COPPER = "COPPER"
+    IRON = "IRON"
+    GOLD = "GOLD"
+
+class Quality(Enum):
+    BRONZE = "BRONZE"
+    SILVER = "SILVER"
+    GOLD = "GOLD"
 
 class FontType(Enum):
     HUD = "HUD"
@@ -126,7 +137,7 @@ class EntityConfig(NamedTuple):
     def get_animation(self, state:EntityState) -> dict[Direction, SpriteRect]:
         return self.animations.get(state, {})
 
-@dataclass
+@dataclass(frozen=True)
 class ItemData:
     """ The Master Schematic for any item in the game."""
     name: str
@@ -144,11 +155,12 @@ class ItemData:
     energy_gain: int = 0        # For eating
     grow_time: int = 0          # For seeds (days)
     tool_type: ToolType|None = None 
-    def __post_init__(self):
-        # Runs after __init__ 
-        # used to calculate defaults based on other fields
-        if self.buy_price and self.sell_price is None:
-            self.sell_price = self.buy_price // 2
+    @property
+    def get_sell_price(self) -> int:
+        """Dynamically calculates sell price if one wasn't explicitly set."""
+        if self.sell_price is not None:
+            return self.sell_price
+        return self.buy_price // 2
 
 @dataclass
 class PlantData:
@@ -226,7 +238,6 @@ class CropConfig:
             buy_price=self.crop_price,
             energy_gain=self.energy
         )
-
     def generate_plant_data(self, name: str, harvest_id: str) -> PlantData:
         """Generates the Logic definition"""
         return PlantData(
@@ -239,84 +250,78 @@ class CropConfig:
             regrows=self.regrows
         )
 
-@dataclass(frozen=True)
-class ItemIdentity:
-    """Helper class to hold the generated text/ID for an item."""
-    name: str
-    description: str
-    item_id: str
-
 @dataclass
 class ItemBlueprint(ABC):
     """Abstract Base Class for generating items."""
     sprite_suffix: str
     base_cost: int
+    
+    # Templates
+    name_fmt: str = "{mat_title} {suffix}"
+    desc_fmt: str = "A {mat_lower} quality {suffix_lower}."
+    id_fmt: str   = "{mat_lower}_{sprite_suffix_lower}"
+    
+    # Flags
     tool_type: ToolType = ToolType.GENERIC
     category: ItemCategory = ItemCategory.TOOL
     stackable: bool = False
+    display_suffix: str = ""
+    free_if_wood: bool = False
 
-    @abstractmethod
-    def get_details(self, material: str) -> ItemIdentity:
-        """Returns (Item Name, Description, Item ID)"""
-        pass
-
-    def generate(self, material: str, multiplier: int) -> tuple[str, 'ItemData']:
-        """ Standard generation logic used by ALL subclasses."""
-        identity = self.get_details(material)
-        price = int(self.base_cost * multiplier)
+    def generate(self, material: Material, multiplier: int) -> tuple[str, 'ItemData']:
+        """ Standard generation logic used by ALL items."""
+        mat_str = material.value
+        suffix = self.display_suffix if self.display_suffix else self.sprite_suffix.replace("_", " ").title()
         
-        # Return the ID and the Object
-        return identity.item_id, ItemData(name=identity.name, description=identity.description, category=self.category, image_key=f"{material}_{self.sprite_suffix}", 
-            buy_price=price, tool_type=self.tool_type, stackable=self.stackable)
+        fmt_vars = {
+            "mat_title": mat_str.title(),
+            "mat_lower": mat_str.lower(),
+            "suffix": suffix,
+            "suffix_lower": suffix.lower(),
+            "sprite_suffix_lower": self.sprite_suffix.lower()
+        }
+        
+        # Calculate price based on flag
+        if self.free_if_wood and material == Material.WOOD:
+            price = 0
+        else:
+            price = int(self.base_cost * multiplier)
+        
+        # Return the ID and the ItemData
+        return self.id_fmt.format(**fmt_vars), ItemData(
+            name=self.name_fmt.format(**fmt_vars), 
+            description=self.desc_fmt.format(**fmt_vars), 
+            category=self.category, 
+            image_key=f"{mat_str}_{self.sprite_suffix}", 
+            buy_price=price, 
+            tool_type=self.tool_type, 
+            stackable=self.stackable
+        )
 
 # --- SUBCLASSES ---
 
 @dataclass
 class ToolBP(ItemBlueprint):
     """Handles Axes, Hoes, Swords."""
-    display_suffix: str = ""
-    
-    def get_details(self, material: str) -> ItemIdentity:
-        suffix = self.display_suffix if self.display_suffix else self.sprite_suffix.replace("_", " ").title()
-        
-        return ItemIdentity(
-            name=f"{material.title()} {suffix}",
-            description=f"A {material.lower()} quality {suffix.lower()}.",
-            item_id=f"{material.lower()}_{self.sprite_suffix.lower()}"
-        )
-
-    def generate(self, material: str, multiplier: int):
-        # Tools override generate because they have the "Wood is Free" rule
-        item_id, data = super().generate(material, multiplier)
-        if material == "WOOD": 
-            data.buy_price = 0
-        return item_id, data
+    free_if_wood: bool = True 
 
 @dataclass
 class MaterialBP(ItemBlueprint):
     """Handles raw wood, iron, etc."""
     category: ItemCategory = ItemCategory.MISC
     stackable: bool = True
-    
-    def get_details(self, material: str) -> ItemIdentity:
-        return ItemIdentity(
-            name=material.title(),
-            description=f"A raw piece of {material.lower()}.",
-            item_id=material.lower()
-        )
+    name_fmt: str = "{mat_title}"
+    desc_fmt: str = "A raw piece of {mat_lower}."
+    id_fmt: str   = "{mat_lower}"
 
 @dataclass
 class ArrowBP(ItemBlueprint):
     """Handles arrows."""
     category: ItemCategory = ItemCategory.MISC
     stackable: bool = True
+    name_fmt: str = "{mat_title} Arrow"
+    desc_fmt: str = "A {mat_lower}-tipped arrow."
 
-    def get_details(self, material: str) -> ItemIdentity:
-        return ItemIdentity(
-            name=f"{material.title()} Arrow",
-            description=f"A {material.lower()}-tipped arrow.",
-            item_id=f"{material.lower()}_{self.sprite_suffix.lower()}"
-        )
     
 @dataclass
 class TextConfig:

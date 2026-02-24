@@ -1,10 +1,10 @@
 # core/states.py
 from abc import ABC, abstractmethod
 from entities.player import Player
-from entities.inventory import ShopMenu
 from entities.Plant import PlantGroup
 from ui.hud import HUD
 from ui.ui_elements import Button
+from ui.InventoryUI import ShopMenu
 from world.level import Level
 from settings import WIDTH, HEIGHT
 from Assets.asset_data import SHOPS, ShopData

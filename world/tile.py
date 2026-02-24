@@ -2,7 +2,7 @@ import pygame
 from settings import  BLOCK_SIZE
 from core.asset_loader import AssetLoader
 from Assets.asset_data import GRASS_LAYOUT
-from entities.physicsEntity import Entity
+from entities.entity import Entity
 
 class MapTileGroup(pygame.sprite.Group):
     def __init__(self):

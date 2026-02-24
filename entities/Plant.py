@@ -1,7 +1,7 @@
 import pygame
 from core.types import PlantData
 from core.asset_loader import AssetLoader
-from entities.physicsEntity import Entity
+from entities.entity import Entity
 from Assets.asset_data import get_plant_data
 
 from settings import BLOCK_SIZE

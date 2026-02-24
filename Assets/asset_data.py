@@ -1,4 +1,4 @@
-from core.types import SpriteRect, ItemData, ItemCategory, PlantData, MaterialBP, ArrowBP, ToolBP, ToolType, ScaleRect, EntityConfig, EntityState, AnimationGrid, ShopData, FontType, TextConfig, UP, LEFT, RIGHT, DOWN
+from core.types import SpriteRect, ItemData, ItemCategory, PlantData, MaterialBP, ArrowBP, ToolBP, ToolType, ScaleRect, EntityConfig, EntityState, AnimationGrid, ShopData, FontType, TextConfig, Material, Quality, UP, LEFT, RIGHT, DOWN
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
@@ -22,6 +22,7 @@ class CropAsset:
     # --- Flags (Optional) ---
     regrows: bool|None = None
     is_tree: bool = False
+    quality_levels: int = 3
     
     def __post_init__(self):
         """Runs automatically after the object is created."""
@@ -36,7 +37,6 @@ class CropAsset:
             category=ItemCategory.SEED,
             image_key=f"{image_key}_seeds", 
             buy_price=self.seed_price,
-            # Pass grow_time so the logic knows how long it takes
             grow_time=self.grow_time 
         )
 
@@ -46,8 +46,6 @@ class CropAsset:
             description=f"A fresh {name}. Restores energy.",
             category=ItemCategory.CROP,
             image_key=image_key,
-            # We set buy_price to 0 (cannot be bought), 
-            # but we explicitly set sell_price to override the __post_init__ halving logic
             buy_price=0,
             sell_price=self.crop_price,
             energy_gain=self.energy
@@ -102,7 +100,8 @@ CROPS = {
         50, 130, 10, 50,
         fruit_container_image=SpriteRect(60, 160, 48, 32),
         fruit_image=SpriteRect(64, 0, 32, 48),
-        world_art=SpriteRect(0, 280, 128, 36)),
+        world_art=SpriteRect(0, 280, 128, 36),
+        quality_levels=2),
     
     # --- REGROWING CROPS ---
     "Green Bean": CropAsset(
@@ -212,13 +211,20 @@ CROPS = {
 
 SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 
-FRUIT_RANKS = ("GOLD", "SILVER", "BRONZE")
+FRUIT_RANKS = (Quality.GOLD, Quality.SILVER, Quality.BRONZE)
 TREE_FRAME_SLICES = [(0, 30), (32, 30), (66, 60), (131, 60), (195, 60) ]
 PLANT_FRAME_ORDER = [0, 1, 3, 2]
 
 # Materials
-MATERIAL_MULTIPLIERS = { "WOOD": 1, "COPPER": 5, "IRON": 15, "GOLD": 50 }
-MATERIAL_LEVELS = ["WOOD", "COPPER", "IRON", "GOLD"]
+MATERIAL_MULTIPLIERS = { 
+    Material.WOOD: 1, 
+    Material.COPPER: 5, 
+    Material.IRON: 15, 
+    Material.GOLD: 50 
+}
+
+# You can actually just dynamically grab all the materials directly from the Enum!
+MATERIAL_LEVELS = list(Material)
 
 TOOL_SPRITE_LAYOUT = [
     "MATERIAL", "DAGGER", "SWORD", "STAFF", "KNIFE", "BOW", "ARROW", "AXE", 
@@ -352,7 +358,7 @@ SHOPS = {
         store_name="General Store",
         items_ids=[
             "melon_seeds",
-            "red_pepper_seeds", # Now available because of your generator!
+            "red_pepper_seeds", 
             "wood_axe", 
             "wood_sword",
             "apple"

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 from core.spritesheet import SpriteSheet
 from core.types import ItemCategory, ItemData,  EntityState, Direction, TextConfig
-from Assets.asset_data import CROPS, TEXT, COLOURS, GROUND_TILE_REGIONS, TILE_DETAILS, MATERIAL_LEVELS, MarchingLayout, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS, GAME_ENTITIES
+from Assets.asset_data import CROPS, TEXT, COLOURS, GROUND_TILE_REGIONS, TILE_DETAILS, MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS, GAME_ENTITIES, MarchingLayout, Quality
 from settings import BLOCK_SIZE, QUAD_SIZE
 
 ### Parent Classes
@@ -208,9 +208,11 @@ class ToolGroup(SpriteGroup):
             return
         
         for r_idx, mat in enumerate(MATERIAL_LEVELS):
-            cls.STORAGE[mat] = {}
+            mat_str = mat.value if isinstance(mat, Enum) else mat 
+            
+            cls.STORAGE[mat_str] = {}
             for c_idx, tool in enumerate(TOOL_SPRITE_LAYOUT):
-                cls.STORAGE[mat][tool] = sheet.get_image(
+                cls.STORAGE[mat_str][tool] = sheet.get_image(
                     c_idx * cls.TILE_SIZE, 
                     r_idx * cls.TILE_SIZE + 2,
                     cls.TILE_SIZE, cls.TILE_SIZE, 
@@ -255,20 +257,30 @@ class FruitGroup(SpriteGroup):
             return
 
         for name, asset in CROPS.items():
-            num = 2 if name == "Melon" else 3
-            cls.STORAGE[name] = cls._create_strip(sheet, asset.fruit_container_image, FRUIT_RANKS, num, 2)
-            cls.CONTAINERS[name] = sheet.get_image(
+            clean_key = name.lower().replace(" ", "_") 
+            ranks = FRUIT_RANKS[:asset.quality_levels]
+            cls.STORAGE[clean_key] = cls._create_strip(sheet, asset.fruit_container_image, ranks, asset.quality_levels, 2)
+            cls.CONTAINERS[clean_key] = sheet.get_image(
                 asset.fruit_image.x, asset.fruit_image.y, 
                 asset.fruit_image.w, asset.fruit_image.h)
             
-        cls.SEED_BAGS = cls._create_strip(sheet, SEED_BAGS_POS, ["1", "2"], 2, 3)
+        cls.SEED_BAGS = cls._create_strip(sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
 
     @classmethod
     def _create_strip(cls, sheet, rect, ranks, num, scale_f):
         items = {}
         w = rect.w // num
         for i, rank in enumerate(ranks):
-            items[rank] = sheet.get_image(rect.x + (i * w), rect.y, w, rect.h, (w*scale_f, rect.h*scale_f))
+            # Extract the string if it's an Enum, otherwise use it as-is (for seed bags)
+            rank_key = rank.value if isinstance(rank, Enum) else rank
+            
+            items[rank_key] = sheet.get_image(
+                rect.x + (i * w), 
+                rect.y, 
+                w, 
+                rect.h, 
+                (w * scale_f, rect.h * scale_f)
+            )
         return items
 
 class EntityGroup(SpriteGroup):
@@ -451,7 +463,9 @@ class AssetLoader:
         
         # Check Fruits (Format: Tomato)
         if key in FruitGroup.STORAGE:
-            return FruitGroup.STORAGE[key].get("BRONZE")
+            # If Bronze is missing (like for Melon), fallback to Silver or Gold
+            data = FruitGroup.STORAGE[key]
+            return data.get("BRONZE") or data.get("SILVER") or data.get("GOLD")
 
         fallback = TileGroup.STORAGE.get("DIRT_IMAGE")
         if fallback:
@@ -467,26 +481,34 @@ class AssetLoader:
         elif data.category == ItemCategory.SEED:
             return cls.get_seed_image(data.image_key)
         elif data.category in (ItemCategory.CROP, ItemCategory.FRUIT):
-            formatted_name = data.image_key.replace("_", " ").title()
-            return FruitGroup.STORAGE.get(formatted_name, {}).get("BRONZE")
+            return cls.get_image(data.image_key)
         return TileGroup.STORAGE.get("DIRT_IMAGE")
     @classmethod
-    def get_seed_image(cls, seed_name: str, bag_id="1") -> pygame.Surface | None:
-        cache_key = f"{bag_id}_{seed_name}"
+    def get_seed_image(cls, item_id: str, quality: Quality = Quality.BRONZE) -> pygame.Surface | None:
+        quality_key = quality.value if isinstance(quality, Quality) else quality
+        clean_id = item_id.lower().replace("_seeds", "").replace(" ", "_")
+        
+        cache_key = f"{quality_key}_{clean_id}"
         if cache_key in FruitGroup.CACHE: 
             return FruitGroup.CACHE[cache_key]
         
-        bag = FruitGroup.SEED_BAGS.get(bag_id)
+        bag = FruitGroup.SEED_BAGS.get(quality_key)
         
-        formatted_name = seed_name.replace("_", " ").title()
-        fruit = FruitGroup.STORAGE.get(formatted_name, {}).get("BRONZE")
+        fruit_data = FruitGroup.STORAGE.get(clean_id, {})
+        fruit = fruit_data.get("GOLD")
         
-        if not bag or not fruit: 
+        if not bag:
+            print("no bag")
+            return TileGroup.STORAGE.get("DIRT_IMAGE")
+        elif not fruit: 
+            print("no fruit")
             return bag
         
         comp = bag.copy()
         bx, by = comp.get_rect().center
+       
         fx, fy = fruit.get_rect().size
+        # Blit centered on the bag
         comp.blit(fruit, (bx - fx//2, by - fy//2 - 2))
         FruitGroup.CACHE[cache_key] = comp
         return comp
