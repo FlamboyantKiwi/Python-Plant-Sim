@@ -73,7 +73,8 @@ class TextBox(UIElement):
 
     def _render_text(self):
         """Generates the text surface."""
-        if self.config is None: return
+        if self.config is None: 
+            return
 
         # No text to render
         if not self._text.strip():
@@ -106,7 +107,8 @@ class TextBox(UIElement):
             if current_val != self._text:
                 self.set_text(current_val)
     def draw(self, screen):
-        if not self.is_visible: return
+        if not self.is_visible: 
+            return
 
         # Draw BG/border
         super().draw(screen)
@@ -172,7 +174,8 @@ class Button(StateElement):
         self.text_box.update()
 
     def draw(self, screen):
-        if not self.is_visible: return
+        if not self.is_visible: 
+            return
          # Draw the current image state 
         super().draw(screen)
         # Draw text
@@ -185,7 +188,8 @@ class Button(StateElement):
         return self.is_visible and self.rect.collidepoint(mouse_pos)
     
     def handle_click(self):
-        if self.function:   return self.function()
+        if self.function:   
+            return self.function()
     @classmethod
     def create_bordered_button(cls, rect, text, function, bg_colour="ButtonBG", 
             border_colour="ButtonBorder", hover_colour="ButtonHover", active_colour="ButtonActive", thickness=2):

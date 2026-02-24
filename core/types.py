@@ -1,3 +1,4 @@
+import pygame
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -5,10 +6,15 @@ from typing import NamedTuple
 
 # ============ ENUMS ============ #
 class EntityState(Enum):
-    WALK = "Walk"; IDLE = "Idle"; RUN = "Run"
+    WALK = "Walk"
+    IDLE = "Idle"
+    RUN = "Run"
 
 class Direction(Enum):
-    DOWN = "Down"; RIGHT = "Right"; LEFT = "Left"; UP = "Up"
+    DOWN = "Down"
+    RIGHT = "Right"
+    LEFT = "Left"
+    UP = "Up"
 DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
 
 class ItemCategory(Enum):
@@ -20,36 +26,50 @@ class ItemCategory(Enum):
 
 class ToolType(Enum):
     # Farming
-    HOE = "hoe"; WATER = "water"
+    HOE = "hoe"
+    WATER = "water"
     # Gathering
-    AXE = "axe"; PICKAXE = "pick"; ROD = "rod"
+    AXE = "axe"
+    PICKAXE = "pick"
+    ROD = "rod"
     # Combat
-    SWORD = "sword"; DAGGER = "dagger"; BOW = "bow"; STAFF = "staff"
+    SWORD = "sword"
+    DAGGER = "dagger"
+    BOW = "bow"
+    STAFF = "staff"
     # Misc
-    HAMMER = "hammer"; SCYTHE = "scythe"; SHOVEL = "shovel"
+    HAMMER = "hammer"
+    SCYTHE = "scythe"
+    SHOVEL = "shovel"
     # Fallback
     GENERIC = "generic"
 
 class FontType(Enum):
-    HUD = "HUD";    SLOT = "SLOT"
+    HUD = "HUD"
+    SLOT = "SLOT"
 
 # ============ GEOMETRY ============ #
 @dataclass(frozen=True)
 class SpriteRect:
     """Defines a basic region on a sprite sheet."""
-    x: int; y: int; w: int; h: int
+    x: int
+    y: int
+    w: int
+    h: int
 
 @dataclass(frozen=True)
 class ScaleRect(SpriteRect):
     """Defines a region containing multiple tiles of a specific size."""
-    tile_w: int; tile_h: int
+    tile_w: int
+    tile_h: int
 
 @dataclass(frozen=True)
 class RectPair:
     """ Used for Fruits.
     a: The Fruit Strip (3 frames: Gold, Silver, Bronze)
     b: The Container (Crate/Basket) """
-    a: SpriteRect; b: SpriteRect
+    a: SpriteRect
+    b: SpriteRect
 
 @dataclass
 class AnimationGrid(dict):
@@ -58,7 +78,8 @@ class AnimationGrid(dict):
     def __init__(self, rect: SpriteRect, directions: list[Direction]|None = None, is_vertical: bool = True):
         super().__init__() # Initialize the underlying dict
         if directions is None:
-            for d in Direction: self[d] = rect
+            for d in Direction:
+                self[d] = rect
             return
         count = len(directions)
         
@@ -126,7 +147,7 @@ class ItemData:
     def __post_init__(self):
         # Runs after __init__ 
         # used to calculate defaults based on other fields
-        if self.buy_price and self.sell_price == None:
+        if self.buy_price and self.sell_price is None:
             self.sell_price = self.buy_price // 2
 
 @dataclass
@@ -144,9 +165,11 @@ class PlantData:
     def get_stage_index(self, current_age: float) -> int:
         """Calculates the correct image index based on age."""
         #Prevent division by 0
-        if self.grow_time <= 0:             return self.image_stages - 1
+        if self.grow_time <= 0:
+            return self.image_stages - 1
         # Ready to Harvest?
-        if current_age >= self.grow_time:   return self.image_stages - 1
+        if current_age >= self.grow_time:   
+            return self.image_stages - 1
 
         # Calculate percentage of growth
         growth_percent = current_age / self.grow_time
@@ -179,7 +202,8 @@ class CropConfig:
     @property
     def stages(self) -> int:
         """ Calculates stage count based on what the plant IS. """
-        if self.is_tree: return 5
+        if self.is_tree: 
+            return 5
         return 4 # Default for standard vegetables
     
     def generate_seed_data(self, name: str, image_key: str) -> ItemData:
@@ -264,7 +288,8 @@ class ToolBP(ItemBlueprint):
     def generate(self, material: str, multiplier: int):
         # Tools override generate because they have the "Wood is Free" rule
         item_id, data = super().generate(material, multiplier)
-        if material == "WOOD": data.buy_price = 0
+        if material == "WOOD": 
+            data.buy_price = 0
         return item_id, data
 
 @dataclass
@@ -293,7 +318,6 @@ class ArrowBP(ItemBlueprint):
             item_id=f"{material.lower()}_{self.sprite_suffix.lower()}"
         )
     
-import pygame
 @dataclass
 class TextConfig:
     """Defines the styling for a specific type of text."""

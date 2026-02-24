@@ -1,4 +1,4 @@
-from settings import WIDTH, SHOP_BUTTON, MONEY_RECT
+from settings import SHOP_BUTTON, MONEY_RECT
 from ui.ui_elements import Button, TextBox
 
 

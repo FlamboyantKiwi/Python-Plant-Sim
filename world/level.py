@@ -1,7 +1,9 @@
-import random, math, pygame
+import random
+import math
 from settings import BLOCK_SIZE, DETAIL_CHANCE
 from core.asset_loader import TileGroup
-from world.tile import Tile
+from entities.Plant import Plant
+from world.tile import Tile, MapTileGroup
 class Level:
     DIRT_NODE = 0
     GRASS_NODE = 1
@@ -9,15 +11,14 @@ class Level:
     """ Handles level initialization by processing a node map (corner statuses)
     and generating high-resolution Marching Squares tiles. """
 
-    def __init__(self, all_tiles_group, player_sprite, map_data: list[list[int]]|None = None):
+    def __init__(self, plant_group, player_sprite, map_data: list[list[int]]|None = None):
         self.tilesets = TileGroup.STORAGE
-        self.all_tiles = all_tiles_group
+        self.all_tiles = MapTileGroup()
+        
+        self.plant_group = plant_group
         self.player_sprite = player_sprite
         
         self.tile_grid = {}
-        
-        self.active_plants = []
-        self.entities = pygame.sprite.Group()
         
         if map_data:
             print("loading existing map data")
@@ -31,7 +32,10 @@ class Level:
         self.MAP_WIDTH = len(self.node_map[0]) - 2 
 
         self.generate_level()
-        self.entities.add(self.all_tiles.sprites())
+    def update(self):
+        self.all_tiles.update()
+    def draw(self, camera_offset):
+        self.all_tiles.custom_draw(camera_offset)
     def generate_level(self):
         """ Iterates over the node map to calculate the 9-node status for each 
         64x64 tile and creates the Tile object. """
@@ -94,10 +98,8 @@ class Level:
                         random_detail_image = random.choice(detail_list)
 
                 # --- 3. Create the Marching Tile ---
-                new_tile = Tile.create(self, x, y, tile_type_key, nine_nodes_status, random_detail_image)
+                new_tile = Tile.create(self, x, y, tile_type_key, nine_nodes_status, self.all_tiles, random_detail_image)
                 
-                # Add to grid and sprite groups
-                self.all_tiles.add(new_tile)
                 self.tile_grid[(map_tile_x, map_tile_y)] = new_tile
                 
                 # --- 4. Place Player (using the map_tile_x/y indices) ---
@@ -165,10 +167,16 @@ class Level:
                 tile.refresh_terrain(new_nodes)
     def get_tile(self, grid_x:int, grid_y:int) -> Tile|None:
         return self.tile_grid.get((grid_x, grid_y))
-    def update(self):
-        """Updates all entities within the level (tiles, water animations, etc)."""
-        self.all_tiles.update()
-    
+    def spawn_plant(self, plant_name, grid_x, grid_y, camera_group):
+        # Create new plant, with groups
+        new_plant = Plant(plant_name, grid_x, grid_y, group=[camera_group, self.plant_group])
+        
+        # Link to the tile
+        tile = self.get_tile(grid_x, grid_y)
+        if tile: 
+            tile.occupant = new_plant
+        
+        return new_plant
     @staticmethod
     def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4):
         """Randomly selects a center point, calculates a noise-distorted boundary, 

@@ -1,5 +1,5 @@
-import pygame, os
-from settings import BLOCK_SIZE
+import pygame
+import os
 #Helper Function
 def get_asset(fileName, path="assets"): 
     """Gets the full, cross-platform path for a file in the assets folder.

@@ -20,8 +20,10 @@ class AnimationController:
         
         # Adjust speed for different states if needed
         current_speed = self.speed
-        if state == EntityState.IDLE: current_speed = 0.4
-        elif state == EntityState.RUN: current_speed = 0.1
+        if state == EntityState.IDLE: 
+            current_speed = 0.4
+        elif state == EntityState.RUN: 
+            current_speed = 0.1
 
         # 2. Advance Frame
         if self.current_time >= current_speed:

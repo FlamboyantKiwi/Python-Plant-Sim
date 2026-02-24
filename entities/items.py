@@ -1,7 +1,6 @@
 from core.asset_loader import AssetLoader
 from Assets.asset_data import get_item_data, ItemData
 from core.types import ItemCategory
-from entities.Plant import Plant
 
 Default_colour = (150, 150, 150)
 
@@ -40,7 +39,7 @@ class Item:
         self.count -= amount
         return amount
 
-    def use(self, player, target_tile, all_tiles) -> bool:
+    def use(self, player, target_tile, all_tiles, group) -> bool:
         """Default behavior: Do nothing."""
         return False
         
@@ -52,8 +51,9 @@ class Item:
 # We only subclass if there is custom BEHAVIOR (methods), not custom DATA.
 
 class ToolItem(Item):
-    def use(self, player, target_tile, all_tiles):
-        if not target_tile: return False
+    def use(self, player, target_tile, all_tiles, group):
+        if not target_tile: 
+            return False
         
         # Get the tool type string (e.g., "hoe")
         t_type = self.data.tool_type 
@@ -68,12 +68,12 @@ class ToolItem(Item):
         if hasattr(self, method_name):
             # Get the method and call it
             method = getattr(self, method_name)
-            return method(player, target_tile, all_tiles)
+            return method(player, target_tile, all_tiles, group)
             
         print(f"ToolItem Error: Method '{method_name}' not implemented for {self.name}.")
         return False
 
-    def _use_hoe(self, player, tile, all_tiles):
+    def _use_hoe(self, player, tile, all_tiles, group):
         # Can only till tillable ground (Dirt/Grass)
         if not getattr(tile, 'tillable', False):
             print("You can't till this ground!")
@@ -96,22 +96,24 @@ class ToolItem(Item):
         
         return True
 
-    def _use_watering_can(self, player, tile, all_tiles):
+    def _use_watering_can(self, player, tile, all_tiles, group):
         print(f"Watering {tile}...")
         return True
 
-    def _use_axe(self, player, tile, all_tiles):
+    def _use_axe(self, player, tile, all_tiles, group):
         print("Chop chop")
         return True
     
-    def _use_pickaxe(self, player, tile, all_tiles):
+    def _use_pickaxe(self, player, tile, all_tiles, group):
         print("Breaking stone...")
         return True
 
 class SeedItem(Item):
-    def use(self, player, target_tile, all_tiles):
-        if self.count <= 0: return False
-        if not target_tile: return False
+    def use(self, player, target_tile, all_tiles, group):
+        if self.count <= 0: 
+            return False
+        if not target_tile: 
+            return False
         
         # Check if the tile is ready for a seed
         if not getattr(target_tile, 'is_tilled', False):
@@ -119,7 +121,7 @@ class SeedItem(Item):
             return False
             
         # Check if something is already planted here
-        if target_tile.plant is not None:
+        if target_tile.occupant is not None:
             print("Something is already growing here!")
             return False
             
@@ -128,23 +130,16 @@ class SeedItem(Item):
         plant_name = self.data.name.replace(" Seeds", "").replace(" Seed", "")
         print(f"Planting {plant_name}...")
         
-        # Create the Plant entity using the tile's grid coordinates
-        new_plant = Plant(plant_name, target_tile.grid_x, target_tile.grid_y)
-        
-        # Link it to the tile so we can easily find it later!
-        target_tile.plant = new_plant
-        
-        # Instantly notify the Level that a plant was born!
-        target_tile.level.active_plants.append(new_plant)
-        target_tile.level.entities.add(new_plant)
+        target_tile.level.spawn_plant(plant_name, target_tile.grid_x, target_tile.grid_y, group)
         
         # Consume the seed
         self.count -= 1
         return True
 
 class FoodItem(Item):
-    def use(self, player, target_tile, all_tiles):
-        if self.count <= 0: return False
+    def use(self, player, target_tile, all_tiles, group):
+        if self.count <= 0: 
+            return False
         print(f"Yum! Ate {self.name} for {self.data.energy_gain} energy.")
         # use for energy or sell?
         self.count -= 1

@@ -6,8 +6,34 @@ from Assets.asset_data import get_plant_data
 
 from settings import BLOCK_SIZE
 
+class PlantGroup(pygame.sprite.Group):
+    def __init__(self):
+        super().__init__()
+
+    def add(self, *sprites):
+        """Overridden to ensure only Plant instances are added."""
+        for sprite in sprites:
+            if isinstance(sprite, Plant):
+                super().add(sprite)
+            else:
+                raise TypeError(f"PlantGroup only accepts 'Plant' objects, not {type(sprite).__name__}")
+    
+    def grow_all(self, amount: float):
+        """Ticks the growth logic for every plant in this group."""
+        for plant in self.sprites():
+            for plant in self.sprites():
+                plant.grow(amount)
+
+    def get_plant_at_grid(self, grid_x, grid_y):
+        """Helper to find a specific plant instance by its coordinates."""
+        for plant in self.sprites():
+            if plant.grid_x == grid_x and plant.grid_y == grid_y:
+                return plant
+        return None
+
+
 class Plant(Entity):
-    def __init__(self, name: str, grid_x: int, grid_y: int):
+    def __init__(self, name: str, grid_x: int, grid_y: int, group):
         self.grid_x, self.grid_y = grid_x, grid_y
         
         # Get Logic Data (Growth time, is_tree, etc)
@@ -37,11 +63,8 @@ class Plant(Entity):
         start_hitbox = self._calculate_hitbox(scale = self.hitbox_scale)
         start_hitbox.midbottom = self.rect.midbottom
         
-        # Initialize PhysicsEntity (Speed is 0, because plants don't walk!)
-        super().__init__(
-            image=initial_image,
-            initial_rect=self.rect, 
-            initial_hitbox=start_hitbox)
+        # Initialize Entity
+        super().__init__(initial_image, self.rect, start_hitbox, group)
     
     def _get_current_image(self) -> pygame.Surface:
         """Helper to generate the current stage key and fetch the image."""
@@ -59,7 +82,8 @@ class Plant(Entity):
     def update_visuals(self):
         """ Checks if the plant grew into a new stage and updates the sprite. """
         new_image = self._get_current_image()
-        if new_image == self.image: return # Only update if the image changed
+        if new_image == self.image: 
+            return # Only update if the image changed
         
         self.image = new_image
         # Trees are taller than seeds, so we must re-anchor the midbottom to the ground!

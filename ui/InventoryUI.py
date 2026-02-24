@@ -1,4 +1,5 @@
-import copy, pygame
+import copy
+import pygame
 from ui.ui_elements import UIElement, TextBox, Slot
 from entities.items import Item, ItemFactory
 from Assets.asset_data import ITEMS
@@ -115,7 +116,8 @@ class InventoryUI(UIElement):
 
     def is_click(self, mouse_pos):
         """ Checks if the overall inventory panel was clicked. """
-        if not self.is_visible: return False
+        if not self.is_visible: 
+            return False
         return self.rect.collidepoint(mouse_pos)
 
     def click(self, mouse_pos):
@@ -161,10 +163,12 @@ class ShopMenu:
 
     def populate_shop(self):
         """ Reads IDs from shop_data and fills the backend data structure. """
-        if not self.shop_data: return
+        if not self.shop_data: 
+            return
 
         for i, item_id in enumerate(self.shop_data.items_ids):
-            if i >= self.inventory_data.max_size: break
+            if i >= self.inventory_data.max_size: 
+                break
 
             # Assuming ITEMS is a dict of valid IDs
             if item_id not in ITEMS:
@@ -179,14 +183,16 @@ class ShopMenu:
 
     def update(self, mouse_pos=None):
         """ Runs the UI updates and re-applies price tags. """
-        if not self.is_open: return
+        if not self.is_open: 
+            return
         
         # This syncs the UI with the data (and normally sets text to stack count)
         self.ui_grid.update(mouse_pos)
         self.title_box.update()
 
     def draw(self, screen):
-        if not self.is_open: return
+        if not self.is_open: 
+            return
         
         # Draw Background Image
         self.background.draw(screen)
@@ -199,7 +205,8 @@ class ShopMenu:
   
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
-        if not self.is_open: return False
+        if not self.is_open: 
+            return False
 
         # Let the UI grid tell us the index of what was clicked
         clicked_index = self.ui_grid.click(pos)

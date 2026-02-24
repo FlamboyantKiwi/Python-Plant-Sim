@@ -20,7 +20,7 @@ class Player(MovingEntity):
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
-    def __init__(self, x:int|float, y:int|float, type="Racoon"):
+    def __init__(self, x:int|float, y:int|float, group, type="Racoon"):
        # 1. Figure out the unique player visuals and sizes first
         initial_image = pygame.Surface((32, 64))
         start_rect = initial_image.get_rect(topleft=(x, y))
@@ -29,10 +29,7 @@ class Player(MovingEntity):
         start_hitbox.midbottom = start_rect.midbottom
         
         # 2. Hand them to the PhysicsEntity to do the rest!
-        super().__init__(image=initial_image, 
-                         initial_rect=start_rect, 
-                         initial_hitbox=start_hitbox, 
-                         base_speed=200)
+        super().__init__(initial_image, start_rect, start_hitbox, 200, group)
         
         self.player_type = type
         self.state = EntityState.IDLE
@@ -185,7 +182,7 @@ class Player(MovingEntity):
         
         for tile in hit_tiles:
             print(f"Interacting with tile at {target_point}")
-            used = active_item.use(self, tile, all_tiles)
+            used = active_item.use(self, tile, all_tiles, self.groups()[0])
             
             if used and active_item.count <= 0:
                 self.inventory.items[self.active_slot_index] = None

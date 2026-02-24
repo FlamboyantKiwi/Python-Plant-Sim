@@ -1,4 +1,4 @@
-from core.types import *
+from core.types import SpriteRect, ItemData, ItemCategory, PlantData, MaterialBP, ArrowBP, ToolBP, ToolType, ScaleRect, EntityConfig, EntityState, AnimationGrid, ShopData, FontType, TextConfig, UP, LEFT, RIGHT, DOWN
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
@@ -54,8 +54,10 @@ class CropAsset:
         )
 
     def generate_plant_data(self, name: str, harvest_id: str) -> PlantData:
-        if self.is_tree:    stage_count = 5
-        else:               stage_count = 4
+        if self.is_tree:    
+            stage_count = 5
+        else:               
+            stage_count = 4
         return PlantData(
             name=name,
             grow_time=self.grow_time,

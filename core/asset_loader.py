@@ -1,11 +1,13 @@
 # asset_loader.py
-import pygame, os, inspect
+import pygame
+import os
+import inspect
 from enum import Enum
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from core.spritesheet import SpriteSheet
-from core.types import ItemCategory, EntityConfig, ItemData, FontType, EntityState, Direction, TextConfig
-from Assets.asset_data import *
+from core.types import ItemCategory, ItemData,  EntityState, Direction, TextConfig
+from Assets.asset_data import CROPS, TEXT, COLOURS, GROUND_TILE_REGIONS, TILE_DETAILS, MATERIAL_LEVELS, MarchingLayout, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS, GAME_ENTITIES
 from settings import BLOCK_SIZE, QUAD_SIZE
 
 ### Parent Classes
@@ -41,7 +43,8 @@ class ConfigGroup(AssetGroup):
         """Generic lookup with error tracking."""
         # 1. Try Exact Match
         val = cls.STORAGE.get(key)
-        if val: return val
+        if val: 
+            return val
 
         # 2. Handle Missing
         if key not in cls.MISSING:
@@ -122,12 +125,14 @@ class ColourGroup(ConfigGroup):
         
         # Try exact match
         col = cls.STORAGE.get(name)
-        if col: return col
+        if col: 
+            return col
         
         # Try fallback category
         if fallback_type:
             col = cls.STORAGE.get(fallback_type)
-            if col: return col
+            if col: 
+                return col
         
         # Fallback to generic missing logic
         return cls.get_val(name) or cls.DEFAULT
@@ -138,7 +143,8 @@ class TileGroup(SpriteGroup):
     @classmethod
     def load(cls):
         sheet = cls.load_spritesheet("exterior")
-        if not sheet: return
+        if not sheet: 
+            return
         
         # 1. Load Ground Regions
         for key, rect in GROUND_TILE_REGIONS.items():
@@ -198,7 +204,8 @@ class ToolGroup(SpriteGroup):
     @classmethod
     def load(cls):
         sheet = cls.load_spritesheet("Tools_All")
-        if not sheet: return
+        if not sheet: 
+            return
         
         for r_idx, mat in enumerate(MATERIAL_LEVELS):
             cls.STORAGE[mat] = {}
@@ -214,7 +221,8 @@ class PlantGroup(SpriteGroup):
     @classmethod
     def load(cls):
         sheet = cls.load_spritesheet("Plants")
-        if not sheet: return
+        if not sheet: 
+            return
 
         for name, asset in CROPS.items():
             rect = asset.world_art
@@ -243,7 +251,8 @@ class FruitGroup(SpriteGroup):
     @classmethod
     def load(cls):
         sheet = cls.load_spritesheet("Supplies")
-        if not sheet: return
+        if not sheet: 
+            return
 
         for name, asset in CROPS.items():
             num = 2 if name == "Melon" else 3
@@ -303,9 +312,11 @@ class ImageGroup(AssetGroup):
         key = (filename, scale)
 
         # Return Cached if exists
-        if key in cls.STORAGE:          return cls.STORAGE[key]
+        if key in cls.STORAGE:          
+            return cls.STORAGE[key]
         # Check if we already failed this file (Prevent log spam)
-        if filename in cls.FAILURES:    return cls.generate_fallback(filename, scale)
+        if filename in cls.FAILURES:    
+            return cls.generate_fallback(filename, scale)
 
         # Attempt Load
         try:
@@ -313,7 +324,8 @@ class ImageGroup(AssetGroup):
             img = pygame.image.load(full_path).convert_alpha()
             
             #Adjust size of image
-            if scale:   img = pygame.transform.scale(img, scale)
+            if scale:   
+                img = pygame.transform.scale(img, scale)
             # Store image in cache
             cls.STORAGE[key] = img
             return img
@@ -358,7 +370,8 @@ class FontGroup(AssetGroup):
         key = (config.name, config.size, config.bold, config.italic)
         
         if key not in cls.STORAGE:
-            if not pygame.font.get_init(): pygame.font.init()
+            if not pygame.font.get_init(): 
+                pygame.font.init()
             # Load and store
             cls.STORAGE[key] = pygame.font.SysFont(
                 config.name, config.size, config.bold, config.italic)
@@ -370,8 +383,10 @@ class FontGroup(AssetGroup):
         for key in cls.STORAGE:
             name, size, bold, italic = key
             styles = []
-            if bold: styles.append("Bold")
-            if italic: styles.append("Italic")
+            if bold: 
+                styles.append("Bold")
+            if italic: 
+                styles.append("Italic")
             style_str = " + ".join(styles) if styles else "Normal"
             print(f"• Name: {name:<20} | Size: {size:<3} | Style: {style_str}")
         print("-" * 30)
@@ -382,7 +397,8 @@ class AssetLoader:
     has_loaded = False
     @classmethod
     def __init__(cls):
-        if cls.has_loaded: return
+        if cls.has_loaded: 
+            return
         cls.has_loaded = True
         
         # Load all sub-groups
@@ -424,7 +440,8 @@ class AssetLoader:
     def get_image(cls, key: str) -> pygame.Surface:
         """Universal lookup that checks through specialized groups."""
         # Check Plants
-        if key in PlantGroup.STORAGE: return PlantGroup.STORAGE[key]
+        if key in PlantGroup.STORAGE: 
+            return PlantGroup.STORAGE[key]
         
         # Check Tools (Format: WOOD_AXE)
         if "_" in key:
@@ -456,14 +473,16 @@ class AssetLoader:
     @classmethod
     def get_seed_image(cls, seed_name: str, bag_id="1") -> pygame.Surface | None:
         cache_key = f"{bag_id}_{seed_name}"
-        if cache_key in FruitGroup.CACHE: return FruitGroup.CACHE[cache_key]
+        if cache_key in FruitGroup.CACHE: 
+            return FruitGroup.CACHE[cache_key]
         
         bag = FruitGroup.SEED_BAGS.get(bag_id)
         
         formatted_name = seed_name.replace("_", " ").title()
         fruit = FruitGroup.STORAGE.get(formatted_name, {}).get("BRONZE")
         
-        if not bag or not fruit: return bag
+        if not bag or not fruit: 
+            return bag
         
         comp = bag.copy()
         bx, by = comp.get_rect().center

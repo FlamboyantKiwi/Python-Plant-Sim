@@ -1,4 +1,5 @@
-import sys, pygame
+import sys
+import pygame
 
 from settings import WIDTH, HEIGHT, FPS
 from core.asset_loader import AssetLoader

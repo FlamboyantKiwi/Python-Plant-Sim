@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from entities.player import Player
 from entities.inventory import ShopMenu
-from entities.Plant import Plant
+from entities.Plant import PlantGroup
 from ui.hud import HUD
 from ui.ui_elements import Button
 from world.level import Level
@@ -10,6 +10,7 @@ from settings import WIDTH, HEIGHT
 from Assets.asset_data import SHOPS, ShopData
 from core.helper import  draw_text
 from core.asset_loader import AssetLoader
+from core.camera import CameraGroup
 import pygame
 
 class GameState(ABC):
@@ -31,11 +32,13 @@ class GameState(ABC):
     def handle_event(self, event) -> bool: 
         if event.type == pygame.KEYDOWN:
             action = self.key_binds.get(event.key)
-            if action: action()
+            if action: 
+                action()
         
         elif event.type == pygame.MOUSEBUTTONDOWN:
             action = self.mouse_binds.get(event.button)
-            if action: action(event.pos)
+            if action: 
+                action(event.pos)
         return False
 
     def enter_state(self): pass
@@ -126,23 +129,20 @@ class ShopState(BaseUIState):
 class PlayingState(GameState):
     def __init__(self, game):
         super().__init__(game)
-        self.all_tiles = pygame.sprite.Group()
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = CameraGroup()
+        self.plant_group = PlantGroup()
 
-        self.player = Player(WIDTH // 2, HEIGHT // 2)
+        self.player = Player(WIDTH // 2, HEIGHT // 2, self.all_sprites)
         self.hud = HUD(self.player)
 
-        self.all_sprites.add(self.player)
-
         self.level = Level(
-            all_tiles_group=self.all_tiles,
+            plant_group=self.plant_group,
             player_sprite=self.player,
             map_data=None 
         )
      
-        self.plants = []
-        self.add_plant_to_world(Plant("Apple", 5, 5))
-        self.add_plant_to_world(Plant("Onion", 6, 5))
+        self.level.spawn_plant("Apple", 5, 5, self.all_sprites)
+        self.level.spawn_plant("Onion", 6, 5, self.all_sprites)
 
         self.key_binds = {
             pygame.K_ESCAPE: self.quit_game,
@@ -154,9 +154,7 @@ class PlayingState(GameState):
         target_tile = self.level.get_tile(plant.grid_x, plant.grid_y)
         if target_tile and hasattr(target_tile, 'plant'):
             setattr(target_tile, 'plant', plant)
-            # Instantly push to the Level's trackers
-            self.level.active_plants.append(plant)
-            self.level.entities.add(plant)
+
     def update(self):
         # Calculate Delta Time (dt) in seconds
         dt = self.game.clock.get_time() / 1000 
@@ -164,34 +162,22 @@ class PlayingState(GameState):
         
         # Update world objects
         self.level.update()
-        self.player.update(dt, self.level.entities)
+        self.all_sprites.update(dt, self.all_sprites)
         self.hud.update(mouse_pos)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
-            for plant in self.plants:
-                plant.grow(0.1) # Grow slightly every frame
-
+            self.plant_group.grow_all(0.1)
+                    
     def draw(self, screen):
         # Draw the game world
-        screen.fill(AssetLoader.get_colour("WATER")) # Or use settings.COLOURS
-        self.all_tiles.draw(screen)
+        screen.fill(AssetLoader.get_colour("WATER")) 
         
-        # Combine everything that can overlap into one temporary list
-        render_list = [self.player] + self.level.active_plants
+        # Draw ground tiles (passing camera offset)
+        self.level.draw(self.all_sprites.offset)
         
-        # 2. Sort the list based on the bottom of their hitboxes
-        # Entities higher up the screen (lower Y value) get drawn first!
-        render_list.sort(key=lambda entity: entity.hitbox.top)
-        
-        # 3. Draw them in the sorted order
-        for entity in render_list:
-            if hasattr(entity, 'draw'): entity.draw(screen) # Use the plant's custom draw
-            else:                       screen.blit(entity.image, entity.rect) # Normal Sprite draw
-                
-            # DEBUG TRICK: Uncomment this line to literally see your hitboxes!
-            pygame.draw.rect(screen, (0,255,0), entity.rect, 2)
-            pygame.draw.rect(screen, (255, 0, 0), entity.hitbox, 2)
+        # Draw all entities (Y-Sorted & Camera-Offset)
+        self.all_sprites.custom_draw(self.player)
             
         self.hud.draw(screen)
 

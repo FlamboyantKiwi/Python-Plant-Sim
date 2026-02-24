@@ -1,5 +1,5 @@
-from enum import Enum
-from core.asset_loader import AssetLoader
+#from enum import Enum
+#from core.asset_loader import AssetLoader
 
 class Animal:
     def __init__(self, x: int, y: int, type: str):

@@ -1,6 +1,8 @@
 # settings.py
 import pygame
 
+DEBUG = True
+
 # Screen & Grid Configuration
 BLOCK_SIZE = 64
 TILES_X = 16

@@ -34,10 +34,14 @@ class KeyBindings:
         """ Dynamically builds the vector dictionary. 
         Automatically updates if changed during runtime"""
         binds = {}
-        for key in self.up:    binds[key] = (0, -1)
-        for key in self.down:  binds[key] = (0, 1)
-        for key in self.left:  binds[key] = (-1, 0)
-        for key in self.right: binds[key] = (1, 0)
+        for key in self.up:    
+            binds[key] = (0, -1)
+        for key in self.down:  
+            binds[key] = (0, 1)
+        for key in self.left:  
+            binds[key] = (-1, 0)
+        for key in self.right: 
+            binds[key] = (1, 0)
         return binds
 
     def rebind(self, action: str, new_key: int):

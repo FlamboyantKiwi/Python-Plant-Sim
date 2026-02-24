@@ -3,8 +3,8 @@ from settings import WIDTH, HEIGHT
 
 class Entity(pygame.sprite.Sprite):
     """Absolute base class for anything that exists in the game world."""
-    def __init__(self, image: pygame.Surface, initial_rect: pygame.Rect, initial_hitbox: pygame.Rect, hitbox_offset=10):
-        super().__init__()
+    def __init__(self, image: pygame.Surface, initial_rect: pygame.Rect, initial_hitbox: pygame.Rect, *groups, hitbox_offset=10):
+        super().__init__(*groups)
         self.image = image
         
         self.rect = initial_rect
@@ -30,7 +30,8 @@ class Entity(pygame.sprite.Sprite):
     
     def draw(self, surface: pygame.Surface, offset_x=0, offset_y=0):
         """Standard drawing logic."""
-        if self.image is None: return
+        if self.image is None: 
+            return
         draw_rect = self.rect.copy()
         draw_rect.x -= offset_x
         draw_rect.y -= offset_y
@@ -38,9 +39,9 @@ class Entity(pygame.sprite.Sprite):
 
 class MovingEntity(Entity):
     """Base class for entities that can move and collide dynamically."""
-    def __init__(self, image: pygame.Surface, initial_rect: pygame.Rect, initial_hitbox: pygame.Rect, base_speed: int | float, hitbox_offset=10):
+    def __init__(self, image: pygame.Surface, initial_rect: pygame.Rect, initial_hitbox: pygame.Rect, base_speed: int | float, *groups, hitbox_offset=10):
         # Pass the visual data up to the basic Entity class
-        super().__init__(image, initial_rect, initial_hitbox, hitbox_offset)
+        super().__init__(image, initial_rect, initial_hitbox, *groups, hitbox_offset=hitbox_offset)
         
         # Add movement-specific variables
         self.pos = pygame.math.Vector2(self.hitbox.center)

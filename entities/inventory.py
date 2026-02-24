@@ -1,13 +1,12 @@
-import pygame, copy
+import pygame
+import copy
 
 from settings import SHOP_MENU
 from entities.items import Item, ItemFactory
 from core.helper import draw_text
-from core.types import ShopData, FontType
+from core.types import ShopData
 from Assets.asset_data import ITEMS
 from ui.ui_elements import Slot, TextBox, UIElement
-from core.asset_loader import AssetLoader
-
 
 class Inventory:
     def __init__(self, max_size = 4, columns = 1, rect = None, slot_size = 40, padding = 5):
@@ -102,11 +101,14 @@ class Inventory:
                         remaining -= amount_to_add
                         slot.set_item(slot.item) # Refresh visual
         for slot in self.slots:
-            if remaining <= 0: break
+            if remaining <= 0:
+                break
             if slot.item is None:
                 to_add = copy.copy(new_item)
-                if new_item.stackable:  count = min(remaining, to_add.stack_size) 
-                else:                   count = 1
+                if new_item.stackable:  
+                    count = min(remaining, to_add.stack_size) 
+                else:                   
+                    count = 1
                 to_add.count = count
                 slot.set_item(to_add)
                 remaining -= count
@@ -128,7 +130,8 @@ class Inventory:
                     remaining -= slot.item.count
                     slot.set_item(None) # Clear slot
                     
-                if remaining <= 0: return True
+                if remaining <= 0: 
+                    return True
         return False
     
     def remove_if_empty(self, item):
@@ -185,11 +188,13 @@ class ShopMenu(Inventory):
     def populate_shop(self):
         """ Reads IDs from shop_data and fills UI slots """
         # Check if shop_data exists
-        if not self.shop_data: return
+        if not self.shop_data: 
+            return
 
         for i, item_id in enumerate(self.shop_data.items_ids):
             # Don't overflow slots
-            if i >= len(self.slots): break
+            if i >= len(self.slots): 
+                break
 
             if item_id not in ITEMS:
                 print(f"Shop Warning: Item ID '{item_id}' not found.")
@@ -201,7 +206,8 @@ class ShopMenu(Inventory):
             self.slots[i].set_price(new_item.data.buy_price)
             
     def draw(self, screen):
-        if not self.is_open: return
+        if not self.is_open: 
+            return
         
         # Draw Background Image
         self.background.draw(screen)
@@ -219,7 +225,8 @@ class ShopMenu(Inventory):
   
     def handle_click(self, pos):
         """Handles interaction. Returns a string action code if the State needs to react."""
-        if not self.is_open: return False
+        if not self.is_open: 
+            return False
 
         for slot in self.slots:
             if slot.is_click(pos) and slot.item:
