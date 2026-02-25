@@ -4,6 +4,7 @@ from abc import ABC
 from enum import Enum
 from typing import NamedTuple
 
+
 # ============ ENUMS ============ #
 class EntityState(Enum):
     WALK = "Walk"
@@ -336,10 +337,10 @@ class TextConfig:
     def render(self, text: str, custom_colour=None) -> pygame.Surface:
         """Convenience method: Asks AssetLoader for the cached font, then renders."""
         # Local import avoids circular dependency errors at startup
-        from core.asset_loader import AssetLoader
+        from core.asset_loader import ASSETS
         
         # 1. Get the heavy Font object from the Loader (cached)
-        font = AssetLoader.get_font(self)
+        font = ASSETS.get_font(self)
         
         # 2. Render the text
         col = custom_colour if custom_colour else self.colour

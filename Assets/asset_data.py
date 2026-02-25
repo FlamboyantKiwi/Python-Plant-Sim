@@ -44,7 +44,7 @@ class CropAsset:
         return ItemData(
             name=name,
             description=f"A fresh {name}. Restores energy.",
-            category=ItemCategory.CROP,
+            category=ItemCategory.FRUIT,
             image_key=image_key,
             buy_price=0,
             sell_price=self.crop_price,

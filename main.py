@@ -2,7 +2,7 @@ import sys
 import pygame
 
 from settings import WIDTH, HEIGHT, FPS
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from core.states import GameState, MenuState
 
 class Game:
@@ -16,7 +16,7 @@ class Game:
         self.tick = 0
 
         # 2. Load Assets
-        AssetLoader()
+        ASSETS.load_all()
         
         # 3. State Management
         self.stack: list[GameState] = []

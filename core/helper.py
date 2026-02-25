@@ -68,16 +68,16 @@ def align_rect(rect, x, y, align="center"):
 
 def draw_text(screen, text, font_key: str, x, y, colour_name=None, align="center"):
     """ Renders text using the global TEXT dict and aligns it to (x, y)."""
-    from core.asset_loader import AssetLoader
+    from core.asset_loader import ASSETS
     
     # Get Text Config bfrom its name
-    config = AssetLoader.get_text_config(font_key)
+    config = ASSETS.get_text_config(font_key)
     if config is None:
         print(f"Error with text config: {font_key}")
         return
     
     # Get Optional Override Colour
-    colour = AssetLoader.get_colour(colour_name) if colour_name else None
+    colour = ASSETS.get_colour(colour_name) if colour_name else None
     
     # Render (Config calls AssetLoader.get_font internally 
     # and handles font loading and default colours

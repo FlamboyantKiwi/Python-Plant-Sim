@@ -1,6 +1,6 @@
 import pygame
 from core.helper import align_rect, get_grid_pos 
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from core.types import TextConfig
 
 # --- PARENT CLASS ---
@@ -16,10 +16,10 @@ class UIElement(pygame.sprite.Sprite):
 
         # Create Background
         if image_file: # Load and scale sprite
-            self.image = AssetLoader.load_image(image_file, scale=rect.size).copy()
+            self.image = ASSETS.load_image(image_file, scale=rect.size).copy()
         elif colour: # Solid Colour
             self.image = pygame.Surface(rect.size)
-            self.image.fill(AssetLoader.get_colour(colour))
+            self.image.fill(ASSETS.get_colour(colour))
         elif border_colour: # Transparent container
             self.image = pygame.Surface(rect.size, pygame.SRCALPHA)
         else: # Invisible / Container only
@@ -28,7 +28,7 @@ class UIElement(pygame.sprite.Sprite):
         # Create Borders
         if self.image and border_colour:
             # Draw border inside the existing surface
-            col = AssetLoader.get_colour(border_colour)
+            col = ASSETS.get_colour(border_colour)
             pygame.draw.rect(self.image, col, self.image.get_rect(), border_width)
 
     def draw(self, screen):

@@ -9,7 +9,7 @@ from world.level import Level
 from settings import WIDTH, HEIGHT
 from Assets.asset_data import SHOPS, ShopData
 from core.helper import  draw_text
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from core.camera import CameraGroup
 import pygame
 
@@ -171,7 +171,7 @@ class PlayingState(GameState):
                     
     def draw(self, screen):
         # Draw the game world
-        screen.fill(AssetLoader.get_colour("WATER")) 
+        screen.fill(ASSETS.get_colour("WATER")) 
         
         # Draw ground tiles (passing camera offset)
         self.level.draw(self.all_sprites.offset)
@@ -196,7 +196,7 @@ class PlayingState(GameState):
         
     def on_right_click(self, pos):
         print("Right Click detected! (Maybe cancel action?)")
-        AssetLoader.debug_assets()
+        ASSETS.debug_assets()
   
         
     ### Actions
@@ -242,7 +242,7 @@ class MenuState(BaseUIState):
         return buttons
 
     def draw(self, screen):
-        screen.fill(AssetLoader.get_colour("MenuBG"))
+        screen.fill(ASSETS.get_colour("MenuBG"))
 
         draw_text(screen, "Python Plant Sim", "TITLE", x=WIDTH//2, y=HEIGHT//4, 
                   colour_name="MenuTitle", align="center")

@@ -1,4 +1,4 @@
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from Assets.asset_data import get_item_data, ItemData
 from core.types import ItemCategory
 
@@ -8,7 +8,7 @@ class Item:
     def __init__(self, item_id: str, count: int = 1):
         self.data: ItemData = get_item_data(item_id)
         self.count = min(count, self.data.max_stack)
-        self.image = AssetLoader.get_item_image(self.data)
+        self.image = ASSETS.get_item_image(self.data)
 
     # --- PROPERTIES (Proxies to the Data) ---
     # This allows us to do item.name instead of item.data.name

@@ -1,6 +1,6 @@
 import pygame
 from core.types import PlantData
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from entities.entity import Entity
 from Assets.asset_data import get_plant_data
 
@@ -69,7 +69,7 @@ class Plant(Entity):
     def _get_current_image(self) -> pygame.Surface:
         """Helper to generate the current stage key and fetch the image."""
         image_key = f"{self.data.name}_{self.data.get_stage_index(self.age)}"
-        return AssetLoader.get_image(image_key)
+        return ASSETS.get_image(image_key)
     
     def grow(self, amount: float):
         """ Call this to test the animation stages """

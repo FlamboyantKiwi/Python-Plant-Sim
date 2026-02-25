@@ -1,5 +1,5 @@
 from core.types import EntityState, Direction
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 
 class AnimationController:
     def __init__(self, category, entity_name):
@@ -32,5 +32,5 @@ class AnimationController:
             
         # 3. Ask AssetLoader for the specific frame
         # We pass frame_index as the "tick"
-        return AssetLoader.get_animated_sprite(
+        return ASSETS.get_animated_sprite(
             self.category, self.name, state, direction, self.frame_index)

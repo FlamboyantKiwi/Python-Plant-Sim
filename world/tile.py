@@ -1,6 +1,6 @@
 import pygame
 from settings import  BLOCK_SIZE
-from core.asset_loader import AssetLoader
+from core.asset_loader import ASSETS
 from Assets.asset_data import GRASS_LAYOUT
 from entities.entity import Entity
 
@@ -71,7 +71,7 @@ class GroundTile(Tile):
 
     def refresh_terrain(self, new_neighbors: list[bool]):
         # LAYER 1: Base Dirt Background
-        dirt_img = AssetLoader.get_image("DIRT_IMAGE")
+        dirt_img = ASSETS.get_image("DIRT_IMAGE")
         self.base_image = dirt_img.copy() if dirt_img else pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
         if not dirt_img: 
             self.base_image.fill((139, 69, 19)) # Fallback brown
@@ -79,7 +79,7 @@ class GroundTile(Tile):
         # LAYER 2: Draw farming overlays (Tilled soil) BEFORE the grass!
         # This allows the grass to curve perfectly over the edges of your tilled dirt.
         if self.is_tilled:
-            tilled_img = AssetLoader.get_image("tilled_soil")
+            tilled_img = ASSETS.get_image("tilled_soil")
             if tilled_img:
                 self.base_image.blit(tilled_img, tilled_img.get_rect(center=(BLOCK_SIZE//2, BLOCK_SIZE//2)))
 
@@ -87,7 +87,7 @@ class GroundTile(Tile):
         if any(new_neighbors) and self.tile_type_key != "WATER":
             grass_key = self.tile_type_key if "GRASS" in self.tile_type_key else "GRASS_A"
             # Assumes GRASS_LAYOUT is imported/available!
-            grass_overlay = AssetLoader.get_marching_tile(grass_key, GRASS_LAYOUT, new_neighbors)
+            grass_overlay = ASSETS.get_marching_tile(grass_key, GRASS_LAYOUT, new_neighbors)
             self.base_image.blit(grass_overlay, (0, 0))
 
         self.image = self.base_image.copy()

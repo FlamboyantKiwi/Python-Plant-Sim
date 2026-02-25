@@ -4,9 +4,9 @@ import pygame
 class SpriteSheet:
     path="Assets"
     def __init__(self, filename):
-        from core.asset_loader import AssetLoader
+        from core.asset_loader import ASSETS
         self.name = filename
-        self.sheet = AssetLoader.load_raw_image(filename)
+        self.sheet = ASSETS.load_raw_image(filename)
 
         if self.sheet is None:
             print(f"ERROR: Could not load sprite sheet {filename}")
@@ -17,8 +17,8 @@ class SpriteSheet:
         if self.sheet:
             image.blit(self.sheet, (0, 0), (x, y, width, height))
         else:
-            from core.asset_loader import AssetLoader
-            colour = AssetLoader.get_colour(self.name.upper(), "SPRITESHEET")
+            from core.asset_loader import ASSETS
+            colour = ASSETS.get_colour(self.name.upper(), "SPRITESHEET")
             image.fill(colour)
 
             

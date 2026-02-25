@@ -1,7 +1,7 @@
 import random
 import math
 from settings import BLOCK_SIZE, DETAIL_CHANCE
-from core.asset_loader import TileGroup
+from core.asset_loader import ASSETS
 from entities.Plant import Plant
 from world.tile import Tile, MapTileGroup
 class Level:
@@ -12,7 +12,7 @@ class Level:
     and generating high-resolution Marching Squares tiles. """
 
     def __init__(self, plant_group, player_sprite, map_data: list[list[int]]|None = None):
-        self.tilesets = TileGroup.STORAGE
+        self.tilesets = ASSETS.tiles.storage
         self.all_tiles = MapTileGroup()
         
         self.plant_group = plant_group

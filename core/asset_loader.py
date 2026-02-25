@@ -16,39 +16,37 @@ class AssetGroup(ABC):
     """Universal Base Class. 
     Automatically gives every subclass its own unique STORAGE dictionary."""
     
-    def __init_subclass__(cls, **kwargs):
-        """Magic method: Runs when a subclass is defined.
-        Ensures every group has its own storage dicts."""
-        super().__init_subclass__(**kwargs)
-        cls.STORAGE = {}
+    def __init__(self, manager):
+        self.manager = manager
+        self.storage = {}
 
-    @classmethod
     @abstractmethod
-    def load(cls):
+    def load(self):
+        pass
+    
+    @abstractmethod
+    def debug_print(self):
         pass
 
 class ConfigGroup(AssetGroup):
     """Parent for Dictionary-based assets (Colours, Text).
     Handles: Storage, Missing Keys, Defaults, and Debugging."""
     
-    MISSING = set() 
-    DEFAULT = None
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Give every config group its own independent tracking sets
-        cls.MISSING = set()
-        cls.DEFAULT = None
-    @classmethod
-    def get_val(cls, key):
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.missing = set()
+        self.default = None
+        
+    def get_val(self, key):
         """Generic lookup with error tracking."""
         # 1. Try Exact Match
-        val = cls.STORAGE.get(key)
+        val = self.storage.get(key)
         if val: 
             return val
 
-        # 2. Handle Missing
-        if key not in cls.MISSING:
-            # --- NEW DEBUG LOGIC ---
+        # 2. Handle Missing & Stack Trace
+        if key not in self.missing:
+            # --- YOUR DEBUG LOGIC ---
             caller_info = "Unknown source"
             try:
                 # Look back through the stack to find who called this
@@ -59,24 +57,25 @@ class ConfigGroup(AssetGroup):
                     
                     if filename not in ignore_files:
                         # Format: filename:line_number
-                        filename = os.path.basename(frame.filename)
                         caller_info = f"{filename}:{frame.lineno}"
                         break
             except Exception:
                 pass
 
-            print(f"[{cls.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")
+            # Use self.__class__.__name__ instead of cls.__name__
+            print(f"[{self.__class__.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")
             # -----------------------
             
-            cls.MISSING.add(key)
+            self.missing.add(key)
+            
+        return self.default
 
-    @classmethod
-    def debug_print(cls):
-        print(f"\n--- {cls.__name__} ({len(cls.STORAGE)}) ---")
+    def debug_print(self):
+        print(f"\n--- {self.__class__.__name__} ({len(self.storage)}) ---")
         # Print Missing
-        if cls.MISSING:
-            print(f"MISSING KEYS ({len(cls.MISSING)}):")
-            for key in sorted(cls.MISSING):
+        if self.missing:
+            print(f"MISSING KEYS ({len(self.missing)}):")
+            for key in sorted(self.missing):
                 print(f"  [X] {key}")
         else:
             print("No missing keys.")
@@ -95,86 +94,92 @@ class SpriteGroup(AssetGroup):
         except Exception as e:
             print(f"Failed to load {name}: {e}")
             return None
+        
+    def debug_print(self):
+        """Default debug for all Sprite groups."""
+        print(f"\n--- {self.__class__.__name__} ({len(self.storage)} items loaded) ---")
+        print("-" * 30)
 
 ### Config Group Implementations
 
 class TextGroup(ConfigGroup):
     """Manages TextConfig styles (presets like 'TITLE', 'HUD')."""
-    DEFAULT = None # Will be set during load()
-    @classmethod
-    def load(cls):
-        cls.STORAGE.update(TEXT)
-        cls.DEFAULT = cls.STORAGE.get("default", TextConfig())
+    def __init__(self, manager):
+        super().__init__(manager) 
+        # Default will be set during load()
 
-    @classmethod
-    def get_config(cls, key: str):
-        return cls.get_val(key)
+    def load(self):
+        self.storage.update(TEXT)
+        self.default = self.storage.get("default", TextConfig())
+
+
+    def get_config(self, key: str):
+        return self.get_val(key)
    
 class ColourGroup(ConfigGroup):
     """Manages game palette and provides debug printing."""
-    DEFAULT = (255, 0, 255) # Error Fallback
-    
-    @classmethod
-    def load(cls):
-        cls.STORAGE.update(COLOURS)
-        cls.DEFAULT = COLOURS.get("DEFAULT", (255, 0, 255))
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.default = (255, 0, 255)
 
-    @classmethod
-    def get_colour(cls, name, fallback_type=None) -> tuple:
+    def load(self):
+        self.storage.update(COLOURS)
+        self.default = COLOURS.get("DEFAULT", (255, 0, 255))
+
+    def get_colour(self, name, fallback_type=None) -> tuple:
         """Tiered lookup: Name -> Fallback -> Default."""
         
         # Try exact match
-        col = cls.STORAGE.get(name)
+        col = self.storage.get(name)
         if col: 
             return col
         
         # Try fallback category
         if fallback_type:
-            col = cls.STORAGE.get(fallback_type)
+            col = self.storage.get(fallback_type)
             if col: 
                 return col
         
         # Fallback to generic missing logic
-        return cls.get_val(name) or cls.DEFAULT
+        return self.get_val(name) or self.default
 
 ### Sprite Group Implementations
 
 class TileGroup(SpriteGroup):    
-    @classmethod
-    def load(cls):
-        sheet = cls.load_spritesheet("exterior")
+    def load(self):
+        sheet = self.load_spritesheet("exterior")
         if not sheet: 
             return
         
         # 1. Load Ground Regions
         for key, rect in GROUND_TILE_REGIONS.items():
-            cls.STORAGE[key] = sheet.extract_tiles_by_dimensions(
-                rect.x, rect.y, rect.w, rect.h, 16, 16, cls.SCALE_FACTOR
+            self.storage[key] = sheet.extract_tiles_by_dimensions(
+                rect.x, rect.y, rect.w, rect.h, 16, 16, self.SCALE_FACTOR
             )
         
         # 2. Dirt Fallback
-        dirt_tiles = cls.STORAGE.get("DIRT")
+        dirt_tiles = self.storage.get("DIRT")
         if dirt_tiles:
-            cls.STORAGE["DIRT_IMAGE"] = pygame.transform.scale(dirt_tiles[11], (BLOCK_SIZE, BLOCK_SIZE))
+            self.storage["DIRT_IMAGE"] = pygame.transform.scale(dirt_tiles[11], (BLOCK_SIZE, BLOCK_SIZE))
             
         # 3. Details
-        detail_sheet = cls.load_spritesheet("ground_grass_details")
+        detail_sheet = self.load_spritesheet("ground_grass_details")
         if detail_sheet:
             for key, rect_list in TILE_DETAILS.items():
-                cls.STORAGE[f"DETAIL_{key.upper()}"] = []
+                self.storage[f"DETAIL_{key.upper()}"] = []
                 for r in rect_list:
-                    cls.STORAGE[f"DETAIL_{key.upper()}"].extend(
-                        detail_sheet.extract_tiles_by_dimensions(r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, cls.SCALE_FACTOR)
+                    self.storage[f"DETAIL_{key.upper()}"].extend(
+                        detail_sheet.extract_tiles_by_dimensions(r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, self.SCALE_FACTOR)
                     )
-    @classmethod
-    def build_marching_tile(cls, tileset_key:str, layout:MarchingLayout, neighbors: list[bool], sheet_width=10)->pygame.Surface:
+
+    def build_marching_tile(self, tileset_key:str, layout:MarchingLayout, neighbors: list[bool], sheet_width=10)->pygame.Surface:
         """Dynamically builds a 64x64 surface based on the 9-node neighborhood."""
         surface = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE), pygame.SRCALPHA)
-        tileset = cls.STORAGE.get(tileset_key)
+        tileset = self.storage.get(tileset_key)
         
         # Fallback if tileset is missing
         if not tileset:
-            surface.fill(ColourGroup.get_colour("DEFAULT"))
+            surface.fill(self.manager.colours.get_colour("DEFAULT"))
             return surface
 
         quads = [
@@ -201,28 +206,35 @@ class TileGroup(SpriteGroup):
     
 class ToolGroup(SpriteGroup):
     ITEM_SIZE = 36
-    @classmethod
-    def load(cls):
-        sheet = cls.load_spritesheet("Tools_All")
+    def load(self):
+        sheet = self.load_spritesheet("Tools_All")
         if not sheet: 
             return
         
         for r_idx, mat in enumerate(MATERIAL_LEVELS):
             mat_str = mat.value if isinstance(mat, Enum) else mat 
             
-            cls.STORAGE[mat_str] = {}
+            self.storage[mat_str] = {}
             for c_idx, tool in enumerate(TOOL_SPRITE_LAYOUT):
-                cls.STORAGE[mat_str][tool] = sheet.get_image(
-                    c_idx * cls.TILE_SIZE, 
-                    r_idx * cls.TILE_SIZE + 2,
-                    cls.TILE_SIZE, cls.TILE_SIZE, 
-                    (cls.ITEM_SIZE, cls.ITEM_SIZE)
-                )
+                self.storage[mat_str][tool] = sheet.get_image(
+                    c_idx * self.TILE_SIZE, 
+                    r_idx * self.TILE_SIZE + 2,
+                    self.TILE_SIZE, self.TILE_SIZE, 
+                    (self.ITEM_SIZE, self.ITEM_SIZE))
+
+    def get(self, key:str) ->pygame.Surface | None:
+        if "_" not in key:
+            return None
+            
+        # Split on the first underscore only
+        material, tool_name = key.upper().split("_", 1)
+        
+        # Safely fetch the material dict, then the tool image
+        return self.storage.get(material, {}).get(tool_name)
 
 class PlantGroup(SpriteGroup):
-    @classmethod
-    def load(cls):
-        sheet = cls.load_spritesheet("Plants")
+    def load(self):
+        sheet = self.load_spritesheet("Plants")
         if not sheet: 
             return
 
@@ -240,34 +252,35 @@ class PlantGroup(SpriteGroup):
                 
             # Extract and store each stage of the plant/tree
             for i, (offset, width) in enumerate(slices):
-                cls.STORAGE[f"{name}_{i}"] = sheet.get_image(
+                self.storage[f"{name}_{i}"] = sheet.get_image(
                     rect.x + offset, rect.y, width, rect.h,
-                    (width * cls.SCALE_FACTOR, rect.h * cls.SCALE_FACTOR)
+                    (width * self.SCALE_FACTOR, rect.h * self.SCALE_FACTOR)
                 )
         
 class FruitGroup(SpriteGroup):
-    CONTAINERS = {}
-    SEED_BAGS = {}
-    CACHE = {}
+    def __init__(self, manager):
+        super().__init__(manager)
+        # Move these from class level to instance level
+        self.containers = {}
+        self.seed_bags = {}
+        self.cache = {}
 
-    @classmethod
-    def load(cls):
-        sheet = cls.load_spritesheet("Supplies")
+    def load(self):
+        sheet = self.load_spritesheet("Supplies")
         if not sheet: 
             return
 
         for name, asset in CROPS.items():
             clean_key = name.lower().replace(" ", "_") 
             ranks = FRUIT_RANKS[:asset.quality_levels]
-            cls.STORAGE[clean_key] = cls._create_strip(sheet, asset.fruit_container_image, ranks, asset.quality_levels, 2)
-            cls.CONTAINERS[clean_key] = sheet.get_image(
+            self.storage[clean_key] = self._create_strip(sheet, asset.fruit_container_image, ranks, asset.quality_levels, 2)
+            self.containers[clean_key] = sheet.get_image(
                 asset.fruit_image.x, asset.fruit_image.y, 
                 asset.fruit_image.w, asset.fruit_image.h)
             
-        cls.SEED_BAGS = cls._create_strip(sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
+        self.seed_bags = self._create_strip(sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
 
-    @classmethod
-    def _create_strip(cls, sheet, rect, ranks, num, scale_f):
+    def _create_strip(self, sheet, rect, ranks, num, scale_f):
         items = {}
         w = rect.w // num
         for i, rank in enumerate(ranks):
@@ -275,27 +288,57 @@ class FruitGroup(SpriteGroup):
             rank_key = rank.value if isinstance(rank, Enum) else rank
             
             items[rank_key] = sheet.get_image(
-                rect.x + (i * w), 
-                rect.y, 
-                w, 
-                rect.h, 
+                rect.x + (i * w), rect.y, w, rect.h, 
                 (w * scale_f, rect.h * scale_f)
             )
         return items
 
+    def get(self, key: str) -> pygame.Surface | None:
+        """Helper to get a fruit, prioritizing Bronze -> Silver -> Gold."""
+        data = self.storage.get(key, {})
+        return data.get("BRONZE") or data.get("SILVER") or data.get("GOLD")
+
+    def get_seed(self, item_id: str, quality: Quality = Quality.BRONZE) -> pygame.Surface | None:
+        """Generates and caches seed bags."""
+        quality_key = quality.value if isinstance(quality, Quality) else quality
+        clean_id = item_id.lower().replace("_seeds", "").replace(" ", "_")
+        
+        cache_key = f"{quality_key}_{clean_id}"
+        if cache_key in self.cache: 
+            return self.cache[cache_key]
+        
+        bag = self.seed_bags.get(quality_key)
+        fruit_data = self.storage.get(clean_id, {})
+        fruit = fruit_data.get("GOLD")
+        
+        if not bag:
+            print("no bag")
+            # Ask the parent manager for the fallback!
+            return self.manager.images.get_image(f"MISSING_BAG_{clean_id}")
+        elif not fruit: 
+            print("no fruit")
+            return bag
+        
+        comp = bag.copy()
+        bx, by = comp.get_rect().center
+        fx, fy = fruit.get_rect().size
+        comp.blit(fruit, (bx - fx//2, by - fy//2 - 2))
+        
+        self.cache[cache_key] = comp
+        return comp
+
 class EntityGroup(SpriteGroup):
-    @classmethod
-    def load(cls):
+    def load(self):
         for category, config in GAME_ENTITIES.items():
-            cls.STORAGE[category] = {}
+            self.storage[category] = {}
             for name in config.sheets:
-                cls.STORAGE[category][name] = {}
-                path = AssetLoader.get_asset_path(f"{name}.png", folder=config.folder)
+                self.storage[category][name] = {}
+                path = self.manager.get_asset_path(f"{name}.png", folder=config.folder)
                 sheet = SpriteSheet(path)
                 
                 for state, anim_grid in config.animations.items():
                     s_key = state.value if isinstance(state, Enum) else state
-                    cls.STORAGE[category][name][s_key] = {}
+                    self.storage[category][name][s_key] = {}
                     for direction, rect in anim_grid.items():
                         d_key = direction.value if isinstance(direction, Enum) else direction
                         frames = []
@@ -303,17 +346,25 @@ class EntityGroup(SpriteGroup):
                         for r in range(rows):
                             for c in range(cols):
                                 frames.append(sheet.get_image(rect.x + (c*32), rect.y + (r*32), 32, 32, (64, 64)))
-                        cls.STORAGE[category][name][s_key][d_key] = frames
+                        self.storage[category][name][s_key][d_key] = frames
+
+    def get_sprite(self, cat: str, name: str, state: EntityState, direction: Direction, frame: int):
+        """Safely fetches a specific frame of animation."""
+        try:
+            frames = self.storage[cat][name][state.value][direction.value]
+            return frames[int(frame) % len(frames)]
+        except (KeyError, IndexError):
+            return None
 
 ### Unique Groups
 class ImageGroup(AssetGroup):
     """Manages standalone images (UI, backgrounds, icons) 
         that aren't part of a spritesheet."""
-    FAILURES = set()   
-    @classmethod
-    def load(cls): pass # ImageGroup loads on demand, so load() is empty
-    @classmethod
-    def get_image(cls, filename: str, scale=None) -> pygame.Surface:
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.failures = set()
+    def load(self): pass # ImageGroup loads on demand, so load() is empty
+    def get_image(self, filename: str, scale=None) -> pygame.Surface:
         """Tries to get a cached image. If not found, loads from disk.
             If loading fails, generates a fallback. to-appends .png if missing."""
         if "." not in filename:
@@ -324,75 +375,76 @@ class ImageGroup(AssetGroup):
         key = (filename, scale)
 
         # Return Cached if exists
-        if key in cls.STORAGE:          
-            return cls.STORAGE[key]
+        if key in self.storage:         
+            return self.storage[key]
         # Check if we already failed this file (Prevent log spam)
-        if filename in cls.FAILURES:    
-            return cls.generate_fallback(filename, scale)
+        if filename in self.failures:   
+            return self.generate_fallback(filename, scale)
 
         # Attempt Load
         try:
-            full_path = AssetLoader.get_asset_path(filename)
+            full_path = self.manager.get_asset_path(filename)
             img = pygame.image.load(full_path).convert_alpha()
             
             #Adjust size of image
             if scale:   
                 img = pygame.transform.scale(img, scale)
             # Store image in cache
-            cls.STORAGE[key] = img
+            self.storage[key] = img
             return img
 
         except (pygame.error, FileNotFoundError):
             print(f"Warning: Failed to load standalone image '{filename}'.")
-            cls.FAILURES.add(filename)
+            self.failures.add(filename)
             
             # Create and Cache the fallback so we don't recalculate it every frame
-            fallback = cls.generate_fallback(filename, scale)
-            cls.STORAGE[key] = fallback
+            fallback = self.generate_fallback(filename, scale)
+            self.storage[key] = fallback
             return fallback
 
-    @classmethod
-    def generate_fallback(cls, name, scale):
+    def generate_fallback(self, name, scale):
         """Internal helper to make the pink squares."""
         w, h = scale if scale else (32, 32)
         surf = pygame.Surface((w, h))
         
         # Use our ColourGroup for the fallback colour!
-        col = ColourGroup.get_colour(name.upper(), "HIGHLIGHT") 
+        col = self.manager.colours.get_colour(name.upper(), "HIGHLIGHT")
         surf.fill(col)
         
         # Draw a little 'X' or border to show it's missing
         pygame.draw.rect(surf, (0,0,0), (0,0,w,h), 1)
         return surf
-    @classmethod
-    def debug_print_failures(cls):
-        print(f"\n--- Failed Images ({len(cls.FAILURES)}) ---")
-        if not cls.FAILURES:
+    def debug_print(self):
+        print(f"\n--- {self.__class__.__name__} ({len(self.storage)} loaded, {len(self.failures)} failed) ---")
+        if not self.failures:
             print("No image load failures. All good!")
         else:
-            for name in sorted(cls.FAILURES):
-                print(f" [MISSING] • {name}")
-        print("------------------------------------\n")
+            for name in sorted(self.failures):
+                print(f"  [MISSING] • {name}")
+        print("-" * 30)
 
 class FontGroup(AssetGroup):
     """ Internal helper class to manage font caching."""
-    @classmethod
-    def get_font(cls, config: TextConfig) -> pygame.font.Font:
+    def __init__(self, manager):
+        super().__init__(manager)
+        
+    def load(self): pass # fonts load on demand - so this isn't needed
+    
+    def get_font(self, config: TextConfig) -> pygame.font.Font:
         # Create a unique key for the cache
         key = (config.name, config.size, config.bold, config.italic)
         
-        if key not in cls.STORAGE:
+        if key not in self.storage:
             if not pygame.font.get_init(): 
                 pygame.font.init()
             # Load and store
-            cls.STORAGE[key] = pygame.font.SysFont(
+            self.storage[key] = pygame.font.SysFont(
                 config.name, config.size, config.bold, config.italic)
-        return cls.STORAGE[key]
+        return self.storage[key]
 
-    @classmethod
-    def debug_print_fonts(cls):
-        print(f"\n--- Cached Fonts ({len(cls.STORAGE)}) ---")
-        for key in cls.STORAGE:
+    def debug_print(self):
+        print(f"\n--- {self.__class__.__name__} ({len(self.storage)} cached) ---")
+        for key in self.storage:
             name, size, bold, italic = key
             styles = []
             if bold: 
@@ -406,31 +458,44 @@ class FontGroup(AssetGroup):
 ### Main Asset Loader
 
 class AssetLoader:
-    has_loaded = False
-    @classmethod
-    def __init__(cls):
-        if cls.has_loaded: 
-            return
-        cls.has_loaded = True
+    def __init__(self):
+        # Create all sub-groups
+        self.colours = ColourGroup(self)
+        self.text = TextGroup(self)
+        self.tiles = TileGroup(self)
+        self.tools = ToolGroup(self)
+        self.plants = PlantGroup(self)
+        self.fruits = FruitGroup(self)
+        self.entities = EntityGroup(self)
+        self.images = ImageGroup(self)
+        self.fonts = FontGroup(self)
         
-        # Load all sub-groups
-        ColourGroup.load()
-        TextGroup.load()
-        TileGroup.load()
-        ToolGroup.load()
-        PlantGroup.load()
-        FruitGroup.load()
-        EntityGroup.load()
+        # Dynamically pack them into a dict for easy looping
+        self.groups = {
+            name: obj 
+            for name, obj in vars(self).items() 
+            if isinstance(obj, AssetGroup)
+        }
         
+        self._image_routers = {
+            ItemCategory.TOOL: self.tools.get,
+            ItemCategory.CROP: self.plants.storage.get, 
+            ItemCategory.FRUIT: self.fruits.get,
+            ItemCategory.SEED: self.fruits.get_seed,
+        }
+        
+    def load_all(self):
+        """Called once at the start of game."""
+        for name, group in self.groups.items():
+            group.load()
         print("--- All Asset Sub-Groups Loaded ---")
         
     # --- UNIVERSAL GETTERS ---
-    @staticmethod
-    def get_asset_path(filename, folder="Assets"): 
+    def get_asset_path(self, filename, folder="Assets"): 
         """Standardizes path creation."""
         return os.path.join(folder, filename)
-    @classmethod
-    def load_raw_image(cls, filename: str) -> pygame.Surface|None:
+
+    def load_raw_image(self, filename: str) -> pygame.Surface|None:
         """Loads an image from disk with NO fallback and NO caching.
             Returns None if the file is missing.
             Useful for SpriteSheets or systems that want to handle errors manually."""
@@ -439,7 +504,7 @@ class AssetLoader:
             filename = f"{filename}.png"
 
         # Get Path
-        full_path = cls.get_asset_path(filename)
+        full_path = self.get_asset_path(filename)
 
         # Try Load
         try:
@@ -448,103 +513,60 @@ class AssetLoader:
             print(f"DEBUG: load_raw_image failed for '{filename}'")
             return None
        
-    @classmethod
-    def get_image(cls, key: str) -> pygame.Surface:
+    def get_image(self, key: str) -> pygame.Surface:
         """Universal lookup that checks through specialized groups."""
-        # Check Plants
-        if key in PlantGroup.STORAGE: 
-            return PlantGroup.STORAGE[key]
-        
-        # Check Tools (Format: WOOD_AXE)
-        if "_" in key:
-            parts = key.upper().split("_", 1)
-            if parts[0] in ToolGroup.STORAGE:
-                return ToolGroup.STORAGE[parts[0]].get(parts[1])
-        
-        # Check Fruits (Format: Tomato)
-        if key in FruitGroup.STORAGE:
-            # If Bronze is missing (like for Melon), fallback to Silver or Gold
-            data = FruitGroup.STORAGE[key]
-            return data.get("BRONZE") or data.get("SILVER") or data.get("GOLD")
+        # Check specific groups using their dedicated getters
+        if img := self.plants.storage.get(key): 
+            return img
+        if img := self.tools.get(key):     
+            return img
+        if img := self.fruits.get(key):   
+            return img
 
-        fallback = TileGroup.STORAGE.get("DIRT_IMAGE")
-        if fallback:
+        if fallback := self.tiles.storage.get("DIRT_IMAGE"):
             return fallback
+        
         # generate error coloured square
-        return ImageGroup.get_image(f"MISSING_{key}")
+        return self.images.get_image(f"MISSING_{key}")
         
-    @classmethod
-    def get_item_image(cls, data: ItemData) -> pygame.Surface | None:
-        """Determines which group to query based on Category."""
-        if data.category == ItemCategory.TOOL:
-            return cls.get_image(data.image_key)
-        elif data.category == ItemCategory.SEED:
-            return cls.get_seed_image(data.image_key)
-        elif data.category in (ItemCategory.CROP, ItemCategory.FRUIT):
-            return cls.get_image(data.image_key)
-        return TileGroup.STORAGE.get("DIRT_IMAGE")
-    @classmethod
-    def get_seed_image(cls, item_id: str, quality: Quality = Quality.BRONZE) -> pygame.Surface | None:
-        quality_key = quality.value if isinstance(quality, Quality) else quality
-        clean_id = item_id.lower().replace("_seeds", "").replace(" ", "_")
+    def get_item_image(self, data: ItemData) -> pygame.Surface:
+        """Determines which group to query based on a dictionary lookup"""
+        router_func = self._image_routers.get(data.category)
+        if router_func:
+            img = router_func(data.image_key)
+            if img: 
+                return img
+
+        # Fallback
+        return self.images.get_image(f"MISSING_{data.image_key}")
+
+    def get_animated_sprite(self, cat: str, name: str, state: EntityState, direction: Direction, frame: int):
+        return self.entities.get_sprite(cat, name, state, direction, frame)
+
+    def get_marching_tile(self, tileset_key:str, layout:MarchingLayout, neighbors: list[bool]) -> pygame.Surface:
+        return self.tiles.build_marching_tile(tileset_key, layout, neighbors)
+
+    def load_image(self, filename: str, scale=None):            
+        return self.images.get_image(filename, scale)
         
-        cache_key = f"{quality_key}_{clean_id}"
-        if cache_key in FruitGroup.CACHE: 
-            return FruitGroup.CACHE[cache_key]
+    def get_font(self, config: TextConfig) -> pygame.font.Font:  
+        return self.fonts.get_font(config)
         
-        bag = FruitGroup.SEED_BAGS.get(quality_key)
+    def get_colour(self, name:str, fallback:str|None = None):    
+        return self.colours.get_colour(name, fallback)
         
-        fruit_data = FruitGroup.STORAGE.get(clean_id, {})
-        fruit = fruit_data.get("GOLD")
-        
-        if not bag:
-            print("no bag")
-            return TileGroup.STORAGE.get("DIRT_IMAGE")
-        elif not fruit: 
-            print("no fruit")
-            return bag
-        
-        comp = bag.copy()
-        bx, by = comp.get_rect().center
-       
-        fx, fy = fruit.get_rect().size
-        # Blit centered on the bag
-        comp.blit(fruit, (bx - fx//2, by - fy//2 - 2))
-        FruitGroup.CACHE[cache_key] = comp
-        return comp
-    @classmethod
-    def get_animated_sprite(cls, cat: str, name: str, state: EntityState, direction: Direction, frame: int):
-        try:
-            frames = EntityGroup.STORAGE[cat][name][state.value][direction.value]
-            return frames[int(frame) % len(frames)]
-        except (KeyError, IndexError): # Only return None if the animation/frame is actually missing
-            return None
-    @classmethod
-    def get_marching_tile(cls, tileset_key:str, layout:MarchingLayout, neighbors: list[bool]) -> pygame.Surface:
-        return TileGroup.build_marching_tile(tileset_key, layout, neighbors)   
+    def get_text_config(self, key:str):                          
+        return self.text.get_config(key)
     
-    @classmethod
-    def load_image(cls, filename: str, scale=None):             return ImageGroup.get_image(filename, scale)
-    @classmethod
-    def get_font(cls, config: TextConfig) -> pygame.font.Font:  return FontGroup.get_font(config)
-    @classmethod
-    def get_colour(cls, name:str, fallback:str|None = None):    return ColourGroup.get_colour(name, fallback)
-    @classmethod 
-    def get_text_config(cls, key:str):                          return TextGroup.get_config(key)
-    
-    @classmethod
-    def debug_assets(cls):
+    def debug_assets(self):
         """Prints a full report of all loaded assets and any failures."""
         print("\n" + "="*40)
         print(f"{'ASSET LOADER DEBUG REPORT':^40}")
         print("="*40)
         
-        ColourGroup.debug_print()
-        TextGroup.debug_print()
-        ImageGroup.debug_print_failures() # Keeping this name as it's specific to failures
-        FontGroup.debug_print_fonts()
-        
-        print(f"\nTiles:  {len(TileGroup.STORAGE)}")
-        print(f"Tools:  {len(ToolGroup.STORAGE)}")
-        print(f"Plants: {len(PlantGroup.STORAGE)}")
+        for name, group in self.groups.items():
+            group.debug_print()
+                
         print("="*40 + "\n")
+        
+ASSETS = AssetLoader()
