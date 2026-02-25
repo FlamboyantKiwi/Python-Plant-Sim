@@ -299,7 +299,9 @@ class FruitGroup(SpriteGroup):
         return data.get("BRONZE") or data.get("SILVER") or data.get("GOLD")
 
     def get_seed(self, item_id: str, quality: Quality = Quality.BRONZE) -> pygame.Surface | None:
-        """Generates and caches seed bags."""
+        """Generates and caches seed bags. Only runs if item_id looks like a seed."""
+        if "_seeds" not in item_id.lower():
+            return None
         quality_key = quality.value if isinstance(quality, Quality) else quality
         clean_id = item_id.lower().replace("_seeds", "").replace(" ", "_")
         
@@ -481,7 +483,7 @@ class AssetLoader:
             ItemCategory.TOOL: self.tools.get,
             ItemCategory.CROP: self.plants.storage.get, 
             ItemCategory.FRUIT: self.fruits.get,
-            ItemCategory.SEED: self.fruits.get_seed,
+            ItemCategory.SEED: lambda key: self.fruits.get_seed(key),
         }
         
     def load_all(self):
@@ -513,32 +515,27 @@ class AssetLoader:
             print(f"DEBUG: load_raw_image failed for '{filename}'")
             return None
        
-    def get_image(self, key: str) -> pygame.Surface:
-        """Universal lookup that checks through specialized groups."""
-        # Check specific groups using their dedicated getters
-        if img := self.plants.storage.get(key): 
-            return img
-        if img := self.tools.get(key):     
-            return img
-        if img := self.fruits.get(key):   
-            return img
-
+    def _get_fallback_image(self, key: str) -> pygame.Surface:
+        """Centralized fallback logic for missing images."""
         if fallback := self.tiles.storage.get("DIRT_IMAGE"):
             return fallback
-        
-        # generate error coloured square
         return self.images.get_image(f"MISSING_{key}")
+       
+    def get_image(self, key: str) -> pygame.Surface:
+        """Universal lookup that checks through all known item groups."""
+        for getter in self._image_routers.values():
+            if img := getter(key):
+                return img
+                
+        return self._get_fallback_image(key)
         
     def get_item_image(self, data: ItemData) -> pygame.Surface:
-        """Determines which group to query based on a dictionary lookup"""
-        router_func = self._image_routers.get(data.category)
-        if router_func:
-            img = router_func(data.image_key)
-            if img: 
+        """Determines which group to query based on the item category."""
+        if router_func := self._image_routers.get(data.category):
+            if img := router_func(data.image_key): 
                 return img
-
-        # Fallback
-        return self.images.get_image(f"MISSING_{data.image_key}")
+        
+        return self._get_fallback_image(data.image_key)
 
     def get_animated_sprite(self, cat: str, name: str, state: EntityState, direction: Direction, frame: int):
         return self.entities.get_sprite(cat, name, state, direction, frame)
