@@ -7,10 +7,10 @@ from ui.ui_elements import Button
 from ui.InventoryUI import ShopMenu
 from world.level import Level
 from settings import WIDTH, HEIGHT
-from Assets.asset_data import SHOPS, ShopData
 from core.helper import  draw_text
 from core.asset_loader import ASSETS
 from core.camera import CameraGroup
+from core.types import ShopData
 import pygame
 
 class GameState(ABC):
@@ -141,8 +141,8 @@ class PlayingState(GameState):
             map_data=None 
         )
      
-        self.level.spawn_plant("Apple", 5, 5, self.all_sprites)
-        self.level.spawn_plant("Onion", 6, 5, self.all_sprites)
+        self.level.spawn_plant("apple", 5, 5, self.all_sprites)
+        self.level.spawn_plant("onion", 6, 5, self.all_sprites)
 
         self.key_binds = {
             pygame.K_ESCAPE: self.quit_game,
@@ -198,16 +198,11 @@ class PlayingState(GameState):
         print("Right Click detected! (Maybe cancel action?)")
         ASSETS.debug_assets()
   
-        
-    ### Actions
     def open_shop(self, shop_id="general_store"): 
-        """ Opens the shop state with data loaded from settings.
-        :param shop_id: The key matching a dictionary in settings.SHOPS"""
-        # 1. Get the data from settings
-        shop_data = SHOPS.get(shop_id)
-        
-        if shop_data:
-            self.game.push(ShopState(self.game, self.player, shop_data))
+        """ Opens the shop state with data loaded from the database. """
+        shop_data = ASSETS.get_shop_data(shop_id)
+
+        self.game.push(ShopState(self.game, self.player, shop_data))
         
     def quit_game(self):
         self.game.running = False

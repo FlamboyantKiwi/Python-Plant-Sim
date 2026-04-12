@@ -274,7 +274,7 @@ class Slot(Button):
             self.info_text.is_visible = True
             
         # PRIORITY 2: Stack Count
-        elif self.item.stack_size > 1:
+        elif self.item.max_stack > 1:
             self.info_text.set_text(self.item.count)
             self.info_text.is_visible = True
             

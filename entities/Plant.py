@@ -2,7 +2,7 @@ import pygame
 from core.types import PlantData
 from core.asset_loader import ASSETS
 from entities.entity import Entity
-from Assets.asset_data import get_plant_data
+
 
 from settings import BLOCK_SIZE
 
@@ -21,8 +21,7 @@ class PlantGroup(pygame.sprite.Group):
     def grow_all(self, amount: float):
         """Ticks the growth logic for every plant in this group."""
         for plant in self.sprites():
-            for plant in self.sprites():
-                plant.grow(amount)
+            plant.grow(amount)
 
     def get_plant_at_grid(self, grid_x, grid_y):
         """Helper to find a specific plant instance by its coordinates."""
@@ -33,18 +32,19 @@ class PlantGroup(pygame.sprite.Group):
 
 
 class Plant(Entity):
-    def __init__(self, name: str, grid_x: int, grid_y: int, group):
+    def __init__(self, plant_id: str, grid_x: int, grid_y: int, group):
+        self.plant_id = plant_id
         self.grid_x, self.grid_y = grid_x, grid_y
         
         # Get Logic Data (Growth time, is_tree, etc)
-        self.data: PlantData = get_plant_data(name)
+        self.data: PlantData = ASSETS.get_plant_data(plant_id)
         
         # State
         self.age = 0.0
         self.days_old = 0
         
         # Make trees solid for collisions and set their hitbox scale to 50%
-        self.obstructed = getattr(self.data, 'is_tree', True)
+        self.obstructed = self.data.is_tree
         self.hitbox_scale = 0.5 if self.obstructed else 1.0
         
         # 1. Translate Grid to Absolute World Pixels
@@ -91,9 +91,9 @@ class Plant(Entity):
         self.rect = self.image.get_rect()
         self.hitbox = self._calculate_hitbox(scale=self.hitbox_scale)
         
-        # 4. Re-anchor the new hitbox to the exact spot on the ground
+        # Re-anchor the new hitbox to the exact spot on the ground
         self.hitbox.midbottom = bottom_anchor
         
-        # 5. Snap the newly sized visual rect back to the correctly placed hitbox
+        # Snap the newly sized visual rect back to the correctly placed hitbox
         self.sync_rect_to_hitbox()
             

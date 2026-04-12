@@ -7,7 +7,7 @@ from core.types import EntityState, DOWN
 from core.controls import controls
 from core.animation import AnimationController
 # 2. Entity Imports
-from entities.items import ItemFactory
+from entities.items import create_item
 from entities.entity import MovingEntity
 
 from ui.InventoryUI import InventoryUI, Inventory
@@ -79,7 +79,7 @@ class Player(MovingEntity):
         
         # Populate initial items into the data layer
         for item_id, count in PLAYER_START_INVENTORY:
-            self.inventory.add_item(ItemFactory.create(item_id, count))
+            self.inventory.add_item(create_item(item_id, count))
     
     def set_active_slot(self, index: int):
         """Safely updates the active slot and handles UI highlighting."""

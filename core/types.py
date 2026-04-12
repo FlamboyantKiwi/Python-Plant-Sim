@@ -1,6 +1,5 @@
 import pygame
 from dataclasses import dataclass
-from abc import ABC
 from enum import Enum
 from typing import NamedTuple
 
@@ -17,6 +16,38 @@ class Direction(Enum):
     LEFT = "Left"
     UP = "Up"
 DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
+
+class ItemType(Enum):
+    # --- Tools ---
+    TOOL         = ("tool", "generic")
+    HOE          = ("tool", "hoe")
+    WATERING_CAN = ("tool", "water")
+    AXE          = ("tool", "axe")
+    PICKAXE      = ("tool", "pick")
+    SWORD        = ("tool", "sword")
+    SCYTHE       = ("tool", "scythe") 
+    ROD          = ("tool", "rod")
+    # Combat
+    DAGGER       = ("tool", "dagger")
+    BOW          = ("tool","bow")
+    STAFF        = ("tool","staff")
+    # Misc
+    HAMMER       = ("tool","hammer")
+    SHOVEL       = ("tool","shovel")
+
+    # --- Consumables ---
+    SEED         = ("seed", "none")
+    FRUIT        = ("fruit", "none")
+    CROP         = ("crop", "none")
+    
+    # --- Resources ---
+    WOOD         = ("misc", "none")
+    STONE        = ("misc", "none")
+    GENERIC      = ("misc", "none")
+
+    def __init__(self, category: str, use_id: str):
+        self.category = category
+        self.use_id = use_id
 
 class ItemCategory(Enum):
     SEED = "seed"
@@ -82,6 +113,14 @@ class RectPair:
     b: The Container (Crate/Basket) """
     a: SpriteRect
     b: SpriteRect
+
+@dataclass(frozen=True)
+class CropVisualData:
+    """Holds ONLY the rendering coordinates for crops, no gameplay stats."""
+    container: SpriteRect
+    fruit: SpriteRect
+    world_art: SpriteRect
+    is_tree: bool = False
 
 @dataclass
 class AnimationGrid(dict):
@@ -155,7 +194,7 @@ class ItemData:
     # Gameplay Stats
     energy_gain: int = 0        # For eating
     grow_time: int = 0          # For seeds (days)
-    tool_type: ToolType|None = None 
+    tool_type: ToolType|None = None
     @property
     def get_sell_price(self) -> int:
         """Dynamically calculates sell price if one wasn't explicitly set."""
@@ -197,131 +236,6 @@ class PlantData:
 class ShopData:
     store_name:str # Title show at top of store (e.g. General Store)
     items_ids:list[str] # list of items that can be sold here
-
-# Config / Factories
-
-@dataclass(frozen=True)
-class CropConfig:
-    """ Configuration blueprint for a specific crop/tree. 
-    Replaces the dictionary logic in CROP_BALANCE."""
-    seed_price: int
-    crop_price: int
-    grow_time: int
-    energy: int
-    # Optional
-    is_tree: bool = False
-    regrows: bool = False
-
-    @property
-    def stages(self) -> int:
-        """ Calculates stage count based on what the plant IS. """
-        if self.is_tree: 
-            return 5
-        return 4 # Default for standard vegetables
-    
-    def generate_seed_data(self, name: str, image_key: str) -> ItemData:
-        """Generates the Seed definition"""
-        return ItemData(
-            name=f"{name} Seeds",
-            description=f"Plant these to grow {name}. Takes {self.grow_time} days.",
-            category=ItemCategory.SEED,
-            image_key=image_key,
-            buy_price=self.seed_price,
-            grow_time=self.grow_time
-        )
-    def generate_crop_data(self, name: str, image_key: str) -> ItemData:
-        """Generates the Fruit/Veggie definition"""
-        return ItemData(
-            name=name,
-            description=f"Fresh {name}. Restores {self.energy} energy.",
-            category=ItemCategory.CROP,
-            image_key=image_key,
-            buy_price=self.crop_price,
-            energy_gain=self.energy
-        )
-    def generate_plant_data(self, name: str, harvest_id: str) -> PlantData:
-        """Generates the Logic definition"""
-        return PlantData(
-            name=name,
-            grow_time=self.grow_time,
-            harvest_item=harvest_id,
-            image_stages=self.stages,
-            image_rect=SpriteRect(0,0,0,0), # to prevent errors between change-over
-            is_tree=self.is_tree,
-            regrows=self.regrows
-        )
-
-@dataclass
-class ItemBlueprint(ABC):
-    """Abstract Base Class for generating items."""
-    sprite_suffix: str
-    base_cost: int
-    
-    # Templates
-    name_fmt: str = "{mat_title} {suffix}"
-    desc_fmt: str = "A {mat_lower} quality {suffix_lower}."
-    id_fmt: str   = "{mat_lower}_{sprite_suffix_lower}"
-    
-    # Flags
-    tool_type: ToolType = ToolType.GENERIC
-    category: ItemCategory = ItemCategory.TOOL
-    stackable: bool = False
-    display_suffix: str = ""
-    free_if_wood: bool = False
-
-    def generate(self, material: Material, multiplier: int) -> tuple[str, 'ItemData']:
-        """ Standard generation logic used by ALL items."""
-        mat_str = material.value
-        suffix = self.display_suffix if self.display_suffix else self.sprite_suffix.replace("_", " ").title()
-        
-        fmt_vars = {
-            "mat_title": mat_str.title(),
-            "mat_lower": mat_str.lower(),
-            "suffix": suffix,
-            "suffix_lower": suffix.lower(),
-            "sprite_suffix_lower": self.sprite_suffix.lower()
-        }
-        
-        # Calculate price based on flag
-        if self.free_if_wood and material == Material.WOOD:
-            price = 0
-        else:
-            price = int(self.base_cost * multiplier)
-        
-        # Return the ID and the ItemData
-        return self.id_fmt.format(**fmt_vars), ItemData(
-            name=self.name_fmt.format(**fmt_vars), 
-            description=self.desc_fmt.format(**fmt_vars), 
-            category=self.category, 
-            image_key=f"{mat_str}_{self.sprite_suffix}", 
-            buy_price=price, 
-            tool_type=self.tool_type, 
-            stackable=self.stackable
-        )
-
-# --- SUBCLASSES ---
-
-@dataclass
-class ToolBP(ItemBlueprint):
-    """Handles Axes, Hoes, Swords."""
-    free_if_wood: bool = True 
-
-@dataclass
-class MaterialBP(ItemBlueprint):
-    """Handles raw wood, iron, etc."""
-    category: ItemCategory = ItemCategory.MISC
-    stackable: bool = True
-    name_fmt: str = "{mat_title}"
-    desc_fmt: str = "A raw piece of {mat_lower}."
-    id_fmt: str   = "{mat_lower}"
-
-@dataclass
-class ArrowBP(ItemBlueprint):
-    """Handles arrows."""
-    category: ItemCategory = ItemCategory.MISC
-    stackable: bool = True
-    name_fmt: str = "{mat_title} Arrow"
-    desc_fmt: str = "A {mat_lower}-tipped arrow."
 
     
 @dataclass

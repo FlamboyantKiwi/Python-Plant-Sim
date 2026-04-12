@@ -1,9 +1,8 @@
-import copy
 import pygame
 from ui.ui_elements import UIElement, TextBox, Slot
-from entities.items import Item, ItemFactory
-from Assets.asset_data import ITEMS
+from entities.items import Item, create_item
 from settings import SHOP_MENU
+from core.asset_loader import ASSETS
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
@@ -16,11 +15,11 @@ class Inventory:
         remaining = new_item.count
         
         # 1. Try to add to existing stacks first
-        if new_item.stack_size > 1:
+        if new_item.max_stack > 1:
             for i in range(self.max_size):
                 item = self.items[i]
                 if item and item.name == new_item.name:
-                    space_left = item.stack_size - item.count
+                    space_left = item.max_stack - item.count
                     if space_left > 0:
                         amount_to_add = min(remaining, space_left)
                         item.count += amount_to_add
@@ -32,8 +31,8 @@ class Inventory:
         # 2. Spill over into empty slots
         for i in range(self.max_size):
             if self.items[i] is None:
-                to_add = copy.copy(new_item)
-                count = min(remaining, to_add.stack_size)
+                to_add = new_item.copy_one()
+                count = min(remaining, to_add.max_stack)
                 to_add.count = count
                 self.items[i] = to_add
                 remaining -= count
@@ -170,13 +169,8 @@ class ShopMenu:
             if i >= self.inventory_data.max_size: 
                 break
 
-            # Assuming ITEMS is a dict of valid IDs
-            if item_id not in ITEMS:
-                print(f"Shop Warning: Item ID '{item_id}' not found.")
-                continue
-
             # Create the item and insert it straight into the pure data list
-            new_item = ItemFactory.create(item_id, count=1)
+            new_item = create_item(item_id, count=1)
             self.inventory_data.items[i] = new_item
             
             self.ui_grid.slots[i].set_price(new_item.data.buy_price)

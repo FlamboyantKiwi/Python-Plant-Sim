@@ -7,7 +7,7 @@ from core.states import GameState, MenuState
 
 class Game:
     def __init__(self):
-        # 1. Pygame Setup
+        # Pygame Setup
         pygame.init()
         pygame.display.set_caption("Freddy's Python Plant Sim")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -15,10 +15,10 @@ class Game:
         self.running = True
         self.tick = 0
 
-        # 2. Load Assets
+        # Load Assets
         ASSETS.load_all()
         
-        # 3. State Management
+        # State Management
         self.stack: list[GameState] = []
         
         # Start with the Menu
@@ -85,5 +85,6 @@ if __name__ == "__main__":
     game.run()
     
     # Cleanup on exit
+    ASSETS.clean_up()
     pygame.quit()
     sys.exit()

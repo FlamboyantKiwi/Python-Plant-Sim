@@ -6,8 +6,9 @@ from enum import Enum
 from abc import ABC, abstractmethod
 
 from core.spritesheet import SpriteSheet
-from core.types import ItemCategory, ItemData,  EntityState, Direction, TextConfig
-from Assets.asset_data import CROPS, TEXT, COLOURS, GROUND_TILE_REGIONS, TILE_DETAILS, MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS, GAME_ENTITIES, MarchingLayout, Quality
+from core.database import DatabaseManager
+from core.types import ItemCategory, ItemData,  EntityState, Direction, PlantData, ShopData, TextConfig, SpriteRect
+from Assets.asset_data import CROP_VISUALS, TEXT, COLOURS, GROUND_TILE_REGIONS, TILE_DETAILS, MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS, GAME_ENTITIES, MarchingLayout, Quality
 from settings import BLOCK_SIZE, QUAD_SIZE
 
 ### Parent Classes
@@ -26,6 +27,10 @@ class AssetGroup(ABC):
     
     @abstractmethod
     def debug_print(self):
+        pass
+
+    def clean_up(self):
+        """Allows groups to safely close files or connections on exit."""
         pass
 
 class ConfigGroup(AssetGroup):
@@ -100,6 +105,89 @@ class SpriteGroup(AssetGroup):
         print(f"\n--- {self.__class__.__name__} ({len(self.storage)} items loaded) ---")
         print("-" * 30)
 
+class DatabaseGroup(AssetGroup):
+    """Manages the SQLite connection and handles fallback logic for missing data."""
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.db = DatabaseManager()
+        self.missing_ids = set()
+
+    def load(self): 
+        # The database connects on __init__, so no heavy loading needed here.
+        pass
+
+    def clean_up(self):
+        """Closes the SQLite connection when the game exits."""
+        self.db.close()
+    
+    def _log_missing(self, entity_type: str, entity_id: str):
+        """Helper to log missing IDs exactly once without repeating code."""
+        if entity_id not in self.missing_ids:
+            print(f"[{self.__class__.__name__}] VALUE ERROR: Missing {entity_type} ID '{entity_id}'! Using Fallback.")
+            self.missing_ids.add(entity_id)
+
+    def get_item(self, item_id: str) -> ItemData:
+        """Safely fetches an item, returning a glitch item if it's missing."""
+        data = self.db.get_item_data(item_id)
+        if data is not None:
+            return data
+            
+        self._log_missing("Item", item_id)
+            
+        return ItemData(
+            name="Glitch Item",
+            description=f"Error: '{item_id}' is missing from DB.",
+            category=ItemCategory.MISC,
+            image_key=item_id, 
+            buy_price=0, sell_price=0
+        )
+
+    def get_plant(self, plant_id: str) -> PlantData:
+        data = self.db.get_plant_data(plant_id)
+        if data is not None:
+            return data
+            
+        self._log_missing("Plant", plant_id)
+            
+        return PlantData(
+            name="Glitch Plant", 
+            grow_time=1, 
+            harvest_item="error", 
+            image_stages=1, 
+            image_rect=SpriteRect(0,0,16,16), 
+            is_tree=False, 
+            regrows=False
+        )
+
+    def get_shop(self, shop_id: str) -> ShopData:
+        data = self.db.get_shop_data(shop_id)
+        if data is not None:
+            return data
+            
+        self._log_missing("Shop", shop_id)
+            
+        return ShopData(
+            store_name="Glitch Mart", 
+            items_ids=[]
+        )
+
+    def debug_print(self):
+        print(f"\n--- {self.__class__.__name__} (SQLite Backend) ---")
+        try:
+            # Query the database to see exactly how much data is loaded!
+            items_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+            plants_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM plants").fetchone()[0]
+            shops_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM shops").fetchone()[0]
+            print(f" • Loaded: {items_cnt} Items, {plants_cnt} Plants, {shops_cnt} Shops")
+        except Exception:
+            print(" • Database connection unavailable.")
+            
+        if self.missing_ids:
+            print(f"MISSING IDs ({len(self.missing_ids)}):")
+            for key in sorted(self.missing_ids):
+                print(f"  [X] {key}")
+        print("-" * 30)
+
 ### Config Group Implementations
 
 class TextGroup(ConfigGroup):
@@ -120,13 +208,16 @@ class ColourGroup(ConfigGroup):
     """Manages game palette and provides debug printing."""
     def __init__(self, manager):
         super().__init__(manager)
-        self.default = (255, 0, 255)
+        self.default = pygame.Color(255, 0, 255)
 
     def load(self):
-        self.storage.update(COLOURS)
-        self.default = COLOURS.get("DEFAULT", (255, 0, 255))
+        # Pygame natively converts Hex strings to Color objects!
+        for name, hex_str in COLOURS.items():
+            self.storage[name] = pygame.Color(hex_str)
+            
+        self.default = self.storage.get("DEFAULT", pygame.Color(255, 0, 255))
 
-    def get_colour(self, name, fallback_type=None) -> tuple:
+    def get_colour(self, name: str, fallback_type: str | None = None) -> pygame.Color:
         """Tiered lookup: Name -> Fallback -> Default."""
         
         # Try exact match
@@ -238,19 +329,15 @@ class PlantGroup(SpriteGroup):
         if not sheet: 
             return
 
-        for name, asset in CROPS.items():
-            rect = asset.world_art
+        for name, visual_data in CROP_VISUALS.items():
+            rect = visual_data.world_art
             
-            # Use the asset's built-in flag to decide how to slice the sprite!
-            if asset.is_tree:
-                # Static Trees (Use the predefined tuple slices)
+            if visual_data.is_tree:
                 slices = TREE_FRAME_SLICES
             else:
-                # Dynamic Crops (Calculate widths and reorder based on PLANT_FRAME_ORDER)
                 frame_w = rect.w // len(PLANT_FRAME_ORDER)
                 slices = [(idx * frame_w, frame_w) for idx in PLANT_FRAME_ORDER]    
                 
-            # Extract and store each stage of the plant/tree
             for i, (offset, width) in enumerate(slices):
                 self.storage[f"{name}_{i}"] = sheet.get_image(
                     rect.x + offset, rect.y, width, rect.h,
@@ -270,13 +357,18 @@ class FruitGroup(SpriteGroup):
         if not sheet: 
             return
 
-        for name, asset in CROPS.items():
+        for name, visual_data in CROP_VISUALS.items():
             clean_key = name.lower().replace(" ", "_") 
-            ranks = FRUIT_RANKS[:asset.quality_levels]
-            self.storage[clean_key] = self._create_strip(sheet, asset.fruit_container_image, ranks, asset.quality_levels, 2)
+            
+            # Note: Assuming 3 quality levels for all fruits for this visual extraction
+            self.storage[clean_key] = self._create_strip(
+                sheet, visual_data.container, FRUIT_RANKS, 3, 2
+            )
+            
             self.containers[clean_key] = sheet.get_image(
-                asset.fruit_image.x, asset.fruit_image.y, 
-                asset.fruit_image.w, asset.fruit_image.h)
+                visual_data.fruit.x, visual_data.fruit.y, 
+                visual_data.fruit.w, visual_data.fruit.h
+            )
             
         self.seed_bags = self._create_strip(sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
 
@@ -457,6 +549,8 @@ class FontGroup(AssetGroup):
             print(f"• Name: {name:<20} | Size: {size:<3} | Style: {style_str}")
         print("-" * 30)
 
+
+
 ### Main Asset Loader
 
 class AssetLoader:
@@ -471,7 +565,8 @@ class AssetLoader:
         self.entities = EntityGroup(self)
         self.images = ImageGroup(self)
         self.fonts = FontGroup(self)
-        
+        self.database = DatabaseGroup(self)
+
         # Dynamically pack them into a dict for easy looping
         self.groups = {
             name: obj 
@@ -485,7 +580,13 @@ class AssetLoader:
             ItemCategory.FRUIT: self.fruits.get,
             ItemCategory.SEED: lambda key: self.fruits.get_seed(key),
         }
-        
+    
+    def clean_up(self):
+        """Called right before the game quits to close file connections."""
+        for group in self.groups.values():
+            group.clean_up()
+        print("--- All Assets Cleaned Up & Safely Closed ---")
+
     def load_all(self):
         """Called once at the start of game."""
         for name, group in self.groups.items():
@@ -555,6 +656,16 @@ class AssetLoader:
     def get_text_config(self, key:str):                          
         return self.text.get_config(key)
     
+    # Database Getters
+    def get_item_data(self, item_id: str) -> ItemData:
+        return self.database.get_item(item_id)
+        
+    def get_plant_data(self, plant_id: str) -> PlantData:
+        return self.database.get_plant(plant_id)
+        
+    def get_shop_data(self, shop_id: str) -> ShopData:
+        return self.database.get_shop(shop_id)
+
     def debug_assets(self):
         """Prints a full report of all loaded assets and any failures."""
         print("\n" + "="*40)
