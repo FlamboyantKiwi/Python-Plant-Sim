@@ -52,7 +52,7 @@ class Level:
         Use this for collision and iteration instead of the raw Sprite Group."""
         return cast(list[Tile], self.all_tiles.sprites())
 
-    def update(self) -> None:
+    def update(self, dt) -> None:
         self.all_tiles.update()
 
     def draw(self, camera_offset: pygame.math.Vector2) -> None:

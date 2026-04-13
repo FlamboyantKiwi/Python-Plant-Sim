@@ -45,16 +45,27 @@ class PlayingState(GameState):
             pygame.K_SPACE: lambda: self.plant_group.grow_all(0.1)
         }
 
-    def update(self, is_paused: bool = False):
-        dt = self.game.clock.get_time() / 1000 
+    def update(self, dt:float, is_paused: bool = False):
+        # Always update world animations (plants, water, etc.)
+        self.level.update(dt)
         
-        # 1. Always update world animations (plants, water, etc.)
-        self.level.update()
-        self.all_sprites.update(dt, self.level.all_tiles)
+        # 3. Handle Player Logic (Only if not paused)
+        if not is_paused:
+            # Gather everything the player can bump into or use
+            interactables = self.level.tile_list + self.plant_group.plants
+            
+            # Explicitly update the player
+            self.player.update(dt, interactables)
+
+        # 4. Update the rest of the sprites (Excluding the player to avoid double-dip)
+        for sprite in self.all_sprites:
+            if sprite != self.player:
+                # We assume other sprites only need dt for simple animations
+                sprite.update(dt)
         
+        # 6. Update HUD (Money/Buttons)
         mouse_pos = pygame.mouse.get_pos()
         self.hud.update(mouse_pos)
-
     def draw(self, screen: pygame.Surface) -> None:
         # Layer 1: The Water/Map
         screen.fill(ASSETS.colour("WATER"))

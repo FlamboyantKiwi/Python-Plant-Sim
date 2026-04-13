@@ -1,6 +1,12 @@
 # THis file should contain only pure constants and Enums.
 
-from enum import Enum
+from enum import Enum, auto
+
+class StateID(Enum):
+    MENU = auto()
+    PLAYING = auto()
+    SHOP = auto()
+    CHAR_SELECT = auto()
 
 class EntityState(Enum):
     WALK = "Walk"

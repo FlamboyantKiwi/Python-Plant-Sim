@@ -8,6 +8,7 @@ from ui.InventoryUI import ShopMenu
 from settings import WIDTH, HEIGHT
 from core.ui_utils import draw_text
 from core.assets import ASSETS
+from core.types import StateID
 from .base import BaseUIState
 
 # Type-Only Imports (Breaks circular loops)
@@ -32,7 +33,7 @@ class ShopState(BaseUIState):
         self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
     
-    def update(self, is_paused: bool = False) -> None:
+    def update(self, dt, is_paused: bool = False) -> None:
         # Update Buttons
         super().update(is_paused)
         
@@ -66,9 +67,9 @@ class MenuState(BaseUIState):
         self.transparent = False     
         self.suppress_update = True
         self.menu_actions = {
-            "New Game": self.game.open_character_select,
+            "New Game": lambda: self.game.open_state(StateID.CHAR_SELECT),
             "Continue": self.game.load_save_game,
-            "Credits": self.game.open_credits,
+            #"Credits": self.game.open_credits,
             "Quit": self.game.quit
         }
         self.create_buttons()
@@ -98,6 +99,7 @@ class MenuState(BaseUIState):
 class CharacterSelectState(BaseUIState):
     def __init__(self, game):
         super().__init__(game)
+        self.key_binds[pygame.K_ESCAPE] = self.game.pop
         # Create a dimming overlay for the background
         self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0, 150)) # Slightly darker than the shop
@@ -126,7 +128,7 @@ class CharacterSelectState(BaseUIState):
         # Back Button
         back_rect = pygame.Rect(center_x - 100, HEIGHT - 100, 200, 50)
         self.ui_group.add(Button.create_bordered_button(
-            rect=back_rect, text="Back", function=self.game.open_main_menu))
+            rect=back_rect, text="Back", function=self.game.pop))
 
     def select_character(self, character_type: PlayerType):
         """Passes the chosen character to the Game mediator to start the session."""

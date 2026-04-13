@@ -149,7 +149,7 @@ class Player(MovingEntity):
         frame = self.animator.get_frame(self.state, self.facing, dt)
         if frame: 
             self.image = frame
-            self.rect = self.image.get_rect()
+            self.rect.size = self.image.get_size()
             self.sync_rect_to_hitbox()
         
         self.move(dt, interactables)

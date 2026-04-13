@@ -5,11 +5,17 @@ from typing import TYPE_CHECKING
 
 from settings import WIDTH, HEIGHT, FPS
 from core.assets import ASSETS
-from core.states import GameState, MenuState, PlayingState, ShopState, CharacterSelectState
-from core.types import ShopData
+from core.types import StateStack, StateID
+from core.states import (
+    GameState, 
+    MenuState, 
+    PlayingState, 
+    ShopState, 
+    CharacterSelectState, STATES
+)
 
-if TYPE_CHECKING:  
-    pass
+if TYPE_CHECKING:
+    from core.types import ShopData
 
 class Game:
     def __init__(self) -> None:
@@ -20,111 +26,72 @@ class Game:
         self.clock: pygame.time.Clock = pygame.time.Clock()
         self.running: bool = True
         self.tick: int = 0
+        self.dt = 0.0 # Delta time
 
         # Load Assets
         ASSETS.load_all()
         
         # State Management
-        self.stack: list[GameState] = []
-        
-        # Start with the Menu
-        self.push(MenuState(self))
+        self.stack: StateStack[GameState] = StateStack()
 
-    # State Logic
-    def push(self, state:GameState) -> None:
-        """Add a state to the top (e.g., open shop)"""
-        if self.stack:
-            self.stack[-1].exit_state()
-        self.stack.append(state)
-        state.enter_state()
+        # Aliases
+        self.push = self.stack.push
+        self.pop = self.close_menu = self.stack.pop
+        self.change = self.stack.change
+        self.peek = self.stack.peek
 
-    def pop(self) -> GameState|None:
-        """Remove the top state (e.g., close shop)"""
-        if self.stack:
-            top = self.stack.pop()
-            top.exit_state()
-        if self.stack:
-            self.stack[-1].enter_state()
-        return top or None
-
-    def change(self, state:GameState) -> None:
-        """Hard switch (e.g., Menu -> Playing)"""
-        while self.stack:
-            self.stack.pop().exit_state()
-        self.stack.append(state)
-        state.enter_state()
-
-    def peek(self) -> GameState|None:
-        """Returns the current active state"""
-        return self.stack[-1] if self.stack else None
-
-    # --- Core Loop Logic ---
-    def update(self) -> None:
-        """Handles the multi-layered update logic."""
-        if not self.stack: return
-        
-        current = self.stack[-1]
-        # If the top state allows it, update the state beneath it as 'paused'
-        if not current.suppress_update and len(self.stack) > 1:
-            self.stack[-2].update(is_paused=True)
-            
-        current.update(is_paused=False)
-
-    def draw(self) -> None:
-        """Simple Recursive Painter: Draws everything from the floor up."""
-        if not self.stack: return
-
-        # Find the 'floor' (the first state that isn't transparent)
-        start_idx = len(self.stack) - 1
-        while start_idx > 0 and self.stack[start_idx].transparent:
-            start_idx -= 1
-            
-        # Draw every layer in order. 
-        for i in range(start_idx, len(self.stack)):
-            self.stack[i].draw(self.screen)
+        # Start the game using the Enum
+        self.open_state(StateID.MENU)
 
     def run(self) -> None:
         """The main game loop."""
         while self.running:
+            self.dt = self.clock.tick(FPS) / 1000.0
             self.tick += 1
-            current_state = self.peek()
             
+            current_state = self.stack.peek()
+            # Safety check: If the stack is empty, shut down
             if not current_state: 
                 self.quit()
                 break
             
-            # Events
+            # Event handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.quit()
                 current_state.handle_event(event)
 
             # Update & Draw 
-            self.update()
-            self.draw()
+            self.stack.update(self.dt)
+            self.stack.draw(self.screen)
             
             pygame.display.update()
-            self.clock.tick(FPS)
-    # State Transition Helpers
-    def open_main_menu(self):
-        self.change(MenuState(self))
+  
+    def open_state(self, state_id: StateID, *args, **kwargs):
+        """The brain of the transition logic."""
+        state_class = STATES.get(state_id)
+        
+        if not state_class:
+            print(f"State {state_id} not found in registry!")
+            return
 
-    def open_character_select(self) -> None:
-        """Transitions from Menu to Character Selection."""
-        self.change(CharacterSelectState(self))
+        # Initialize the state
+        instance = state_class(self, *args, **kwargs)
+        
+        # Layering Logic
+        if instance.transparent:
+            self.stack.push(instance)
+        else:
+            self.stack.change(instance)
 
-    def start_new_game(self, character_type) -> None:
+    def start_new_game(self, character_type):
         self.change(PlayingState(self, character_type))
 
-    def load_save_game(self) -> None:
-        """Changes to Playing state and triggers load logic."""
+    def load_save_game(self):
         self.change(PlayingState(self))
 
-    def open_shop(self, player_ref, shop_data: ShopData) -> None:
-        """Pushes the Shop menu over the current state."""
+    def open_shop(self, player_ref, shop_data: ShopData):
         self.push(ShopState(self, player_ref, shop_data))
-
-    def open_credits(self) -> None: pass
 
     def quit(self) -> None:
         """Safely shuts down the game, cleans assets, and exits."""

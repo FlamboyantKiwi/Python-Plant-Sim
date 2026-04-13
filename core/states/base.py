@@ -4,6 +4,9 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Any
 import pygame
 from groups.ui_group import UIGroup
+from settings import WIDTH, HEIGHT
+from ui.ui_elements import Button
+
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
@@ -23,7 +26,7 @@ class GameState(ABC):
             3: self.on_right_click}
 
     @abstractmethod
-    def update(self, is_paused: bool = False) -> None: pass
+    def update(self, dt:float, is_paused: bool = False) -> None: pass
 
     @abstractmethod
     def draw(self, screen: pygame.Surface) -> None: pass
@@ -55,7 +58,7 @@ class BaseUIState(GameState):
         self.suppress_update = False
         self.ui_group = UIGroup()
 
-    def update(self, is_paused: bool = False) -> None:
+    def update(self, dt:float, is_paused: bool = False) -> None:
         mouse_pos = pygame.mouse.get_pos()
         self.ui_group.update(mouse_pos)
 
@@ -67,3 +70,26 @@ class BaseUIState(GameState):
         if self.ui_group.handle_event(event):
             return True
         return super().handle_event(event)
+    
+    def add_back_button(self, x: int | None = None, y: int | None = None, 
+                       width: int = 200, height: int = 50, text: str = "Back"):
+        """Adds a back button. Defaults to bottom-center if x/y are None."""
+        
+        # 1. Default Logic: Center it horizontally, 50px from the bottom
+        final_x = x if x is not None else (WIDTH // 2) - 100
+        final_y = y if y is not None else (HEIGHT - 100)
+
+        rect = pygame.Rect(0, 0, width, height)
+        rect.center = (final_x, final_y)
+
+        # 2. Create the button and link it to the stack pop
+        btn = Button.create_bordered_button(
+            rect=rect, 
+            text=text, 
+            function=self.game.pop # Use the alias we made!
+        )
+        
+        self.ui_group.add(btn)
+
+        # 3. Always bind ESC to 'Back' for a better player experience
+        self.key_binds[pygame.K_ESCAPE] = self.game.pop

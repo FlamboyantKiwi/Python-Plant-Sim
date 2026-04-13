@@ -1,13 +1,14 @@
 from __future__ import annotations
 import pygame
 from dataclasses import dataclass
-from typing import NamedTuple, TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING, TypeVar, Generic
 
 from .enums import ItemCategory, ToolType, EntityState, Direction
 from .geometry import SpriteRect, AnimationGrid
 
 if TYPE_CHECKING:
     from custom_types import Colour
+    from core.states import GameState
 
 @dataclass(frozen=True)
 class CropVisualData:
@@ -111,3 +112,61 @@ class TextConfig:
             col = ASSETS.colour(col)
 
         return font.render(text, self.antialias, col)
+    
+T = TypeVar("T", bound="GameState")
+
+class StateStack(Generic[T]):
+    def __init__(self):
+        self._stack: list[T] = []
+
+    def push(self, state: T) -> None:
+        if self._stack:
+            self._stack[-1].exit_state()
+        self._stack.append(state)
+        state.enter_state()
+
+    def pop(self) -> T | None:
+        if not self._stack:
+            return None
+        top = self._stack.pop()
+        top.exit_state()
+        if self._stack:
+            self._stack[-1].enter_state()
+        return top
+
+    def change(self, state: T) -> None:
+        while self._stack:
+            self._stack.pop().exit_state()
+        self._stack.append(state)
+        state.enter_state()
+
+    def peek(self) -> T | None:
+        return self._stack[-1] if self._stack else None
+
+    def update(self, dt) -> None:
+        if not self._stack:
+            return
+        
+        current = self._stack[-1]
+        
+        # Layered update logic
+        if not current.suppress_update and len(self._stack) > 1:
+            # We assume T has an update method that accepts is_paused
+            self._stack[-2].update(dt, is_paused=True)
+        
+        current.update(dt, is_paused=False)
+
+    def draw(self, screen: pygame.Surface) -> None:
+        if not self._stack:
+            return
+
+        start_idx = len(self._stack) - 1
+        while start_idx > 0 and self._stack[start_idx].transparent:
+            start_idx -= 1
+        
+        for i in range(start_idx, len(self._stack)):
+            self._stack[i].draw(screen)
+
+    def __len__(self):
+        return len(self._stack)
+    
