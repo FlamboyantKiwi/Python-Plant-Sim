@@ -61,6 +61,12 @@ class Game:
         """Draws the state underneath the current one (for transparent menus)"""
         if len(self.stack) > 1:
             self.stack[-2].draw(self.screen)
+            
+    def update_previous(self):
+        """Updates the state underneath the current one (for active backgrounds)"""
+        if len(self.stack) > 1:
+            self.stack[-2].update()
+        
 
     # Main Loop
     def run(self) -> None:
