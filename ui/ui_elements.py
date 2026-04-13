@@ -218,6 +218,33 @@ class Button(StateElement):
         return cls(rect, text=text, function=function, 
                    base_visual=v_normal, hover_visual=v_hover, active_visual=v_active)
 
+    @classmethod
+    def create_vertical_stack(cls, 
+                               center_pos: tuple[int, int], 
+                               data: dict[str, Callable] | list[tuple[str, Callable]],
+                               gap: int = 60,
+                               width: int = 200, 
+                               height: int = 50,
+                               **style_kwargs) -> list[Button]:
+        """ Creates a vertical list of buttons centered at center_pos.
+        Style_kwargs can include bg_colour, border_colour, hover_colour, active_colour, thickness, etc."""
+        buttons = []
+        start_x, start_y = center_pos
+        
+        # Convert dict to list of tuples if necessary
+        items = data.items() if isinstance(data, dict) else data
+
+        for i, (text, func) in enumerate(items):
+            rect = pygame.Rect(0, 0, width, height)
+            # Offset each button by the gap
+            rect.center = (start_x, start_y + (i * gap))
+            
+            # Create the button using our existing bordered factory
+            btn = cls.create_bordered_button(rect=rect, text=text, function=func, **style_kwargs)
+            buttons.append(btn)
+            
+        return buttons
+
 
 class Slot(Button):
     def __init__(self, rect: pygame.Rect, index: int, slot_size: int) -> None:

@@ -1,12 +1,5 @@
 
-from .base import GameState, BaseUIState
+from .base import GameState, BaseUIState, STATE_REGISTRY
 from .playing import PlayingState
 from .menus import MenuState, ShopState, CharacterSelectState
-from core.types.enums import StateID
-
-STATES = {
-    StateID.MENU: MenuState,
-    StateID.PLAYING: PlayingState,
-    StateID.SHOP: ShopState,
-    StateID.CHAR_SELECT: CharacterSelectState
-}
+from .hud import HUD

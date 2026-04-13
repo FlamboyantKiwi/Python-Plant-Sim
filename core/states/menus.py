@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from core.types import ShopData
 
 class ShopState(BaseUIState):
+    state_id = StateID.SHOP
     def __init__(self, game:Game, player: Player, shop_data: ShopData):
         super().__init__(game)
         self.player = player
@@ -62,6 +63,7 @@ class ShopState(BaseUIState):
         self.game.pop()
 
 class MenuState(BaseUIState):
+    state_id = StateID.MENU
     def __init__(self, game: Game):
         super().__init__(game)
         self.transparent = False     
@@ -76,17 +78,9 @@ class MenuState(BaseUIState):
     
     def create_buttons(self)-> None:
         # Calculate Layout
-        center_x = WIDTH // 2
-        start_y = HEIGHT // 2 - 50
-        gap = 60
-        btn_width, btn_height = 200, 50
-
-        for i, (text, func) in enumerate(self.menu_actions.items()):
-            rect = pygame.Rect(0, 0, btn_width, btn_height)
-            rect.center = (center_x, start_y + (i * gap))
-            
-            btn = Button.create_bordered_button(rect=rect, text=text, function=func)
-            self.ui_group.add(btn)
+        btns = Button.create_vertical_stack(center_pos=(WIDTH // 2, HEIGHT // 2),
+            data=self.menu_actions,gap=60)
+        self.ui_group.add(*btns)
 
     def draw(self, screen: pygame.Surface) -> None:
         screen.fill(ASSETS.colour("MenuBG"))
@@ -97,6 +91,7 @@ class MenuState(BaseUIState):
         super().draw(screen)
 
 class CharacterSelectState(BaseUIState):
+    state_id = StateID.CHAR_SELECT
     def __init__(self, game):
         super().__init__(game)
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
@@ -109,26 +104,19 @@ class CharacterSelectState(BaseUIState):
         # We can iterate through our PlayerType Enum to auto-generate buttons!
         from core.types import PlayerType
         
-        center_x = WIDTH // 2
-        start_y = HEIGHT // 3
-        gap = 60
+        char_data = [
+            (p.value, lambda t=p: self.select_character(t)) 
+            for p in PlayerType
+        ]
 
-        for i, p_type in enumerate(PlayerType):
-            rect = pygame.Rect(0, 0, 250, 50)
-            rect.center = (center_x, start_y + (i * gap))
-            
-            # Use a lambda to pass the specific character type to the function
-            btn = Button.create_bordered_button(
-                rect=rect, 
-                text=p_type.value, 
-                function=lambda t=p_type: self.select_character(t)
-            )
-            self.ui_group.add(btn)
-
-        # Back Button
-        back_rect = pygame.Rect(center_x - 100, HEIGHT - 100, 200, 50)
-        self.ui_group.add(Button.create_bordered_button(
-            rect=back_rect, text="Back", function=self.game.pop))
+        btns = Button.create_vertical_stack(
+            center_pos=(WIDTH // 2, HEIGHT // 3),
+            data=char_data,
+            width=250 # Custom width for names
+        )
+        
+        self.ui_group.add(*btns)
+        self.add_back_button()
 
     def select_character(self, character_type: PlayerType):
         """Passes the chosen character to the Game mediator to start the session."""

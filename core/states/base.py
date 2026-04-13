@@ -1,18 +1,21 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Any
+from typing import TYPE_CHECKING, Callable, Any, Type
 import pygame
 from groups.ui_group import UIGroup
 from settings import WIDTH, HEIGHT
 from ui.ui_elements import Button
-
+from core.types.enums import StateID
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from custom_types import Game, Pos
 
+STATE_REGISTRY: dict[StateID, Type["GameState"]] = {}
+
 class GameState(ABC):
+    state_id: StateID | None = None
     def __init__(self, game:Game):
         self.game = game
         # Flags control how the Game stack behaves
@@ -24,6 +27,11 @@ class GameState(ABC):
             1: self.on_left_click,
             2: self.on_middle_click,
             3: self.on_right_click}
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        if cls.state_id is not None:
+            STATE_REGISTRY[cls.state_id] = cls
 
     @abstractmethod
     def update(self, dt:float, is_paused: bool = False) -> None: pass

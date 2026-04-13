@@ -11,7 +11,7 @@ from core.states import (
     MenuState, 
     PlayingState, 
     ShopState, 
-    CharacterSelectState, STATES
+    CharacterSelectState, STATE_REGISTRY
 )
 
 if TYPE_CHECKING:
@@ -69,7 +69,7 @@ class Game:
   
     def open_state(self, state_id: StateID, *args, **kwargs):
         """The brain of the transition logic."""
-        state_class = STATES.get(state_id)
+        state_class = STATE_REGISTRY.get(state_id)
         
         if not state_class:
             print(f"State {state_id} not found in registry!")

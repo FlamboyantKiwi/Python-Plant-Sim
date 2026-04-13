@@ -1,4 +1,5 @@
 from core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, CropVisualData, UP, LEFT, RIGHT, DOWN
+from core.types.generated_enums import PlayerType, FarmAnimalType
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
     SLOT_FONT_SIZE, SLOT_FONT_BOLD
@@ -164,7 +165,7 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
 GAME_ENTITIES = {
     "PLAYER": EntityConfig(
     folder="Player",
-    sheets=["BlueBird", "Fox", "GreyCat", "OrangeCat", "Racoon", "WhiteBird"],
+    sheets=[p.value for p in PlayerType],
     animations={
         # WALK/RUN: Vertical Split
         EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, RIGHT, LEFT, UP]),
@@ -174,7 +175,7 @@ GAME_ENTITIES = {
     ),
     "ANIMAL": EntityConfig(
     folder="Farm_Animals",
-    sheets=["Bull", "Calf", "Chick", "Lamb", "Piglet", "Rooster", "Sheep", "Turkey"],
+    sheets=[a.value for a in FarmAnimalType],
     animations={
         EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, UP, LEFT, RIGHT]),
         EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 128, 128), [DOWN, UP, LEFT, RIGHT])}

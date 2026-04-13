@@ -7,6 +7,7 @@ class StateID(Enum):
     PLAYING = auto()
     SHOP = auto()
     CHAR_SELECT = auto()
+    HUD = auto()
 
 class EntityState(Enum):
     WALK = "Walk"
@@ -19,26 +20,6 @@ class Direction(Enum):
     LEFT = "Left"
     UP = "Up"
 DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
-
-class AnimalType(str, Enum):
-    """Maps directly to the filenames in the Farm_Animals directory."""
-    BULL = "Bull"
-    CALF = "Calf"
-    CHICK = "Chick"
-    LAMB = "Lamb"
-    PIGLET = "Piglet"
-    ROOSTER = "Rooster"
-    SHEEP = "Sheep"
-    TURKEY = "Turkey"
-
-class PlayerType(str, Enum):
-    """Maps directly to the filenames in the Player directory."""
-    BLUE_BIRD = "BlueBird"
-    FOX = "Fox"
-    GREY_CAT = "GreyCat"
-    ORANGE_CAT = "OrangeCat"
-    RACOON = "Racoon"  # Spelled with one 'C' to match the file!
-    WHITE_BIRD = "WhiteBird"
 
 class EntityCategory(str, Enum):
     """Maps directly to the root asset folders for animated entities."""

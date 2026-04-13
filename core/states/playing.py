@@ -4,7 +4,7 @@ import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
 from entities.player import Player
-from ui.hud import HUD
+from core.states.hud import HUD
 from world.level import Level
 from settings import WIDTH, HEIGHT
 from core.assets import ASSETS
@@ -12,12 +12,14 @@ from groups.camera import CameraGroup
 from groups.plant_group import PlantGroup
 from core.types import PlayerType
 from .base import GameState
+from core.types import StateID
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from custom_types import Game, Pos, PlayerType
 
 class PlayingState(GameState):
+    state_id = StateID.PLAYING
     def __init__(self, game: Game, character_type: PlayerType = PlayerType.RACOON):
         super().__init__(game)
 
@@ -28,7 +30,7 @@ class PlayingState(GameState):
         self.plant_group = PlantGroup()
 
         self.player = Player(WIDTH // 2, HEIGHT // 2, self.all_sprites, character_type)
-        self.hud = HUD(self.player)
+        self.hud = HUD(self.game, self.player)
 
         self.level = Level(
             plant_group=self.plant_group,
@@ -64,8 +66,8 @@ class PlayingState(GameState):
                 sprite.update(dt)
         
         # 6. Update HUD (Money/Buttons)
-        mouse_pos = pygame.mouse.get_pos()
-        self.hud.update(mouse_pos)
+        self.hud.update(dt, is_paused)
+
     def draw(self, screen: pygame.Surface) -> None:
         # Layer 1: The Water/Map
         screen.fill(ASSETS.colour("WATER"))
@@ -78,27 +80,20 @@ class PlayingState(GameState):
         self.hud.draw(screen)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
+        if self.hud.handle_event(event):
+            return True
         collidables = self.level.tile_list + self.plant_group.plants
         self.player.handle_event(event, collidables)
         return super().handle_event(event)
 
     def on_left_click(self,pos: Pos) -> None:
-        action = self.hud.handle_click(pos)
-        
-        if action == "OPEN_SHOP":
-            self.open_shop("general_store")
-            return 
-        elif action:
-            return  
+        pass
         
     def on_right_click(self, pos: Pos) -> None:
-        print("Right Click detected! (Maybe cancel action?)")
         ASSETS.debug_assets()
   
     def open_shop(self, shop_id: str = "general_store") -> None:
         """ Opens the shop state with data loaded from the database. """
-        from .menus import ShopState
-
         shop_data = ASSETS.shop(shop_id)
         self.game.open_shop(self.player, shop_data)
         
