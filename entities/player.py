@@ -1,43 +1,44 @@
+from __future__ import annotations
 import pygame
-from settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
+from typing import TYPE_CHECKING
 
-# 1. Core Imports
+# Runtime Imports (Needed for logic/inheritance)
+from settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
 from core.helper import calc_pos_rect
 from core.types import EntityState, DOWN
 from core.controls import controls
 from core.animation import AnimationController
-# 2. Entity Imports
 from entities.items import create_item
 from entities.entity import MovingEntity
-
 from ui.InventoryUI import InventoryUI, Inventory
 
-# 3. World Imports
-from world.tile import Tile
+# Type-Only Imports (Prevents Circular Imports)
+if TYPE_CHECKING:
+    from custom_types import Tile, Direction, Item, Group, Pos, Interactables, Num
 
 class Player(MovingEntity):
     #Inventory Variables
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
-    def __init__(self, x:int|float, y:int|float, group, type="Racoon"):
-       # 1. Figure out the unique player visuals and sizes first
+    def __init__(self, x:Num, y:Num, group: Group, type:str="Racoon") -> None:
+       # Figure out the unique player visuals and sizes first
         initial_image = pygame.Surface((32, 64))
         start_rect = initial_image.get_rect(topleft=(x, y))
         
         start_hitbox = pygame.Rect(0, 0, 20, 10)
         start_hitbox.midbottom = start_rect.midbottom
         
-        # 2. Hand them to the PhysicsEntity to do the rest!
+        # Hand them to the PhysicsEntity to do the rest!
         super().__init__(initial_image, start_rect, start_hitbox, 200, group)
         
         self.player_type = type
         self.state = EntityState.IDLE
-        self.facing = DOWN # start looking down
-        self.animator = AnimationController("PLAYER", type)
+        self.facing:Direction = DOWN # start looking down
+        self.animator = AnimationController("PLAYER", type) 
         
         # Interaction Offsets
-        self.interaction_offsets = {}
+        self.interaction_offsets: dict[Direction, pygame.math.Vector2] = {}
         self.generate_interaction_offsets(INTERACTION_DISTANCE)
 
         self.run_multiplier = 1.5  
@@ -46,13 +47,13 @@ class Player(MovingEntity):
         self.money = 500
         self.setup_inventory()
         
-    def generate_interaction_offsets(self, distance:int):
+    def generate_interaction_offsets(self, distance:int) -> None:
         for (dx, dy), direction in controls.facing_map.items():
             # Only use Pure Cardinals (ignore diagonal keys for the math)
             if dx == 0 or dy == 0:
                 self.interaction_offsets[direction] = pygame.math.Vector2(dx * distance, dy * distance)
         
-    def setup_inventory(self):
+    def setup_inventory(self) -> None:
         """Calculates and initializes the UI rect for the inventory."""
         required_width = self.INV_SIZE * (self.SLOT_SIZE + self.INV_PADDING) + self.INV_PADDING
         required_height = self.SLOT_SIZE + self.INV_PADDING * 2
@@ -65,7 +66,7 @@ class Player(MovingEntity):
         
         self.active_slot_index = 0 
         
-        # 3. Visual UI Component
+        # Visual UI Component
         self.inventory_ui = InventoryUI(
             rect=inv_rect,
             inventory_data=self.inventory,
@@ -81,7 +82,7 @@ class Player(MovingEntity):
         for item_id, count in PLAYER_START_INVENTORY:
             self.inventory.add_item(create_item(item_id, count))
     
-    def set_active_slot(self, index: int):
+    def set_active_slot(self, index: int) -> None:
         """Safely updates the active slot and handles UI highlighting."""
         if 0 <= index < self.INV_SIZE:
             # Visually turn off the old slot
@@ -93,19 +94,19 @@ class Player(MovingEntity):
             # Visually turn on the new slot
             self.inventory_ui.slots[self.active_slot_index].is_active = True
         
-    def handle_event(self, event, all_tiles):
+    def handle_event(self, event: pygame.event.Event, interactables:Interactables) -> None:
         """Handles discrete inputs (clicks). Call this from Game Loop."""
         if event.type == pygame.KEYDOWN:
             # Interact
             if event.key == controls.interact:
-                self.interact(all_tiles)
+                self.interact(interactables)
             
             # 2. Hotbar Selection (1-8 keys)
             if event.key in controls.slots:
                 new_index = controls.slots[event.key]
                 self.set_active_slot(new_index)
                 
-    def handle_click(self, pos):
+    def handle_click(self, pos:Pos) -> bool:
         """Checks if the player's UI was clicked."""
         clicked_index = self.inventory_ui.click(pos)
         
@@ -116,7 +117,7 @@ class Player(MovingEntity):
             
         return False
     
-    def input(self):
+    def input(self) -> None:
         keys = pygame.key.get_pressed()
        
         input_x = 0
@@ -149,20 +150,21 @@ class Player(MovingEntity):
         else:
             self.current_speed = self.base_speed
 
-    def update(self, dt, all_tiles):
+    def update(self, dt:Num, interactables:Interactables):
         """Main update loop. 
             Requires dt (delta time) for smooth vector movement."""
         self.input()
         
+        print(f"Colliding with {len(interactables)} objects")
         
         frame = self.animator.get_frame(self.state, self.facing, dt)
         if frame: 
             self.image = frame
             self.rect = self.image.get_rect()
         
-        self.move(dt, all_tiles)
+        self.move(dt, interactables)
 
-    def interact(self, all_tiles:list[Tile]):
+    def interact(self, interactables:Interactables) -> None:
         """Interacts with the tile directly under the player's feet."""
         # Grab the item directly from the data array
         active_item = self.inventory.items[self.active_slot_index]
@@ -178,11 +180,11 @@ class Player(MovingEntity):
         target_rect = pygame.Rect(target_point[0], target_point[1], 1, 1)
         
         # Use Pygame's built-in collision loop (massively faster)
-        hit_tiles = [t for t in all_tiles if target_rect.colliderect(t.rect)]
+        hit_tiles = [t for t in interactables if target_rect.colliderect(t.rect)]
         
         for tile in hit_tiles:
             print(f"Interacting with tile at {target_point}")
-            used = active_item.use(self, tile, all_tiles, self.groups()[0])
+            used = active_item.use(self, tile, interactables, self.groups()[0])
             
             if used and active_item.count <= 0:
                 self.inventory.items[self.active_slot_index] = None

@@ -1,7 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Callable
+
 import pygame
 from core.helper import align_rect, get_grid_pos 
 from core.asset_loader import ASSETS
 from core.types import TextConfig
+
+
+if TYPE_CHECKING:
+    from custom_types import Pos, Item, Any
 
 # --- PARENT CLASS ---
 class UIElement(pygame.sprite.Sprite):
@@ -9,10 +16,13 @@ class UIElement(pygame.sprite.Sprite):
         Rect: Position and Size
         Background: Image or Solid Colour
         Borders: Baked in"""
-    def __init__(self, rect, image_file=None, colour=None, border_colour=None, border_width=2):
+    def __init__(self, rect: pygame.Rect, image_file: str | None = None, 
+                 colour: str | None = None, border_colour: str | None = None, 
+                 border_width: int = 2) -> None:
         super().__init__()
         self.rect = rect
         self.is_visible = True
+        self.image: pygame.Surface | None = None
 
         # Create Background
         if image_file: # Load and scale sprite
@@ -22,8 +32,6 @@ class UIElement(pygame.sprite.Sprite):
             self.image.fill(ASSETS.get_colour(colour))
         elif border_colour: # Transparent container
             self.image = pygame.Surface(rect.size, pygame.SRCALPHA)
-        else: # Invisible / Container only
-            self.image = None
 
         # Create Borders
         if self.image and border_colour:
@@ -31,24 +39,26 @@ class UIElement(pygame.sprite.Sprite):
             col = ASSETS.get_colour(border_colour)
             pygame.draw.rect(self.image, col, self.image.get_rect(), border_width)
 
-    def draw(self, screen):
+    def draw(self,screen: pygame.Surface) -> None:
         # Only draw if we have a valid surface
         if self.is_visible and self.image:
             screen.blit(self.image, self.rect)
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos: Pos | None = None) -> None:
         pass
 
-    def is_click(self, mouse_pos):
-        return False # not clickable by default
+    def is_click(self, mouse_pos: Pos) -> bool:
+        return False 
 
-    def handle_click(self):
+    def handle_click(self) -> Any:
         return None
 
 # --- TEXTBOX CLASS ---
 class TextBox(UIElement):
-    def __init__(self, rect, text:str=" ", text_getter=None, config:str = "default", align="center", 
-                 bg_colour=None, border_colour=None):
+    def __init__(self, rect: pygame.Rect, text: str = " ", 
+                 text_getter: Callable[[], Any] | None = None, 
+                 config: str = "default", align: str = "center", 
+                 bg_colour: str | None = None, border_colour: str | None = None) -> None:
         super().__init__(rect, colour=bg_colour, border_colour=border_colour)
         self.align = align
         self._text = str(text)
@@ -61,17 +71,17 @@ class TextBox(UIElement):
             self.config = TextConfig()
 
         # Initial Render
-        self.text_surf = None
-        self.text_rect = None
+        self.text_surf: pygame.Surface | None = None
+        self.text_rect: pygame.Rect | None = None
         self._render_text()
 
-    def set_text(self, new_text):
+    def set_text(self, new_text:Any) -> None:
         new_text = str(new_text) 
         if new_text != self._text:
             self._text = new_text
             self._render_text()
 
-    def _render_text(self):
+    def _render_text(self) -> None:
         """Generates the text surface."""
         if self.config is None: 
             return
@@ -97,7 +107,7 @@ class TextBox(UIElement):
             anchor_point = self.rect.center
         align_rect(self.text_rect, *anchor_point, align=self.align)
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos: Pos | None = None) -> None:
         """ If a getter exists, run it. If the result changed, re-render. """
         if self.text_getter:
             # Call the function to get the current value
@@ -106,7 +116,7 @@ class TextBox(UIElement):
             # Only render if different
             if current_val != self._text:
                 self.set_text(current_val)
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         if not self.is_visible: 
             return
 
@@ -114,34 +124,35 @@ class TextBox(UIElement):
         super().draw(screen)
 
         #draw text on top
-        if self.text_surf:
+        if self.text_surf and self.text_rect:
             screen.blit(self.text_surf, self.text_rect)
 
 class StateElement(UIElement):
     """Automatically swaps between Normal, Hover, and Active visuals.
     Does NOT handle text or click functions (Button does that)."""
-    def __init__(self, rect, base_visual: UIElement|None = None, 
+    def __init__(self, rect: pygame.Rect, 
+                 base_visual: UIElement|None = None, 
                  hover_visual: UIElement|None = None, 
-                 active_visual: UIElement|None = None):
+                 active_visual: UIElement|None = None) -> None:
         super().__init__(rect) # Init generic sprite
         
         self.is_hovered = False
         self.is_active = False
 
         # --- SETUP SURFACES ---
-        # 1. Normal: Must exist. If None, create transparent.
+        # Normal: Must exist. If None, create transparent.
         self.surf_normal = base_visual.image if base_visual else UIElement(rect).image
 
-        # 2. Hover: If None, fallback to Normal
+        # Hover: If None, fallback to Normal
         self.surf_hover = hover_visual.image if hover_visual else self.surf_normal
 
-        # 3. Active: If None, fallback to Hover (or Normal)
+        # Active: If None, fallback to Hover (or Normal)
         self.surf_active = active_visual.image if active_visual else self.surf_hover
 
         # Start State
         self.image = self.surf_normal
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos: Pos | None = None) -> None:
         """Standard State Switching Logic"""
         if mouse_pos:
             self.is_hovered = self.rect.collidepoint(mouse_pos)
@@ -155,8 +166,11 @@ class StateElement(UIElement):
             self.image = self.surf_normal
 
 class Button(StateElement):
-    def __init__(self, rect:pygame.rect.Rect, text:str="", config:str = "default", function=None,
-                base_visual=None, hover_visual=None, active_visual=None):
+    def __init__(self, rect: pygame.Rect, text: str = "", config: str = "default", 
+                 function: Callable | None = None,
+                 base_visual: UIElement | None = None, 
+                 hover_visual: UIElement | None = None, 
+                 active_visual: UIElement | None = None) -> None:
         # Pass visuals to the State Manager
         super().__init__(rect, base_visual, hover_visual, active_visual)
 
@@ -166,14 +180,14 @@ class Button(StateElement):
         # Pass button rect as container, so text centers automatically.
         self.text_box = TextBox(rect=rect, text=text, config=config)
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos: Pos | None = None) -> None:
         # Run State Logic (Swap Images)
         super().update(mouse_pos)
         
         # Update Text
         self.text_box.update()
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         if not self.is_visible: 
             return
          # Draw the current image state 
@@ -181,26 +195,23 @@ class Button(StateElement):
         # Draw text
         self.text_box.draw(screen) 
 
-    def set_text(self, new_text):
+    def set_text(self, new_text: str) -> None:
         self.text_box.set_text(new_text)
 
-    def is_click(self, mouse_pos):
+    def is_click(self, mouse_pos: Pos) -> bool:
         return self.is_visible and self.rect.collidepoint(mouse_pos)
     
-    def handle_click(self):
+    def handle_click(self) -> Any:
         if self.function:   
             return self.function()
     @classmethod
-    def create_bordered_button(cls, rect, text, function, bg_colour="ButtonBG", 
-            border_colour="ButtonBorder", hover_colour="ButtonHover", active_colour="ButtonActive", thickness=2):
+    def create_bordered_button(cls, rect: pygame.Rect, text: str, function: Callable, 
+                               bg_colour: str = "ButtonBG", border_colour: str = "ButtonBorder", 
+                               hover_colour: str = "ButtonHover", active_colour: str = "ButtonActive", 
+                               thickness: int = 2) -> Button:
         """Factory: Creates a button with a solid background and a changing border."""
-        # 1. Base Visual (Dark BG + Grey Border)
         v_normal = UIElement(rect, colour=bg_colour, border_colour=border_colour, border_width=thickness)
-        
-        # Hover Visual (Same BG + Gold Border)
         v_hover = UIElement(rect, colour=bg_colour, border_colour=hover_colour, border_width=thickness)
-        
-        # Active Visual (Lighter BG + Gold Border)
         v_active = UIElement(rect, colour=active_colour, border_colour=hover_colour, border_width=thickness + 1)
 
         # Return the fully assembled Button
@@ -209,23 +220,17 @@ class Button(StateElement):
 
 
 class Slot(Button):
-    def __init__(self, rect, index, slot_size):
-        # 1. DEFINE VISUALS
-        colour = "SLOT"
-        hover_colour = "HOVER_COLOUR"
-        active_colour = "ACTIVE_COLOUR"
-
-        v_normal = UIElement(rect, colour=colour)
-        v_hover  = UIElement(rect, colour=colour, border_colour=hover_colour)
-        v_active = UIElement(rect, colour=colour, border_colour=active_colour, border_width=3)
-
-        # INIT BUTTON (Which Inits StatefulElement)
+    def __init__(self, rect: pygame.Rect, index: int, slot_size: int) -> None:
+        v_normal = UIElement(rect, colour="SLOT")
+        v_hover  = UIElement(rect, colour="SLOT", border_colour="HOVER_COLOUR")
+        v_active = UIElement(rect, colour="SLOT", border_colour="ACTIVE_COLOUR", border_width=3)
+        
         super().__init__(rect, base_visual=v_normal, hover_visual=v_hover, active_visual=v_active)
 
         self.index = index
-        self.item = None 
+        self.item: Item | None = None 
         self.last_count = 0
-        self.price = None
+        self.price: int | None = None
         
         # COMPONENT: Stack Count
         self.info_text = TextBox(
@@ -234,7 +239,7 @@ class Slot(Button):
         )
         self.info_text.is_visible = False
 
-    def set_item(self, item):
+    def set_item(self, item: Item | None) -> None:
         """Updates the slot's data."""
         current_count = item.count if item else 0
         
@@ -244,7 +249,7 @@ class Slot(Button):
             self.last_count = current_count
             self._update_text()
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         # Draw Background (State managed by parent)
         super().draw(screen)
 
@@ -256,12 +261,12 @@ class Slot(Button):
             screen.blit(self.item.image, item_rect)
 
             self.info_text.draw(screen)
-    def set_price(self, price: int):
+    def set_price(self, price: int) -> None:
         """Sets the slot to Shop Mode and remembers the price."""
         self.price = price
         self._update_text()
         
-    def _update_text(self):
+    def _update_text(self) -> None:
         """Internal helper to figure out what text to display."""
         if self.item is None:
             self.info_text.set_text("")
@@ -284,10 +289,9 @@ class Slot(Button):
             self.info_text.is_visible = False
         
     @classmethod
-    def create_grid(cls, max_size: int, columns: int, start_pos: tuple, slot_size: int, padding: int) -> list['Slot']:
+    def create_grid(cls, max_size: int, columns: int, start_pos: Pos, slot_size: int, padding: int) -> list[Slot]:
         """Factory method: Generates a list of Slot objects arranged in a grid."""
-        
-        slots = []
+        slots: list[Slot] = []
         for i in range(max_size):
             x, y = get_grid_pos(
                 index=i, 

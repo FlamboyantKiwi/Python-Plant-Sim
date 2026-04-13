@@ -1,12 +1,19 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from settings import SHOP_BUTTON, MONEY_RECT
 from ui.ui_elements import Button, TextBox
 
+if TYPE_CHECKING:
+    import pygame
+    from custom_types import Pos, UIElement
+    from entities.player import Player
 
 class HUD:
-    def __init__(self, player):
+    def __init__(self, player:Player):
         self.player = player
 
-        self.ui_elements = [
+        self.ui_elements:list[UIElement] = [
            Button.create_bordered_button(
                 rect=SHOP_BUTTON, 
                 text="SHOP", 
@@ -20,18 +27,18 @@ class HUD:
                 config="HUD"),
         ]
 
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface):
         for element in self.ui_elements:
             element.draw(screen)
 
         self.player.inventory_ui.draw(screen)
 
-    def update(self, mouse_pos):
+    def update(self, mouse_pos:Pos):
         for element in self.ui_elements:
             element.update(mouse_pos)
         self.player.inventory_ui.update(mouse_pos)
 
-    def handle_click(self, pos):
+    def handle_click(self, pos:Pos):
         for element in self.ui_elements:
             if element.is_click(pos):
                 return element.handle_click() 

@@ -1,19 +1,28 @@
+from __future__ import annotations
 import pygame
-from settings import  BLOCK_SIZE
+from typing import TYPE_CHECKING
+
+# Runtime Imports
+from settings import BLOCK_SIZE
 from core.asset_loader import ASSETS
 from Assets.asset_data import GRASS_LAYOUT
-from entities.entity import Entity
+
+# Type-Only Imports
+if TYPE_CHECKING:
+    from custom_types import Group, Num
+    from world.level import Level
+    from entities.entity import Entity
 
 class MapTileGroup(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.display_surface = pygame.display.get_surface()
 
-    def custom_draw(self, camera_offset: pygame.math.Vector2):
+    def custom_draw(self, camera_offset: pygame.math.Vector2) -> None:
         """Draws all tiles, applying the camera offset and snapping to integers 
         to prevent sprite tearing."""
         for tile in self.sprites():
-            # Apply the offset and cast to int to prevent sub-pixel gaps!
+            # Apply the offset and cast to int to prevent sub-pixel gaps
             offset_x = int(tile.rect.left - camera_offset.x)
             offset_y = int(tile.rect.top - camera_offset.y)
             
@@ -22,7 +31,8 @@ class MapTileGroup(pygame.sprite.Group):
 
 class Tile(pygame.sprite.Sprite):
     """The Base Class. Holds the factory method and basic visual/position data."""
-    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], group, detail_image=None):
+    def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
+                 group: Group, detail_image: pygame.Surface | None = None) -> None:
         super().__init__(group)
         self.level = level
         self.grid_x = int(x // BLOCK_SIZE)
@@ -43,14 +53,15 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=self.position)
 
     @classmethod
-    def create(cls, level, x, y, tile_type_key: str, neighbors: list[bool], group, detail_image=None):
+    def create(cls, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
+               group: Group, detail_image: pygame.Surface | None = None) -> Tile:
         """THE FACTORY: Looks at the key and returns the correct subclass!"""
         if tile_type_key == "WATER":
             return WaterTile(level, x, y, tile_type_key, neighbors, group, detail_image)
         else:
             return GroundTile(level, x, y, tile_type_key, neighbors, group, detail_image)
 
-    def refresh_terrain(self, new_neighbors: list[bool]):
+    def refresh_terrain(self, new_neighbors: list[bool]) -> None:
         """Generates the base visual. Subclasses will extend this."""
         pass
     
@@ -58,9 +69,8 @@ class Tile(pygame.sprite.Sprite):
     
 class GroundTile(Tile):
     """Tile containing all farming logic."""
-    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], group, detail_image=None):
-        
-        # Only GroundTiles get farming variables!
+    def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
+                 group: Group, detail_image: pygame.Surface | None = None) -> None:    
         self.is_tilled = False
         self.tillable = (tile_type_key in ["GRASS_A", "GRASS_B", "DIRT"])
         self.watered = False
@@ -69,7 +79,7 @@ class GroundTile(Tile):
         super().__init__(level, x, y, tile_type_key, neighbors, group, detail_image)
         
 
-    def refresh_terrain(self, new_neighbors: list[bool]):
+    def refresh_terrain(self, new_neighbors: list[bool]) -> None:
         # LAYER 1: Base Dirt Background
         dirt_img = ASSETS.get_image("DIRT_IMAGE")
         self.base_image = dirt_img.copy() if dirt_img else pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
@@ -99,13 +109,14 @@ class GroundTile(Tile):
 
 class WaterTile(Tile):
     """Tile representing water. Blocks movement."""
-    def __init__(self, level, x, y, tile_type_key: str, neighbors: list[bool], group, detail_image=None):
-        self.obstructed = True
+    def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
+                 group: Group, detail_image: pygame.Surface | None = None) -> None:
+        self._base_obstructed = True
         super().__init__(level, x, y, tile_type_key, neighbors, group, detail_image)
         
         
-    def refresh_terrain(self, new_neighbors: list[bool]):
-        # A simple, static block of water. (Keeps memory low!)
+    def refresh_terrain(self, new_neighbors: list[bool]) -> None:
+        # A simple, static block of water.
         self.base_image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
         self.base_image.fill((56, 220, 245)) # Cyan Water
         self.image = self.base_image.copy()

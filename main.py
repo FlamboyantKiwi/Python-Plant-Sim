@@ -1,19 +1,24 @@
+from __future__ import annotations
 import sys
 import pygame
+from typing import TYPE_CHECKING
 
 from settings import WIDTH, HEIGHT, FPS
 from core.asset_loader import ASSETS
 from core.states import GameState, MenuState
 
+if TYPE_CHECKING:
+    pass
+
 class Game:
-    def __init__(self):
-        # Pygame Setup
+    def __init__(self) -> None:
+        # Pygame Setup 
         pygame.init()
         pygame.display.set_caption("Freddy's Python Plant Sim")
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.clock = pygame.time.Clock()
-        self.running = True
-        self.tick = 0
+        self.screen: pygame.Surface = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.clock: pygame.time.Clock = pygame.time.Clock()
+        self.running: bool = True
+        self.tick: int = 0
 
         # Load Assets
         ASSETS.load_all()
@@ -25,14 +30,14 @@ class Game:
         self.push(MenuState(self))
 
     # State Logic
-    def push(self, state:GameState):
+    def push(self, state:GameState) -> None:
         """Add a state to the top (e.g., open shop)"""
         if self.stack:
             self.stack[-1].exit_state()
         self.stack.append(state)
         state.enter_state()
 
-    def pop(self):
+    def pop(self) -> None:
         """Remove the top state (e.g., close shop)"""
         if self.stack:
             top = self.stack.pop()
@@ -40,24 +45,24 @@ class Game:
         if self.stack:
             self.stack[-1].enter_state()
 
-    def change(self, state:GameState):
+    def change(self, state:GameState) -> None:
         """Hard switch (e.g., Menu -> Playing)"""
         if self.stack:
             self.stack.pop().exit_state()
         self.stack.append(state)
         state.enter_state()
 
-    def peek(self):
+    def peek(self) -> GameState|None:
         """Returns the current active state"""
         return self.stack[-1] if self.stack else None
 
-    def draw_previous(self):
+    def draw_previous(self) -> None:
         """Draws the state underneath the current one (for transparent menus)"""
         if len(self.stack) > 1:
             self.stack[-2].draw(self.screen)
 
     # Main Loop
-    def run(self):
+    def run(self) -> None:
         while self.running:
             self.tick += 1
             current_state = self.peek()
