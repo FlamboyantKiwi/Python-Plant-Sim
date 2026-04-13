@@ -10,20 +10,24 @@ from settings import WIDTH, HEIGHT
 from core.assets import ASSETS
 from groups.camera import CameraGroup
 from groups.plant_group import PlantGroup
-
+from core.types import PlayerType
 from .base import GameState
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
-    from custom_types import Game, Pos
+    from custom_types import Game, Pos, PlayerType
 
 class PlayingState(GameState):
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, character_type: PlayerType = PlayerType.RACOON):
         super().__init__(game)
+
+        self.transparent = False
+        self.suppress_update = True
+
         self.all_sprites = CameraGroup()
         self.plant_group = PlantGroup()
 
-        self.player = Player(WIDTH // 2, HEIGHT // 2, self.all_sprites)
+        self.player = Player(WIDTH // 2, HEIGHT // 2, self.all_sprites, character_type)
         self.hud = HUD(self.player)
 
         self.level = Level(
@@ -36,41 +40,30 @@ class PlayingState(GameState):
         self.level.spawn_plant("onion", 6, 5, self.all_sprites)
 
         self.key_binds = {
-            pygame.K_ESCAPE: self.quit_game,
-            pygame.K_p: lambda: self.open_shop("general_store")
+            pygame.K_ESCAPE: self.game.quit,
+            pygame.K_p: lambda: self.open_shop("general_store"),
+            pygame.K_SPACE: lambda: self.plant_group.grow_all(0.1)
         }
 
-    """def add_plant_to_world(self, plant):
-        #Adds a plant to the game and links it to its tile.
-        target_tile = self.level.get_tile(plant.grid_x, plant.grid_y)
-        if target_tile and hasattr(target_tile, 'plant'):
-            setattr(target_tile, 'plant', plant)"""
-
-    def update(self) -> None:
-        # Calculate Delta Time (dt) in seconds
+    def update(self, is_paused: bool = False):
         dt = self.game.clock.get_time() / 1000 
-        mouse_pos = pygame.mouse.get_pos()
         
-        # Update world objects
+        # 1. Always update world animations (plants, water, etc.)
         self.level.update()
-        collidables = self.level.tile_list + self.plant_group.plants
-        self.all_sprites.update(dt, collidables)
+        self.all_sprites.update(dt, self.level.all_tiles)
+        
+        mouse_pos = pygame.mouse.get_pos()
         self.hud.update(mouse_pos)
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            self.plant_group.grow_all(0.1)
-                    
     def draw(self, screen: pygame.Surface) -> None:
-        # Draw the game world
-        screen.fill(ASSETS.colour("WATER")) 
-        
-        # Draw ground tiles (passing camera offset)
+        # Layer 1: The Water/Map
+        screen.fill(ASSETS.colour("WATER"))
         self.level.draw(self.all_sprites.offset)
         
-        # Draw all entities (Y-Sorted & Camera-Offset)
+        # Layer 2: The Entities
         self.all_sprites.custom_draw(self.player)
-            
+        
+        # Layer 3: The HUD
         self.hud.draw(screen)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
@@ -96,7 +89,5 @@ class PlayingState(GameState):
         from .menus import ShopState
 
         shop_data = ASSETS.shop(shop_id)
-        self.game.push(ShopState(self.game, self.player, shop_data))
+        self.game.open_shop(self.player, shop_data)
         
-    def quit_game(self) -> None:
-        self.game.running = False

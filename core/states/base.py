@@ -3,8 +3,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Any
 import pygame
-
-# Runtime Imports (Essential for logic/inheritance)
 from groups.ui_group import UIGroup
 
 # Type-Only Imports (Breaks circular loops)
@@ -14,15 +12,18 @@ if TYPE_CHECKING:
 class GameState(ABC):
     def __init__(self, game:Game):
         self.game = game
+        # Flags control how the Game stack behaves
+        self.transparent: bool = False  # If True, the state below will draw first
+        self.suppress_update: bool = True # If True, the state below freezes logic
         # Event Mapping Dict
         self.key_binds: dict[int, Callable] = {} # e.g. pygame.K_ESCAPE: self.func
         self.mouse_binds: dict[int, Callable[[Pos], None]] = {
             1: self.on_left_click,
             2: self.on_middle_click,
             3: self.on_right_click}
-        
+
     @abstractmethod
-    def update(self)-> None: pass
+    def update(self, is_paused: bool = False) -> None: pass
 
     @abstractmethod
     def draw(self, screen: pygame.Surface) -> None: pass
@@ -50,9 +51,11 @@ class BaseUIState(GameState):
     (Menu, Shop, Inventory, Credits, etc)."""
     def __init__(self, game: Game):
         super().__init__(game)
+        self.transparent = True     
+        self.suppress_update = False
         self.ui_group = UIGroup()
 
-    def update(self) -> None:
+    def update(self, is_paused: bool = False) -> None:
         mouse_pos = pygame.mouse.get_pos()
         self.ui_group.update(mouse_pos)
 
