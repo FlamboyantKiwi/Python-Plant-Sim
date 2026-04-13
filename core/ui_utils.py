@@ -35,7 +35,7 @@ def draw_text(screen: pygame.Surface, text:Any, font_key: str, x: int, y: int, c
         return
     
     # Get Optional Override Colour
-    colour = ASSETS.colour(colour) if colour else None # type: ignore
+    colour = ASSETS.colour(colour) if colour else None
      
     # Render (Config calls AssetLoader.get_font internally 
     # and handles font loading and default colours

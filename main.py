@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 
 from settings import WIDTH, HEIGHT, FPS
 from core.assets import ASSETS
-from core.states import GameState, MenuState
+from core.states import GameState, MenuState, PlayingState, ShopState
+from core.types import ShopData
 
-if TYPE_CHECKING: 
+if TYPE_CHECKING:  
     pass
 
 class Game:
@@ -84,12 +85,34 @@ class Game:
             
             pygame.display.update()
             self.clock.tick(FPS)
+ 
+    # State Transition Helpers
+    def start_new_game(self) -> None:
+        """Changes the current state to the Playing state."""
+        self.change(PlayingState(self))
+
+    def load_save_game(self) -> None:
+        """Changes to Playing state and triggers load logic."""
+        playing_state = PlayingState(self)
+        # playing_state.load_save() # Add your save logic later!
+        self.change(playing_state)
+
+    def open_shop(self, player_ref, shop_data: ShopData) -> None:
+        """Pushes the Shop menu over the current state."""
+        self.push(ShopState(self, player_ref, shop_data))
+
+    def open_credits(self) -> None: pass
+
+    def quit(self) -> None:
+        """Safely shuts down the game, cleans assets, and exits."""
+        print("Initiating shutdown sequence...")
+        self.running = False
+        ASSETS.clean_up()
+        pygame.quit()
+        sys.exit()
 
 if __name__ == "__main__":
     game = Game()
     game.run()
     
-    # Cleanup on exit
-    ASSETS.clean_up()
-    pygame.quit()
-    sys.exit()
+    
