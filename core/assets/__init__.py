@@ -118,7 +118,7 @@ class AssetLoader:
     def font(self, config: TextConfig) -> pygame.font.Font:  
         return self.fonts.get_font(config)
         
-    def colour(self, name:str, fallback:Colour|None = None) -> pygame.Color:    
+    def colour(self, name:Colour, fallback:Colour|None = None) -> pygame.Color:    
         return self.colours.get_colour(name, fallback)
         
     def config(self, key:str) -> TextConfig:                          

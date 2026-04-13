@@ -32,7 +32,7 @@ class ColourGroup(ConfigGroup):
             
         self.default = self.storage.get("DEFAULT", pygame.Color(255, 0, 255))
 
-    def get_colour(self, name: str, fallback_type: Colour | None = None) -> pygame.Color:
+    def get_colour(self, name: Colour, fallback_type: Colour | None = None) -> pygame.Color:
         """Tiered lookup: Name -> Fallback -> Default."""
         
         # Try exact match
