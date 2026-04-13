@@ -4,17 +4,19 @@ import pygame
 
 from entities.entity import Entity
 from world.tile import Tile
+from core.types import PlayerType, AnimalType
 
 Num = int|float
 Group = pygame.sprite.AbstractGroup
 Pos = tuple[int,int]
 NodeMap = list[list[int]]
 Interactables = Sequence[Tile | Entity]
-
+EntityType = PlayerType | AnimalType | str
+Colour = str | tuple[int, int, int] | pygame.Color
 if TYPE_CHECKING:
     from main import Game
     # Core Logic
-    from core.animation import AnimationController
+    from entities.components.animation import AnimationController
     from core.types import EntityState, Direction, ItemCategory, ToolType, Quality, TextConfig
     # UI
     from ui.InventoryUI import InventoryUI, Inventory
@@ -23,7 +25,7 @@ if TYPE_CHECKING:
     from entities.items import Item, ToolItem, SeedItem
     from entities.entity import MovingEntity
     # Groups
-    from groups.plant_group import Plant
+    from groups.plant_group import PlantGroup
     from groups.camera import CameraGroup
     from groups.ui_group import UIGroup
     

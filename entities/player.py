@@ -4,13 +4,14 @@ from typing import TYPE_CHECKING
 
 # Runtime Imports (Needed for logic/inheritance)
 from settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from core.helper import calc_pos_rect
-from core.types import EntityState, DOWN
+from core.ui_utils import calc_pos_rect
+from core.types import EntityState, PlayerType, EntityCategory
 from core.controls import controls
-from core.animation import AnimationController
+from entities.components.animation import AnimationController
 from entities.items import create_item
 from entities.entity import MovingEntity
 from ui.InventoryUI import InventoryUI, Inventory
+from entities.components.interaction import InteractionController
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
@@ -21,7 +22,7 @@ class Player(MovingEntity):
     INV_SIZE = 8 # will be a single row
     INV_PADDING = 5
     SLOT_SIZE = 50
-    def __init__(self, x:Num, y:Num, group: Group, type:str="Racoon") -> None:
+    def __init__(self, x:Num, y:Num, group: Group, type:PlayerType=PlayerType.RACOON) -> None:
        # Figure out the unique player visuals and sizes first
         initial_image = pygame.Surface((32, 64))
         start_rect = initial_image.get_rect(topleft=(x, y))
@@ -33,25 +34,15 @@ class Player(MovingEntity):
         super().__init__(initial_image, start_rect, start_hitbox, 200, group)
         
         self.player_type = type
-        self.state = EntityState.IDLE
-        self.facing:Direction = DOWN # start looking down
-        self.animator = AnimationController("PLAYER", type) 
+        self.animator = AnimationController(EntityCategory.PLAYER, type) 
         
-        # Interaction Offsets
-        self.interaction_offsets: dict[Direction, pygame.math.Vector2] = {}
-        self.generate_interaction_offsets(INTERACTION_DISTANCE)
+        self.targeter = InteractionController(self, INTERACTION_DISTANCE)
 
         self.run_multiplier = 1.5  
         
         #Inventory + Stats
         self.money = 500
         self.setup_inventory()
-        
-    def generate_interaction_offsets(self, distance:int) -> None:
-        for (dx, dy), direction in controls.facing_map.items():
-            # Only use Pure Cardinals (ignore diagonal keys for the math)
-            if dx == 0 or dy == 0:
-                self.interaction_offsets[direction] = pygame.math.Vector2(dx * distance, dy * distance)
         
     def setup_inventory(self) -> None:
         """Calculates and initializes the UI rect for the inventory."""
@@ -155,40 +146,35 @@ class Player(MovingEntity):
             Requires dt (delta time) for smooth vector movement."""
         self.input()
         
-        print(f"Colliding with {len(interactables)} objects")
-        
         frame = self.animator.get_frame(self.state, self.facing, dt)
         if frame: 
             self.image = frame
             self.rect = self.image.get_rect()
+            self.sync_rect_to_hitbox()
         
         self.move(dt, interactables)
 
     def interact(self, interactables:Interactables) -> None:
-        """Interacts with the tile directly under the player's feet."""
-        # Grab the item directly from the data array
-        active_item = self.inventory.items[self.active_slot_index]
+        """Interacts with the tile or entity directly under the player's target offset."""
+        # Ask the Component what we are looking at!
+        hit_objects = self.targeter.get_target_objects(interactables)
         
+        if not hit_objects:
+            return # Looking at nothing
+            
+        # Check Inventory
+        active_item = self.inventory.items[self.active_slot_index]
         if not active_item: 
-            print("Inventory Slot Empty!")
+            print("Inventory Slot Empty! (Maybe talk to an NPC or open a chest here later?)")
             return
 
-        offset = self.interaction_offsets.get(self.facing, (0,0))
-        target_point = self.hitbox.midbottom + offset
+        # Use the item on the first object we hit
+        target_obj = hit_objects[0]
+        print(f"Interacting with {type(target_obj).__name__}")
         
-        # Create a 1x1 invisible rect at the target point
-        target_rect = pygame.Rect(target_point[0], target_point[1], 1, 1)
+        used = active_item.use(self, target_obj, interactables, self.groups()[0])
         
-        # Use Pygame's built-in collision loop (massively faster)
-        hit_tiles = [t for t in interactables if target_rect.colliderect(t.rect)]
-        
-        for tile in hit_tiles:
-            print(f"Interacting with tile at {target_point}")
-            used = active_item.use(self, tile, interactables, self.groups()[0])
-            
-            if used and active_item.count <= 0:
-                self.inventory.items[self.active_slot_index] = None
-                print("Item consumed entirely.")
-            break # Stop after interacting with the first valid tile
-
+        if used and active_item.count <= 0:
+            self.inventory.items[self.active_slot_index] = None
+            print("Item consumed entirely.")
         

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, cast
-from entities.Plant import Plant
+from entities.plant import Plant
 
 if TYPE_CHECKING:
     from custom_types import Num

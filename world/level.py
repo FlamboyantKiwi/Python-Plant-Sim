@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 # Runtime Imports
 from settings import BLOCK_SIZE, DETAIL_CHANCE
-from core.asset_loader import ASSETS
-from entities.Plant import Plant
+from core.assets import ASSETS
+from entities.plant import Plant 
 from world.tile import Tile, MapTileGroup
 
 # Type-Only Imports

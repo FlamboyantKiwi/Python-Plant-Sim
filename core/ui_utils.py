@@ -1,10 +1,10 @@
+from __future__ import annotations
 import pygame
-import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from custom_types import Colour
 #Helper Function
-def get_asset(fileName:str, path:str="assets") -> str: 
-    """Returns the full cross-platform file path for a specific asset."""
-    return os.path.join(path, fileName)
 
 def calc_pos_rect(desired_width: int, desired_height: int, screen_width: int, screen_height: int, x_offset: int = 0, y_offset: int = 0) -> pygame.Rect:
     """Calculates coordinates to center a block on screen and returns a pygame.Rect."""
@@ -15,31 +15,6 @@ def calc_pos_rect(desired_width: int, desired_height: int, screen_width: int, sc
         desired_height
     )
 
-def get_axis(value:int, lessthan:str, greaterthan:str) -> str:
-    """Returns 'lessthan' if value < 0, otherwise returns 'greaterthan'."""
-    return lessthan if value < 0 else greaterthan
-    
-def get_direction(dx: int, dy: int, tick: int = 0) -> str|None:
-    """Determines the primary direction (Up, Down, Left, Right) based on velocity and tick cycle."""
-    abs_dx, abs_dy = abs(dx), abs(dy)
-    if abs_dx == 0 and abs_dy == 0:
-        return None
-    # Alternation Tie-breaker (If abs_dx == abs_dy)
-    if abs_dx == abs_dy:
-        # Check if the tick falls into the first half of the 16-tick cycle
-        if tick % 16 < 8:
-            return get_axis(dx, "Left", "Right")
-        else: # Even tick: Prioritize Vertical (Up/Down)
-            return get_axis(dy, "Up", "Down")
-
-    # Magnitude Priority (Non-Diagonal movement)
-    if abs_dx > abs_dy:
-        # Horizontal axis has the greatest speed
-        return get_axis(dx, "Left", "Right")
-    else: 
-        # Vertical axis has the greatest speed
-        return get_axis(dy, "Up", "Down")
-    
 def align_rect(rect: pygame.Rect, x: int, y: int, align: str = "center") -> pygame.Rect:
     """Sets a specific anchor point of a Rect to (x, y) coordinates."""
     try:
@@ -49,19 +24,19 @@ def align_rect(rect: pygame.Rect, x: int, y: int, align: str = "center") -> pyga
         rect.center = (x, y)
     return rect
 
-def draw_text(screen: pygame.Surface, text:Any, font_key: str, x: int, y: int, colour_name: str|None = None, align: str = "center") -> None:
+def draw_text(screen: pygame.Surface, text:Any, font_key: str, x: int, y: int, colour: Colour|None = None, align: str = "center") -> None:
     """Renders text from the asset loader and blits it to the screen with alignment."""
-    from core.asset_loader import ASSETS
+    from core.assets import ASSETS
     
     # Get Text Config bfrom its name
-    config = ASSETS.get_text_config(font_key)
+    config = ASSETS.config(font_key)
     if config is None:
         print(f"Error with text config: {font_key}")
         return
     
     # Get Optional Override Colour
-    colour = ASSETS.get_colour(colour_name) if colour_name else None
-    
+    colour = ASSETS.colour(colour) if colour else None
+     
     # Render (Config calls AssetLoader.get_font internally 
     # and handles font loading and default colours
     text_surf = config.render(str(text), colour)

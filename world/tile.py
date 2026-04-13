@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 # Runtime Imports
 from settings import BLOCK_SIZE
-from core.asset_loader import ASSETS
-from Assets.asset_data import GRASS_LAYOUT
+from core.assets import ASSETS
+from core.assets.asset_data import GRASS_LAYOUT
 
 # Type-Only Imports
 if TYPE_CHECKING:
@@ -97,7 +97,7 @@ class GroundTile(Tile):
         if any(new_neighbors) and self.tile_type_key != "WATER":
             grass_key = self.tile_type_key if "GRASS" in self.tile_type_key else "GRASS_A"
             # Assumes GRASS_LAYOUT is imported/available!
-            grass_overlay = ASSETS.get_marching_tile(grass_key, GRASS_LAYOUT, new_neighbors)
+            grass_overlay = ASSETS.autotile(grass_key, GRASS_LAYOUT, new_neighbors)
             self.base_image.blit(grass_overlay, (0, 0))
 
         self.image = self.base_image.copy()

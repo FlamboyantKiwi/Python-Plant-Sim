@@ -1,5 +1,5 @@
 import pygame
-from core.asset_loader import ASSETS
+from core.assets import ASSETS
 from core.types import ItemCategory
 from typing import Any
 
@@ -8,9 +8,9 @@ class Item:
     Manages stack counts and proxies core data from the SQLite database. """
     def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None):
         # OPTIMIZATION: Use preloaded data from the factory if available
-        self.data = preloaded_data or ASSETS.get_item_data(item_id)
+        self.data = preloaded_data or ASSETS.item(item_id)
         self.count:int = min(count, self.data.max_stack)
-        self.image: pygame.Surface = ASSETS.get_item_image(self.data)
+        self.image: pygame.Surface = ASSETS.item_image(self.data)
         self.item_id: str = item_id
 
     # --- PROPERTIES (Proxies to the Data) ---
@@ -141,7 +141,7 @@ _LOGIC_MAP = {
 
 def create_item(item_id: str, count: int = 1) -> Item:
     """ The unified way to spawn items using the Database and Logic Mapping. """
-    data = ASSETS.get_item_data(item_id)
+    data = ASSETS.item(item_id)
     
     # Use the Category from the Unified Enum to pick the class
     target_class = _LOGIC_MAP.get(data.category, Item)

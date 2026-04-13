@@ -2,7 +2,7 @@ import pygame
 from ui.ui_elements import UIElement, TextBox, Slot
 from entities.items import Item, create_item
 from settings import SHOP_MENU
-from core.asset_loader import ASSETS
+from core.assets import ASSETS
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""

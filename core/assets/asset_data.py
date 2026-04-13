@@ -191,19 +191,19 @@ FONT_CONFIG = {
 TEXT = {
     "default": TextConfig(),
     "HUD": TextConfig(size=20, bold=True),
-    "ACTIVE": TextConfig(size=20, bold=True, colour=(50, 50, 50)),
-    "SLOT": TextConfig(size=14, colour=(255, 215, 0)),
-    "TITLE": TextConfig(size=80, bold=True, colour=(255, 255, 255)),
-    "MenuTitle": TextConfig(size=60, bold=True, colour=(255, 215, 0)),
+    "ACTIVE": TextConfig(size=20, bold=True, colour="DARK_TEXT"),
+    "SLOT": TextConfig(size=14, colour="GOLD"),
+    "TITLE": TextConfig(size=80, bold=True),
+    "MenuTitle": TextConfig(size=60, bold=True, colour=("MenuTitle")),
 }
 
-        
 # --- COLOUR PALETTE ---
-COLOURS = {
+COLOURS: dict[str, str] = {
     # UI & System
     "DEFAULT":        "#FF00FF", # Magenta for errors
     "DEBUG":          "#FF00FF",
     "TEXT":           "#FFFFFF",
+    "DARK_TEXT":      "#323232",
     "HIGHLIGHT":      "#FFFF00",
     "HOVER":          "#9696FF",
     "SPRITESHEET":    "#FF00FF", # Fallback for missing sheets

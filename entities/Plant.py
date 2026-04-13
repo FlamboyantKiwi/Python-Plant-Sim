@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 # Runtime Imports
 from core.types import PlantData
-from core.asset_loader import ASSETS
+from core.assets import ASSETS
 from entities.entity import Entity
 from settings import BLOCK_SIZE
 
@@ -18,7 +18,7 @@ class Plant(Entity):
         self.grid_x, self.grid_y = grid_x, grid_y
         
         # Get Logic Data (Growth time, is_tree, etc)
-        self.data: PlantData = ASSETS.get_plant_data(plant_id)
+        self.data: PlantData = ASSETS.plant(plant_id)
         
         # State
         self.age:float = 0.0

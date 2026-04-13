@@ -4,10 +4,10 @@ import pygame
 from typing import TYPE_CHECKING
 
 from settings import WIDTH, HEIGHT, FPS
-from core.asset_loader import ASSETS
+from core.assets import ASSETS
 from core.states import GameState, MenuState
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: 
     pass
 
 class Game:

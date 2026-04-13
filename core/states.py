@@ -11,8 +11,8 @@ from ui.InventoryUI import ShopMenu
 from groups.ui_group import UIGroup
 from world.level import Level
 from settings import WIDTH, HEIGHT
-from core.helper import draw_text
-from core.asset_loader import ASSETS
+from core.ui_utils import draw_text
+from core.assets import ASSETS
 from groups.camera import CameraGroup
 from groups.plant_group import PlantGroup
 from core.types import ShopData
@@ -169,7 +169,7 @@ class PlayingState(GameState):
                     
     def draw(self, screen: pygame.Surface) -> None:
         # Draw the game world
-        screen.fill(ASSETS.get_colour("WATER")) 
+        screen.fill(ASSETS.colour("WATER")) 
         
         # Draw ground tiles (passing camera offset)
         self.level.draw(self.all_sprites.offset)
@@ -199,7 +199,7 @@ class PlayingState(GameState):
   
     def open_shop(self, shop_id: str = "general_store") -> None:
         """ Opens the shop state with data loaded from the database. """
-        shop_data = ASSETS.get_shop_data(shop_id)
+        shop_data = ASSETS.shop(shop_id)
 
         self.game.push(ShopState(self.game, self.player, shop_data))
         
@@ -232,10 +232,10 @@ class MenuState(BaseUIState):
             self.ui_group.add(btn)
 
     def draw(self, screen: pygame.Surface) -> None:
-        screen.fill(ASSETS.get_colour("MenuBG"))
+        screen.fill(ASSETS.colour("MenuBG"))
 
         draw_text(screen, "Python Plant Sim", "TITLE", x=WIDTH//2, y=HEIGHT//4, 
-                  colour_name="MenuTitle", align="center")
+                  colour="MenuTitle", align="center")
         
         super().draw(screen)
 

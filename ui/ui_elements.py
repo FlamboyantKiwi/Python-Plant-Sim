@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 import pygame
-from core.helper import align_rect, get_grid_pos 
-from core.asset_loader import ASSETS
+from core.ui_utils import align_rect, get_grid_pos 
+from core.assets import ASSETS
 from core.types import TextConfig
 
 
@@ -29,14 +29,14 @@ class UIElement(pygame.sprite.Sprite):
             self.image = ASSETS.load_image(image_file, scale=rect.size).copy()
         elif colour: # Solid Colour
             self.image = pygame.Surface(rect.size)
-            self.image.fill(ASSETS.get_colour(colour))
+            self.image.fill(ASSETS.colour(colour))
         elif border_colour: # Transparent container
             self.image = pygame.Surface(rect.size, pygame.SRCALPHA)
 
         # Create Borders
         if self.image and border_colour:
             # Draw border inside the existing surface
-            col = ASSETS.get_colour(border_colour)
+            col = ASSETS.colour(border_colour)
             pygame.draw.rect(self.image, col, self.image.get_rect(), border_width)
 
     def draw(self,screen: pygame.Surface) -> None:
@@ -64,7 +64,7 @@ class TextBox(UIElement):
         self._text = str(text)
         self.text_getter = text_getter
         
-        from Assets.asset_data import TEXT 
+        from core.assets.asset_data import TEXT 
         self.config =TEXT.get(config, TEXT.get("default"))
         if self.config is None:
             print(f"Error with text config: {config}")

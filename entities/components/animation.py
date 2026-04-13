@@ -3,15 +3,15 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from core.types import EntityState
-from core.asset_loader import ASSETS
+from core.types import EntityState, EntityCategory
+from core.assets import ASSETS
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from custom_types import Num, Direction
+    from custom_types import Num, Direction, EntityType
 
 class AnimationController:
-    def __init__(self, category: str, entity_name: str, speed:float = 0.15) -> None:
+    def __init__(self, category: EntityCategory, entity_name: EntityType, speed:float = 0.15) -> None:
         self.category = category
         self.name = entity_name
         
@@ -41,5 +41,5 @@ class AnimationController:
             
         # Ask AssetLoader for the specific frame
         # We pass frame_index as the "tick"
-        return ASSETS.get_animated_sprite(
+        return ASSETS.sprite(
             self.category, self.name, state, direction, self.frame_index)

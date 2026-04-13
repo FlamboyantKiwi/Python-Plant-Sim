@@ -3,6 +3,7 @@ import pygame
 from typing import TYPE_CHECKING, Any
 
 from settings import WIDTH, HEIGHT
+from core.types import Direction, EntityState
 
 if TYPE_CHECKING:
     from custom_types import Num, Group, Interactables
@@ -57,6 +58,9 @@ class MovingEntity(Entity):
         self.direction = pygame.math.Vector2()
         self.current_speed:Num = 0
         self.base_speed = base_speed
+
+        self.state: EntityState = EntityState.IDLE
+        self.facing: Direction = Direction.DOWN
 
     @staticmethod
     def _hitbox_collide(entity:Any, obj:Any) -> bool:
