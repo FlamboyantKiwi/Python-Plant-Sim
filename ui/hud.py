@@ -1,7 +1,6 @@
 from settings import SHOP_BUTTON, MONEY_RECT
 from ui.ui_elements import Button, TextBox
 
-
 class HUD:
     def __init__(self, player):
         self.player = player

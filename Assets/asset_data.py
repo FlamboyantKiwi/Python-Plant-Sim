@@ -381,7 +381,8 @@ TEXT = {
     "MenuTitle": TextConfig(size=60, bold=True, colour=(255, 215, 0)),
 }
 
-        
+
+
 # --- COLOUR PALETTE ---
 COLOURS = {
     # UI & System

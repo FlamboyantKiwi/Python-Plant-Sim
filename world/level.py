@@ -115,6 +115,7 @@ class Level:
         self.MAP_WIDTH = map_tile_x 
         self.MAP_HEIGHT = map_tile_y
         print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
+        
     def till_map_node(self, grid_x: int, grid_y: int):
         """Converts a grass grid tile into dirt and updates the surrounding visuals."""
         node_cx = (grid_x * 2) + 1

@@ -11,6 +11,7 @@ from Assets.asset_data import SHOPS, ShopData
 from core.helper import  draw_text
 from core.asset_loader import ASSETS
 from core.camera import CameraGroup
+
 import pygame
 
 class GameState(ABC):
@@ -94,6 +95,7 @@ class ShopState(BaseUIState):
         self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
     def update(self):
         # Update Buttons
+        self.game.update_previous()
         super().update()
         
         # Update Shop Menu explicitly
@@ -108,7 +110,7 @@ class ShopState(BaseUIState):
         # Blit the pre-calculated overlay (Dim the background)
         screen.blit(self.overlay, (0, 0))
 
-        self.shop_menu.draw(screen)
+        self.shop_menu.draw(screen)  # Draws any BaseUI buttons
         
         # Draw Buttons
         super().draw(screen)
@@ -266,3 +268,18 @@ class MenuState(BaseUIState):
     def quit_game(self):
         print("Quitting...")
         self.game.running = False
+
+class CharacterSelectState(BaseUIState):
+    def __init__(self, game):
+        super().__init__(game)
+        self.ui_elements = self.create_buttons()
+        
+    # --- Button Actions ---
+    def start_game_with_character(self, character_type):
+        print(f"Selected: {character_type}")
+        # Pass the chosen character type into the PlayingState
+        self.game.change(PlayingState(self.game, character_type))
+        
+    def go_back(self):
+        # Return to main menu
+        self.game.change(MenuState(self.game))
