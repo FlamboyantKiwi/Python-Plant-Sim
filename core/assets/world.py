@@ -20,30 +20,37 @@ if TYPE_CHECKING:
 
 class TileGroup(SpriteGroup):    
     def load(self) -> None:
-        sheet = self.get_sheet("main")
-        if not sheet: 
-            return
-        
-        # 1. Load Ground Regions
-        for key, rect in GROUND_TILE_REGIONS.items():
-            self.storage[key] = sheet.extract_tiles_by_dimensions(
-                rect.x, rect.y, rect.w, rect.h, 16, 16, self.SCALE_FACTOR
-            )
+        marching_sets = {
+            "GRASS_A": ("grass_a", 160, 48),
+            "GRASS_B": ("grass_b", 160, 48),
+            "DIRT":    ("dirt",    160, 48),
+        }
+        for key, (alias, w, h) in marching_sets.items():
+            sheet = self.get_sheet(alias)
+            if sheet:
+                # We extract the whole sheet as a list of 16x16 tiles
+                self.storage[key] = sheet.extract_tiles_by_dimensions(
+                    0, 0, w, h, 16, 16, self.SCALE_FACTOR
+                )
         
         # 2. Dirt Fallback
         dirt_tiles = self.storage.get("DIRT")
-        if dirt_tiles:
-            self.storage["DIRT_IMAGE"] = pygame.transform.scale(dirt_tiles[11], (BLOCK_SIZE, BLOCK_SIZE))
+        if dirt_tiles and len(dirt_tiles) > 11:
+            self.storage["DIRT_IMAGE"] = pygame.transform.scale(
+                dirt_tiles[11], (BLOCK_SIZE, BLOCK_SIZE)
+            )
             
-        # 3. Details
+        # 3. Details (Remains the same as your original)
         detail_sheet = self.get_sheet("details")
         if detail_sheet:
             for key, rect_list in TILE_DETAILS.items():
-                self.storage[f"DETAIL_{key.upper()}"] = []
+                storage_key = f"DETAIL_{key.upper()}"
+                self.storage[storage_key] = []
                 for r in rect_list:
-                    self.storage[f"DETAIL_{key.upper()}"].extend(
-                        detail_sheet.extract_tiles_by_dimensions(r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, self.SCALE_FACTOR)
+                    tiles = detail_sheet.extract_tiles_by_dimensions(
+                        r.x, r.y, r.w, r.h, r.tile_w, r.tile_h, self.SCALE_FACTOR
                     )
+                    self.storage[storage_key].extend(tiles)
 
     def build_marching_tile(self, tileset_key:str, layout:MarchingLayout, neighbors: list[bool], sheet_width=10) -> pygame.Surface:
         """Dynamically builds a 64x64 surface based on the 9-node neighborhood."""

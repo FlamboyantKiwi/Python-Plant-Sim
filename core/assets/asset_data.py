@@ -180,7 +180,6 @@ GAME_ENTITIES = {
 } 
 
 # ============ Items ============ #
-
 FONT_CONFIG = {
     FontType.HUD:   (HUD_FONT_SIZE, HUD_FONT_BOLD),
     FontType.SLOT:  (SLOT_FONT_SIZE, SLOT_FONT_BOLD),
@@ -274,7 +273,7 @@ class MarchingLayout:
         variants = self.mapping.get(mask, self.mapping.get(fallback_mask, [(0, 0, 0)]))
         return random.choice(variants)
 
-GRASS_LAYOUT = MarchingLayout({
+LAYOUT = MarchingLayout({
     # 1-Sided Corners
     1: (2, 2),  
     2: (2, 0),  
@@ -282,47 +281,50 @@ GRASS_LAYOUT = MarchingLayout({
     8: (0, 0),
     
     # 2-Sided Adjacent Corners
-    3: [(2, 1, 0), (2, 8, 0), (2, 9, 0)],
-    5: [(1, 2, 0), (2, 8, 90), (2, 9, 90)],
-    10: [(1, 0, 0), (1, 8, 90), (1, 9, 90), (0, 5, 0)],
-    12: [(0, 1, 0), (1, 8, 0), (1, 9, 0), (0, 5, -90)],
+    3: [(2, 1, 0), (1, 8, 0), (1, 9, 0)],
+    5: [(1, 2, 0), (1, 8, 90), (1, 9, 90)],
+    10: [(1, 0, 0), (0, 8, 90), (0, 9, 90), (0, 5, 0)],
+    12: [(0, 1, 0), (0, 8, 0), (0, 9, 0), (0, 5, -90)],
     
     # Negative Mappings
     14: (1, 4), 13: (1, 3), 11: (0, 4), 7: (0, 3),
     
     # Diagonal Mappings
-    9: [(0, 7, 0), (0, 8, 0), (1, 6, 0)],
-    6: [(0, 6, 0), (0, 9, 0), (1, 7, 0)],
+    9: [(0, 7, 0), (2, 8, 0), (1, 6, 0)],
+    6: [(0, 6, 0), (2, 9, 0), (1, 7, 0)],
     
     # All / Nothing
     15: (1, 1), 
     0: (2, 3),  
 })
 
-DIRT_LAYOUT = MarchingLayout({
-    # 1-Sided Corners
-    1: (2, 2),  
-    2: (2, 0),  
-    4: (0, 2),  
-    8: (0, 0),
+# Not Used Yet! - guessed locations
+COBBLE_LAYOUT = MarchingLayout({
+    # 1. Standard structural tiles (First 5 columns)
+    1:  (2, 2), # Bottom-Right Corner
+    2:  (2, 0), # Bottom-Left Corner
+    4:  (0, 2), # Top-Right Corner
+    8:  (0, 0), # Top-Left Corner
+    15: (1, 1), # Solid Center
+    0:  (2, 3), # Empty
     
-    # 2-Sided Adjacent Corners (| Shapes)
-    3: [(2, 1, 0), (1, 9, 0), (1, 8, 0)], 
-    5: [(1, 2, 0), (1, 9, 90), (1, 8, 90)], 
-    10: [(1, 0, 0), (0, 9, 90), (0, 8, 90), (0, 5, 0)], 
-    12: [(0, 1, 0), (0, 9, 0), (0, 8, 0), (0, 5, -90)], 
+    # 2. Edges with Variations
+    # Mask 10 (Left Edge) + Variations from Col 6 (Index 5)
+    10: [(1, 0), (0, 5), (1, 5), (2, 5), (3, 5)], 
     
-    # Negative Mappings (L Shapes)
-    14: (1, 4), 
-    13: (1, 3), 
-    11: (0, 4), 
-    7: (0, 3),
-    
-    # Diagonal Mappings
-    9: [(0, 7, 0), (1, 6, 0)], 
-    6: [(0, 6, 0), (1, 7, 0)], 
-    
-    # All / Nothing
-    15: (1, 1), 
-    0: (2, 3),
+    # Mask 5 (Right Edge) + Variations from Col 7 (Index 6)
+    5:  [(1, 2), (0, 6), (1, 6), (2, 6), (3, 5)],
+
+    # Mask 12 (Top Edge) + Variations from Col 8 (Index 7, Row 1)
+    12: [(0, 1), (0, 7)],
+
+    # Mask 3 (Bottom Edge) + Variations from Col 10 (Index 9, Row 3)
+    3:  [(2, 1), (2, 9)],
+
+    # 3. Special "Full" Variations (Mask 15) from Col 9 (Index 8)
+    # This adds variety to your solid inner tiles
+    15: [(1, 1), (0, 8), (1, 8), (2, 8)],
+
+    # 4. Negative Mappings (L-Shapes)
+    14: (1, 4), 13: (1, 3), 11: (0, 4), 7: (0, 3),
 })

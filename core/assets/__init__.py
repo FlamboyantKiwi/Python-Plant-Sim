@@ -26,7 +26,13 @@ class AssetLoader:
         # Create all sub-groups
         self.colours = ColourGroup(self)
         self.text = TextGroup(self)
-        self.tiles = TileGroup(self, main="exterior", details="ground_grass_details")
+        self.tiles = TileGroup(
+            self, 
+            grass_a="tiles/grass_a", 
+            grass_b="tiles/grass_b", 
+            dirt="tiles/dirt",
+            details="ground_grass_details"
+        )
         self.tools = ToolGroup(self, main="Tools_All")
         self.plants = PlantGroup(self, main="Plants")
         self.fruits = FruitGroup(self, main="Supplies")
