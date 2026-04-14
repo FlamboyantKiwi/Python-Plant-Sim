@@ -16,14 +16,16 @@ class EntityState(Enum):
 
 class Direction(Enum):
     DOWN = "Down"
-    RIGHT = "Right"
-    LEFT = "Left"
     UP = "Up"
-DOWN, RIGHT, LEFT, UP = Direction.DOWN, Direction.RIGHT, Direction.LEFT, Direction.UP
+    LEFT = "Left"
+    RIGHT = "Right"
+    
+DOWN, UP, LEFT, RIGHT= Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT
+STANDARD_DIRECTIONS = [DOWN, UP, LEFT, RIGHT]
 
 class EntityCategory(str, Enum):
     """Maps directly to the root asset folders for animated entities."""
-    PLAYER = "PLAYER"
+    PLAYER = "Player"
     FARM_ANIMALS = "Farm_Animals"
     NPC = "NPCs"
 

@@ -22,7 +22,8 @@ class EntityGroup(SpriteGroup):
             self.storage[category] = {}
             for name in config.sheets:
                 self.storage[category][name] = {}
-                path = self.manager.get_asset_path(f"{name}.png", folder=config.folder)
+                folder_name = category.value if isinstance(category, Enum) else category
+                path = self.manager.get_asset_path(f"{name}.png", folder=folder_name)
                 sheet = SpriteSheet(path)
                 
                 for state, anim_grid in config.animations.items():
@@ -31,10 +32,13 @@ class EntityGroup(SpriteGroup):
                     for direction, rect in anim_grid.items():
                         d_key = direction.value if isinstance(direction, Enum) else direction
                         frames = []
-                        cols, rows = rect.w // 32, rect.h // 32
+                        f_size = config.frame_size 
+                        cols, rows = rect.w // f_size, rect.h // f_size
                         for r in range(rows):
                             for c in range(cols):
-                                frames.append(sheet.get_image(rect.x + (c*32), rect.y + (r*32), 32, 32, (64, 64)))
+                               frames.append(sheet.get_image(
+                                    rect.x + (c * f_size), rect.y + (r * f_size), 
+                                    f_size, f_size, (64, 64)))
                         self.storage[category][name][s_key][d_key] = frames
 
     def get_sprite(self, cat: EntityCategory, name: EntityType, state: EntityState, direction: Direction, frame: int) -> pygame.Surface | None:

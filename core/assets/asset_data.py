@@ -1,4 +1,4 @@
-from core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, CropVisualData, UP, LEFT, RIGHT, DOWN
+from core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, CropVisualData, STANDARD_DIRECTIONS, UP, LEFT, RIGHT, DOWN
 from core.types.generated_enums import PlayerType, FarmAnimalType
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
@@ -162,38 +162,22 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
 }
 
 # ============ Entities (Player, Animals) ============ #
-STANDARD_DIRECTIONS = [DOWN, UP, LEFT, RIGHT]
 GAME_ENTITIES = {
-    "PLAYER": EntityConfig(
-    folder="Player",
+    "Player": EntityConfig(
     sheets=[p.value for p in PlayerType],
     animations={
-            # WALK: Starts at Y=0. 
-            # 4 frames wide (128px), 4 rows tall (128px).
-            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), STANDARD_DIRECTIONS),
-            
-            # IDLE: Starts at Y=128 (right below Walk). 
-            # 1 frame wide (32px), 4 rows tall (128px).
-            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 32, 128), STANDARD_DIRECTIONS),
-            
-            # RUN: Starts at Y=256 (right below Idle). 
-            # 8 frames wide (256px), 4 rows tall (128px).
-            EntityState.RUN:    AnimationGrid(SpriteRect(0, 256, 256, 128), STANDARD_DIRECTIONS)
-        }
+            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128)),
+            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 32, 128)),
+            EntityState.RUN:    AnimationGrid(SpriteRect(0, 256, 256, 128))},
+            frame_size=32
     ),
-    "ANIMAL": EntityConfig(
-    folder="Farm_Animals",
+    "Farm_Animals": EntityConfig(
     sheets=[a.value for a in FarmAnimalType],
     animations={
-            # WALK: Starts at Y=0. 
-            # 6 frames wide (384px), 4 rows tall (256px).
-            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 384, 256), STANDARD_DIRECTIONS),
-            
-            # IDLE: Starts at Y=256 (right below Walk). 
-            # 4 frames wide (256px), 4 rows tall (256px).
-            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 256, 256, 256), STANDARD_DIRECTIONS)}
-    )
-}
+            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 384, 256)),
+            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 256, 256, 256))},
+    frame_size = 64)
+} 
 
 # ============ Items ============ #
 

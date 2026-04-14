@@ -20,9 +20,9 @@ class CropVisualData:
 
 class EntityConfig(NamedTuple):
     """Blueprint for registering a new entity type."""
-    folder: str         # Folder name (e.g. "Player")
     sheets: list[str]   # List of filenames (e.g. ["Fox", "Cat"])
     animations: dict[EntityState, AnimationGrid]
+    frame_size: int = 32
     def get_animation(self, state:EntityState) -> dict[Direction, SpriteRect]:
         return self.animations.get(state, {})
 

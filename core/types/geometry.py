@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from .enums import Direction
+from .enums import Direction, STANDARD_DIRECTIONS
 
 @dataclass(frozen=True)
 class SpriteRect:
@@ -29,7 +29,7 @@ class RectPair:
 class AnimationGrid(dict):
     """ A dictionary-like object that auto-slices a SpriteRect into directions.
         It behaves exactly like dict[Direction, SpriteRect]."""
-    def __init__(self, rect: SpriteRect, directions: list[Direction]|None = None, is_vertical: bool = True):
+    def __init__(self, rect: SpriteRect, directions: list[Direction] = STANDARD_DIRECTIONS, is_vertical: bool = True):
         super().__init__() # Initialize the underlying dict
         if directions is None:
             for d in Direction:
