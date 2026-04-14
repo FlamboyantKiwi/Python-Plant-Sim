@@ -6,13 +6,7 @@ from typing import TYPE_CHECKING
 from settings import WIDTH, HEIGHT, FPS
 from core.assets import ASSETS
 from core.types import StateStack, StateID
-from core.states import (
-    GameState, 
-    MenuState, 
-    PlayingState, 
-    ShopState, 
-    CharacterSelectState, STATE_REGISTRY
-)
+from core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
 
 if TYPE_CHECKING:
     from core.types import ShopData

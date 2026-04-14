@@ -162,23 +162,36 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
 }
 
 # ============ Entities (Player, Animals) ============ #
+STANDARD_DIRECTIONS = [DOWN, UP, LEFT, RIGHT]
 GAME_ENTITIES = {
     "PLAYER": EntityConfig(
     folder="Player",
     sheets=[p.value for p in PlayerType],
     animations={
-        # WALK/RUN: Vertical Split
-        EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, RIGHT, LEFT, UP]),
-        EntityState.RUN:    AnimationGrid(SpriteRect(0, 160, 128, 256), [DOWN, LEFT, RIGHT, UP]),
-        # IDLE: Horizontal Split
-        EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 128, 32), [DOWN, RIGHT, UP, LEFT], is_vertical=False)}
+            # WALK: Starts at Y=0. 
+            # 4 frames wide (128px), 4 rows tall (128px).
+            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), STANDARD_DIRECTIONS),
+            
+            # IDLE: Starts at Y=128 (right below Walk). 
+            # 1 frame wide (32px), 4 rows tall (128px).
+            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 32, 128), STANDARD_DIRECTIONS),
+            
+            # RUN: Starts at Y=256 (right below Idle). 
+            # 8 frames wide (256px), 4 rows tall (128px).
+            EntityState.RUN:    AnimationGrid(SpriteRect(0, 256, 256, 128), STANDARD_DIRECTIONS)
+        }
     ),
     "ANIMAL": EntityConfig(
     folder="Farm_Animals",
     sheets=[a.value for a in FarmAnimalType],
     animations={
-        EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128), [DOWN, UP, LEFT, RIGHT]),
-        EntityState.IDLE:   AnimationGrid(SpriteRect(0, 128, 128, 128), [DOWN, UP, LEFT, RIGHT])}
+            # WALK: Starts at Y=0. 
+            # 6 frames wide (384px), 4 rows tall (256px).
+            EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 384, 256), STANDARD_DIRECTIONS),
+            
+            # IDLE: Starts at Y=256 (right below Walk). 
+            # 4 frames wide (256px), 4 rows tall (256px).
+            EntityState.IDLE:   AnimationGrid(SpriteRect(0, 256, 256, 256), STANDARD_DIRECTIONS)}
     )
 }
 
