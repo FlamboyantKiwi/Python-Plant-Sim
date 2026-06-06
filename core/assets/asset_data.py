@@ -179,12 +179,6 @@ GAME_ENTITIES = {
     frame_size = 64)
 } 
 
-# ============ Items ============ #
-FONT_CONFIG = {
-    FontType.HUD:   (HUD_FONT_SIZE, HUD_FONT_BOLD),
-    FontType.SLOT:  (SLOT_FONT_SIZE, SLOT_FONT_BOLD),
-}
-
 TEXT = {
     "default": TextConfig(),
     "HUD": TextConfig(size=20, bold=True),
@@ -192,6 +186,7 @@ TEXT = {
     "SLOT": TextConfig(size=14, colour="GOLD"),
     "TITLE": TextConfig(size=80, bold=True),
     "MenuTitle": TextConfig(size=60, bold=True, colour=("MenuTitle")),
+    "MenuTitleShadow": TextConfig(size=60, bold=True, colour=("MenuTitleShadow")),
 }
 
 # --- COLOUR PALETTE ---
@@ -229,6 +224,7 @@ COLOURS: dict[str, str] = {
     # Menu
     "MenuBG":         "#1E1E1E", # Dark Grey
     "MenuTitle":      "#FFD700", # Gold
+    "MenuTitleShadow":"#AB4308", # Gold
     
     # Button
     "ButtonBG":       "#282828", # Dark Grey Background
@@ -238,6 +234,10 @@ COLOURS: dict[str, str] = {
    
     "HOVER_COLOUR":   "#FFFFFF",
     "ACTIVE_COLOUR":  "#FFD700",
+    
+    #Transparent colours
+    "OVERLAY": "#00000080", # 50% transparent overlay
+    "NONE": "#00000000", # fully transparent
 }
 
 

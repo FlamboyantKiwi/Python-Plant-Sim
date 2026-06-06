@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING, Callable
 import pygame
 from core.ui_utils import align_rect, get_grid_pos 
 from core.assets import ASSETS
-from core.types import TextConfig
-
 
 if TYPE_CHECKING:
     from custom_types import Pos, Item, Any
@@ -64,11 +62,7 @@ class TextBox(UIElement):
         self._text = str(text)
         self.text_getter = text_getter
         
-        from core.assets.asset_data import TEXT 
-        self.config =TEXT.get(config, TEXT.get("default"))
-        if self.config is None:
-            print(f"Error with text config: {config}")
-            self.config = TextConfig()
+        self.config = ASSETS.text.get_config(config)
 
         # Initial Render
         self.text_surf: pygame.Surface | None = None
@@ -124,6 +118,60 @@ class TextBox(UIElement):
         super().draw(screen)
 
         #draw text on top
+        if self.text_surf and self.text_rect:
+            screen.blit(self.text_surf, self.text_rect)
+
+class BubbleText(TextBox):
+    def __init__(self, rect: pygame.Rect, text: str = " ",
+                 text_getter: Callable[[], Any] | None = None, 
+                 config: str = "default", shadow_config: str = "shadow_default", 
+                 shadow_offset: tuple[int, int] = (2, 2), align: str = "center", 
+                 bg_colour: str | None = None, border_colour: str | None = None) -> None:
+        
+        # Set up shadow properties 
+        self.shadow_offset = shadow_offset
+        self.shadow_surf: pygame.Surface | None = None
+        self.shadow_rect: pygame.Rect | None = None
+        
+        # Fetch shadow config
+        self.shadow_config_data = ASSETS.text.get_config(shadow_config)
+        
+        # Call parent initialization (will call _render_text)
+        super().__init__(rect, text, text_getter, config, align, bg_colour, border_colour)
+
+    def _render_text(self) -> None:
+        """Generates both the main text surface and the shadow surface."""
+        # Render the standard text and handle the alignment logic using the parent class
+        super()._render_text()
+
+        # If there's no text to render (handled by parent), clear shadow and exit
+        if not self._text.strip() or self.shadow_config_data is None:
+            self.shadow_surf = None
+            return
+
+        # Render the shadow text
+        self.shadow_surf = self.shadow_config_data.render(self._text)
+        self.shadow_rect = self.shadow_surf.get_rect()
+        
+        # Align the shadow exactly with the main text, but shifted by the offset
+        if self.text_rect:
+            self.shadow_rect.centerx = self.text_rect.centerx + self.shadow_offset[0]
+            self.shadow_rect.centery = self.text_rect.centery + self.shadow_offset[1]
+
+    def draw(self, screen: pygame.Surface) -> None:
+        """Custom draw method to ensure the shadow is rendered behind the main text."""
+        if not self.is_visible: 
+            return
+
+        # Draw the Background/Border using the grandparent (UIElement) method.
+        # We bypass TextBox.draw() here so the main text doesn't draw before the shadow
+        super(TextBox, self).draw(screen)
+
+        # Draw the shadow text first
+        if self.shadow_surf and self.shadow_rect:
+            screen.blit(self.shadow_surf, self.shadow_rect)
+
+        # Draw the main text on top
         if self.text_surf and self.text_rect:
             screen.blit(self.text_surf, self.text_rect)
 
@@ -229,15 +277,25 @@ class Button(StateElement):
         """ Creates a vertical list of buttons centered at center_pos.
         Style_kwargs can include bg_colour, border_colour, hover_colour, active_colour, thickness, etc."""
         buttons = []
-        start_x, start_y = center_pos
+        center_x, center_y = center_pos
         
         # Convert dict to list of tuples if necessary
-        items = data.items() if isinstance(data, dict) else data
+        items = list(data.items()) if isinstance(data, dict) else data
+        total_items = len(items)
+
+        if total_items == 0:
+            return buttons
+
+        # Calculate the starting Y position so the whole stack is centered
+        # The total distance from the center of the first button to the center of the last
+        total_stack_height = (total_items - 1) * gap
+        start_y = center_y - (total_stack_height // 2)
 
         for i, (text, func) in enumerate(items):
             rect = pygame.Rect(0, 0, width, height)
-            # Offset each button by the gap
-            rect.center = (start_x, start_y + (i * gap))
+            
+            # Offset each button from the newly calculated true start position
+            rect.center = (center_x, start_y + (i * gap))
             
             # Create the button using our existing bordered factory
             btn = cls.create_bordered_button(rect=rect, text=text, function=func, **style_kwargs)

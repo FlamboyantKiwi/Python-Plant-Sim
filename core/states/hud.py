@@ -15,10 +15,11 @@ if TYPE_CHECKING:
 class HUD(BaseUIState):
     state_id = StateID.HUD
     def __init__(self, game:Game, player:Player):
-        super().__init__(game)
+        super().__init__(game, back_button=False)
         self.player = player
         self.transparent = True
         self.suppress_update = False
+        self.key_binds[pygame.K_ESCAPE] = self.escape
         self.ui_group.add(
             Button.create_bordered_button(
                 rect=SHOP_BUTTON, 
@@ -32,6 +33,8 @@ class HUD(BaseUIState):
                 rect=MONEY_RECT,
                 text_getter=lambda: f"Money: {self.player.money}",
                 config="HUD"))
+    def escape(self):
+        print("Add pause menu")
     def player_open_shop(self):
         """Helper to trigger the shop transition through the game mediator."""
         from core.assets import ASSETS

@@ -3,12 +3,10 @@ from typing import TYPE_CHECKING, Any
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
-from ui.ui_elements import Button
+from ui.ui_elements import Button, BubbleText
 from ui.InventoryUI import ShopMenu
 from settings import WIDTH, HEIGHT
-from core.ui_utils import draw_text
-from core.assets import ASSETS
-from core.types import StateID
+from core.types import StateID, PlayerType
 from .base import BaseUIState
 
 # Type-Only Imports (Breaks circular loops)
@@ -20,19 +18,13 @@ if TYPE_CHECKING:
 class ShopState(BaseUIState):
     state_id = StateID.SHOP
     def __init__(self, game:Game, player: Player, shop_data: ShopData):
-        super().__init__(game)
+        super().__init__(game, "OVERLAY", back_button=False)
         self.player = player
-       
-        self.key_binds = {
-            pygame.K_ESCAPE: self.close_menu,
-            pygame.K_p: self.close_menu
-        }
+        self.key_binds[pygame.K_p] = self.game.pop
+        self.key_binds[pygame.K_ESCAPE] = self.game.pop
 
         self.shop_menu = ShopMenu(self.player, data=shop_data) 
         self.shop_menu.is_open = True
-
-        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        self.overlay.fill((0, 0, 0, 128)) # Black with 50% alpha
     
     def update(self, dt, is_paused: bool = False) -> None:
         # Update Buttons
@@ -42,12 +34,10 @@ class ShopState(BaseUIState):
         self.shop_menu.update(pygame.mouse.get_pos())
 
     def draw(self, screen: pygame.Surface) -> None:
-        # Dim the entire screen (including the HUD below us)
-        screen.blit(self.overlay, (0, 0))
-        
-        # Draw the bright shop menu on top
+        # Draw the bright shop menu on top of default overlay
+        super().draw(screen) # Draw BG+Buttons
         self.shop_menu.draw(screen)
-        super().draw(screen) # Draw Buttons
+        
 
     def on_left_click(self, pos: Pos) -> None:
         # Check if we clicked inside the shop menu (slots/buying)
@@ -56,17 +46,14 @@ class ShopState(BaseUIState):
         
         # Clicked OUTSIDE the shop menu -> Close Shop
         else:
-            self.close_menu()
+            self.game.pop()
     def on_right_click(self, pos: Pos) -> None:
-        self.close_menu()
-    def close_menu(self, *args:Any) -> None:
         self.game.pop()
 
 class MenuState(BaseUIState):
     state_id = StateID.MENU
     def __init__(self, game: Game):
-        super().__init__(game)
-        self.transparent = False     
+        super().__init__(game, "MenuBG", back_button=False)   
         self.suppress_update = True
         self.menu_actions = {
             "New Game": lambda: self.game.open_state(StateID.CHAR_SELECT),
@@ -74,76 +61,59 @@ class MenuState(BaseUIState):
             #"Credits": self.game.open_credits,
             "Quit": self.game.quit
         }
-        self.create_buttons()
-    
-    def create_buttons(self)-> None:
-        # Calculate Layout
-        btns = Button.create_vertical_stack(center_pos=(WIDTH // 2, HEIGHT // 2),
-            data=self.menu_actions,gap=60)
+        btns = Button.create_vertical_stack(
+            center_pos=(WIDTH // 2, HEIGHT // 2),
+            data=self.menu_actions,gap=70,
+            width=220,
+            height=55,
+            thickness=3)
         self.ui_group.add(*btns)
-
-    def draw(self, screen: pygame.Surface) -> None:
-        screen.fill(ASSETS.colour("MenuBG"))
-
-        draw_text(screen, "Python Plant Sim", "TITLE", x=WIDTH//2, y=HEIGHT//4, 
-                  colour="MenuTitle", align="center")
         
-        super().draw(screen)
+        title_rect = pygame.Rect(0, 0, 600, 100) 
+        title_rect.center = (WIDTH // 2, HEIGHT // 4)   
+        self.ui_group.add(BubbleText(
+            rect=title_rect,
+            text="Python Plant Sim",
+            config="MenuTitle",
+            shadow_config="MenuTitleShadow", 
+            shadow_offset=(4, 4),
+            align="center"
+        ))
 
 class CharacterSelectState(BaseUIState):
     state_id = StateID.CHAR_SELECT
     def __init__(self, game):
-        super().__init__(game)
+        super().__init__(game, "MenuBG", back_button=True)
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
-        # Create a dimming overlay for the background
-        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        self.overlay.fill((0, 0, 0, 150)) # Slightly darker than the shop
-        self.create_ui()
-
-    def create_ui(self):
-        # We can iterate through our PlayerType Enum to auto-generate buttons!
-        from core.types import PlayerType
-        
+     
         char_data = [
             (p.value, lambda t=p: self.select_character(t)) 
             for p in PlayerType
         ]
 
         btns = Button.create_vertical_stack(
-            center_pos=(WIDTH // 2, HEIGHT // 3),
+            center_pos=(WIDTH // 2, HEIGHT // 2),
             data=char_data,
-            width=250 # Custom width for names
+            width=250 
         )
         
         self.ui_group.add(*btns)
         self.add_back_button()
-
+        
+        title_rect = pygame.Rect(0, 0, 600, 100) 
+        title_rect.center = (WIDTH // 2, 100)   
+        self.ui_group.add(BubbleText(
+            rect=title_rect,
+            text="Select Character",
+            config="MenuTitle",
+            shadow_config="MenuTitleShadow", 
+            shadow_offset=(4, 4),
+            align="center"
+        ))
+        
     def select_character(self, character_type: PlayerType):
         """Passes the chosen character to the Game mediator to start the session."""
         print(f"Character selected: {character_type}")
         self.game.start_new_game(character_type)
 
-    def draw(self, screen: pygame.Surface) -> None:
-        # The Dimming Overlay (Middle)
-        screen.blit(self.overlay, (0, 0))
-        
-        draw_text(screen, "Select Character", "TITLE", WIDTH//2, 100, colour="MenuTitle")
-        super().draw(screen)
 
-"""
-
-class CharacterSelectState(BaseUIState):
-    def __init__(self, game):
-        super().__init__(game)
-        self.ui_elements = self.create_buttons()
-        
-    # --- Button Actions ---
-    def start_game_with_character(self, character_type):
-        print(f"Selected: {character_type}")
-        # Pass the chosen character type into the PlayingState
-        self.game.change(PlayingState(self.game, character_type))
-        
-    def go_back(self):
-        # Return to main menu
-        self.game.change(MenuState(self.game))
-"""

@@ -55,6 +55,9 @@ class ItemType(Enum):
     # --- Resources ---
     WOOD         = ("misc", "none")
     STONE        = ("misc", "none")
+    COPPER       = ("misc", "none")
+    IRON         = ("misc", "none")
+    GOLD         = ("misc", "none")
     GENERIC      = ("misc", "none")
 
     def __init__(self, category: str, use_id: str):

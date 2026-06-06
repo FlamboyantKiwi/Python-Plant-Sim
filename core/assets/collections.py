@@ -15,7 +15,6 @@ class TextGroup(ConfigGroup):
         self.storage.update(TEXT)
         self.default = self.storage.get("default", TextConfig())
 
-
     def get_config(self, key: str) ->TextConfig:
         return self.get_val(key)
    

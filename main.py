@@ -73,7 +73,7 @@ class Game:
         instance = state_class(self, *args, **kwargs)
         
         # Layering Logic
-        if instance.transparent:
+        if instance.back_button:
             self.stack.push(instance)
         else:
             self.stack.change(instance)

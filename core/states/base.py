@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Callable, Any, Type
 import pygame
 from groups.ui_group import UIGroup
 from settings import WIDTH, HEIGHT
+from core.assets import ASSETS
 from ui.ui_elements import Button
 from core.types.enums import StateID
 
@@ -20,6 +21,7 @@ class GameState(ABC):
         self.game = game
         # Flags control how the Game stack behaves
         self.transparent: bool = False  # If True, the state below will draw first
+        self.back_button:bool = False
         self.suppress_update: bool = True # If True, the state below freezes logic
         # Event Mapping Dict
         self.key_binds: dict[int, Callable] = {} # e.g. pygame.K_ESCAPE: self.func
@@ -60,17 +62,32 @@ class GameState(ABC):
 class BaseUIState(GameState):
     """"Parent class managing a list of UI elements via the UIElementProtocol.
     (Menu, Shop, Inventory, Credits, etc)."""
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, bg_colour:str= "NONE", back_button=True):
         super().__init__(game)
-        self.transparent = True     
         self.suppress_update = False
         self.ui_group = UIGroup()
+        #pre-render background 
+        self.colour = ASSETS.colours.get_colour(bg_colour)
+        self.draw_bg = self.colour.a > 0       # Skip completely if 0
+        self.transparent = self.colour.a < 255  # Blit if translucent, Fill if solid
+        self.back_button = back_button
+        if self.back_button:
+            self.add_back_button()
+        # 3. Only pre-render the surface if we actually need a translucent overlay
+        if self.draw_bg and self.transparent:
+            self.background = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            self.background.fill(self.colour) # Black with 50% alpha
 
     def update(self, dt:float, is_paused: bool = False) -> None:
         mouse_pos = pygame.mouse.get_pos()
         self.ui_group.update(mouse_pos)
 
     def draw(self, screen: pygame.Surface) -> None:
+        if self.draw_bg:# Only process the background if it is visible
+            if self.transparent:
+                screen.blit(self.background, (0, 0)) # Alpha blending math
+            else:
+                screen.fill(self.colour)    # Fast hardware overwrite
         self.ui_group.draw(screen)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
@@ -79,18 +96,14 @@ class BaseUIState(GameState):
             return True
         return super().handle_event(event)
     
-    def add_back_button(self, x: int | None = None, y: int | None = None, 
+    def add_back_button(self, x: int = 100, y: int = HEIGHT-100, 
                        width: int = 200, height: int = 50, text: str = "Back"):
         """Adds a back button. Defaults to bottom-center if x/y are None."""
-        
-        # 1. Default Logic: Center it horizontally, 50px from the bottom
-        final_x = x if x is not None else (WIDTH // 2) - 100
-        final_y = y if y is not None else (HEIGHT - 100)
 
         rect = pygame.Rect(0, 0, width, height)
-        rect.center = (final_x, final_y)
+        rect.center = (x, y)
 
-        # 2. Create the button and link it to the stack pop
+        # Create the button and link it to the stack pop
         btn = Button.create_bordered_button(
             rect=rect, 
             text=text, 
@@ -99,5 +112,5 @@ class BaseUIState(GameState):
         
         self.ui_group.add(btn)
 
-        # 3. Always bind ESC to 'Back' for a better player experience
+        # Always bind ESC to 'Back' for a better player experience
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
