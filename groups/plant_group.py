@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 from entities.plant import Plant
 
 if TYPE_CHECKING:
-    from custom_types import Num
+    from custom_types import Any, Num
 
 
 
@@ -17,14 +17,21 @@ class PlantGroup(pygame.sprite.Group):
         """Returns a strictly-typed list of Plant objects."""
         return cast(list[Plant], self.sprites())
 
-    def add(self, *sprites:pygame.sprite.Sprite) -> None:
-        """Overridden to ensure only Plant instances are added."""
-        for sprite in sprites:
-            if isinstance(sprite, Plant):
-                super().add(sprite)
+    def add(self, *sprites: Any) -> None:
+        """
+        Overridden to ensure only Plant instances are added.
+        Handles single items, iterables, and groups natively.
+        """
+        for item in sprites:
+            if isinstance(item, Plant):
+                super().add(item)
+            elif isinstance(item, (pygame.sprite.AbstractGroup, list, tuple)) or hasattr(item, "__iter__"):
+                # It's a collection! Recursively unfold it through this same check
+                for sprite in item:
+                    self.add(sprite)
             else:
-                raise TypeError(f"PlantGroup only accepts 'Plant' objects, not {type(sprite).__name__}")
-    
+                raise TypeError(f"PlantGroup only accepts 'Plant' objects, not {type(item).__name__}")
+            
     def grow_all(self, amount: Num) -> None:
         """Ticks the growth logic for every plant in this group."""
         for plant in self.plants:

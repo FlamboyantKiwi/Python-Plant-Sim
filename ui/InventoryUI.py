@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import pygame
-from ui.ui_elements import UIElement, TextBox, Slot
+from ui.ui_factory import UIFactory
+from ui.ui_elements import UIElement, TextBox
 from entities.items import Item, create_item
 from settings import SHOP_MENU
-from core.assets import ASSETS
+
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
@@ -71,11 +74,15 @@ class InventoryUI(UIElement):
         self.data = inventory_data # Link to the pure data
         self.slots = []
         
-        # 1. Setup Slots using Slots factory Method
-        self.slots = Slot.create_grid(
-            max_size=self.data.max_size, columns=columns,
+        # Setup Slots using UIFactory and wrappers
+        self.slots = UIFactory.create_grid(
+            factory=UIFactory.bordered_slot,
             start_pos=(self.rect.x + padding, self.rect.y + padding),
-            slot_size=slot_size, padding=padding)
+            columns=columns,
+            item_size=(slot_size, slot_size),
+            gap=(padding, padding),
+            data=self.data.max_size
+        )
         
         #Setup tooltip
         self.tooltip = TextBox(
@@ -135,7 +142,7 @@ class ShopMenu:
         self.rect = SHOP_MENU
 
         # Background visual
-        self.background = UIElement(self.rect, image_file="SHOP_MENU")
+        self.background = UIFactory.image_element(self.rect, "SHOP_MENU")
 
         # The Pure Data
         self.inventory_data = Inventory(max_size=max_size)

@@ -22,22 +22,29 @@ class AnimationController:
         # Settings
         self.speed: float = speed
 
+    def _get_state_speed(self, state: EntityState) -> float:
+        """Helper to explicitly map out animation pacing configurations."""
+        match state:
+            case EntityState.IDLE: 
+                return 0.4
+            case EntityState.RUN:  
+                return 0.1
+            case _:                
+                return self.speed
+
     def get_frame(self, state:EntityState, direction:Direction, dt:Num) -> pygame.Surface | None:
         """ Handles the timer logic and fetches the image from AssetLoader."""
         # Update Timer
         self.current_time += dt
+        frame_duration = self._get_state_speed(state)
         
-        # Adjust speed for different states if needed
-        current_speed = self.speed
-        if state == EntityState.IDLE: 
-            current_speed = 0.4
-        elif state == EntityState.RUN: 
-            current_speed = 0.1
-
-        # Advance Frame
-        if self.current_time >= current_speed:
-            self.current_time = 0
-            self.frame_index += 1
+        # Handle frame switching
+        if self.current_time >= frame_duration:
+            # Using floor division/modulo allows us to catch up safely 
+            # if a major frame-drop occurs in the main engine loop
+            frames_to_advance = int(self.current_time // frame_duration)
+            self.frame_index += frames_to_advance
+            self.current_time %= frame_duration
             
         # Ask AssetLoader for the specific frame
         # We pass frame_index as the "tick"

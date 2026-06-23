@@ -6,7 +6,7 @@ import pygame
 from groups.ui_group import UIGroup
 from settings import WIDTH, HEIGHT
 from core.assets import ASSETS
-from ui.ui_elements import Button
+from ui.ui_factory import UIFactory
 from core.types.enums import StateID
 
 # Type-Only Imports (Breaks circular loops)
@@ -104,10 +104,10 @@ class BaseUIState(GameState):
         rect.center = (x, y)
 
         # Create the button and link it to the stack pop
-        btn = Button.create_bordered_button(
+        btn = UIFactory.bordered_text_button(
             rect=rect, 
             text=text, 
-            function=self.game.pop # Use the alias we made!
+            function=self.game.pop
         )
         
         self.ui_group.add(btn)

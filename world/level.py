@@ -2,7 +2,7 @@ from __future__ import annotations
 import random
 import math
 import pygame
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 # Runtime Imports
 from settings import BLOCK_SIZE, DETAIL_CHANCE

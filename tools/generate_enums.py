@@ -53,11 +53,11 @@ def fetch_keys_from_table(cursor: sqlite3.Cursor, table_name: str) -> EnumDefini
     # Auto-generate the docstring based on the table name
     docstring = f"Maps directly to the '{table_name}' table in the gamedata database."
     
-    # 2. Generate Class Name (e.g., 'items' -> 'ItemID')
+    # Generate Class Name (e.g., 'items' -> 'ItemID')
     base_name = table_name.capitalize()
     if base_name.endswith("s"):
         base_name = base_name[:-1] # Remove the plural 's'
-    class_name = f"{base_name}ID"
+    class_name = f"{base_name}ID" # add ID
     
     return EnumDefinition(
         class_name=class_name,
@@ -81,10 +81,10 @@ def scan_directory_for_names(directory_path: str) -> EnumDefinition|None:
             
     folder_name = os.path.basename(directory_path)
     
-    # 1. Generate Docstring
+    # Generate Docstring
     docstring = f"Maps directly to the filenames in the '{folder_name}' directory."
     
-    # 2. Generate Class Name (e.g., 'Farm_Animals' -> 'FarmAnimalType')
+    # Generate Class Name (e.g., 'Farm_Animals' -> 'FarmAnimalType')
     # Replace underscores with spaces, capitalize each word, then remove spaces
     clean_name = folder_name.replace("_", " ").title().replace(" ", "")
     if clean_name.endswith("s"):

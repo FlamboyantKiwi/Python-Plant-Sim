@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
-from ui.ui_elements import Button, BubbleText
+from ui.ui_factory import UIFactory, Button
 from ui.InventoryUI import ShopMenu
 from settings import WIDTH, HEIGHT
 from core.types import StateID, PlayerType
@@ -61,17 +61,20 @@ class MenuState(BaseUIState):
             #"Credits": self.game.open_credits,
             "Quit": self.game.quit
         }
-        btns = Button.create_vertical_stack(
+        btns = UIFactory.create_vertical_stack(
+            factory=UIFactory.bordered_text_button,
             center_pos=(WIDTH // 2, HEIGHT // 2),
-            data=self.menu_actions,gap=70,
-            width=220,
-            height=55,
-            thickness=3)
+            item_size=(220, 55),
+            gap=70,
+            data=[{"text": k, "function": v} for k, v in self.menu_actions.items()],
+            # Shared across all buttons in this specific stack
+            thickness=3 
+        )
         self.ui_group.add(*btns)
         
         title_rect = pygame.Rect(0, 0, 600, 100) 
         title_rect.center = (WIDTH // 2, HEIGHT // 4)   
-        self.ui_group.add(BubbleText(
+        self.ui_group.add(UIFactory.bubble_text(
             rect=title_rect,
             text="Python Plant Sim",
             config="MenuTitle",
@@ -86,15 +89,17 @@ class CharacterSelectState(BaseUIState):
         super().__init__(game, "MenuBG", back_button=True)
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
      
-        char_data = [
-            (p.value, lambda t=p: self.select_character(t)) 
-            for p in PlayerType
-        ]
-
-        btns = Button.create_vertical_stack(
+        char_data = [{
+                "text": p.value, 
+                "function": lambda t=p: self.select_character(t)
+            } for p in PlayerType]
+        
+        btns = UIFactory.create_vertical_stack(
+            factory=UIFactory.bordered_text_button,
             center_pos=(WIDTH // 2, HEIGHT // 2),
-            data=char_data,
-            width=250 
+            item_size=(250, 50), 
+            gap=60,             
+            data=char_data
         )
         
         self.ui_group.add(*btns)
@@ -102,7 +107,7 @@ class CharacterSelectState(BaseUIState):
         
         title_rect = pygame.Rect(0, 0, 600, 100) 
         title_rect.center = (WIDTH // 2, 100)   
-        self.ui_group.add(BubbleText(
+        self.ui_group.add(UIFactory.bubble_text(
             rect=title_rect,
             text="Select Character",
             config="MenuTitle",

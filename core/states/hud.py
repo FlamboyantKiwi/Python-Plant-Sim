@@ -3,7 +3,7 @@ import pygame
 from typing import TYPE_CHECKING
 
 from settings import SHOP_BUTTON, MONEY_RECT
-from ui.ui_elements import Button, TextBox
+from ui.ui_factory import UIFactory, TextBox
 from .base import BaseUIState
 from core.types import StateID
 
@@ -20,14 +20,14 @@ class HUD(BaseUIState):
         self.transparent = True
         self.suppress_update = False
         self.key_binds[pygame.K_ESCAPE] = self.escape
-        self.ui_group.add(
-            Button.create_bordered_button(
-                rect=SHOP_BUTTON, 
-                text="SHOP", 
-                function=self.player_open_shop,
-                bg_colour="ButtonBG",
-                border_colour="ButtonBorder",
-                hover_colour="ButtonHover"))
+        self.ui_group.add(UIFactory.bordered_text_button(
+            rect=SHOP_BUTTON, 
+            text="SHOP", 
+            function=self.player_open_shop,
+            bg_colour="ButtonBG",
+            border_colour="ButtonBorder",
+            hover_colour="ButtonHover"
+        ))
         self.ui_group.add(
             TextBox(
                 rect=MONEY_RECT,
