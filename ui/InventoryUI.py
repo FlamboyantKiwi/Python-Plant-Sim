@@ -7,6 +7,7 @@ from ui.ui_elements import UIElement
 from entities.items import Item, create_item
 from settings import SHOP_MENU
 
+if TYPE_CHECKING:
     from custom_types import Slot
 
 class Inventory:
