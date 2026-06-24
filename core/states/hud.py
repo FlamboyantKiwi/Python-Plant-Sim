@@ -28,11 +28,10 @@ class HUD(BaseUIState):
             border_colour="ButtonBorder",
             hover_colour="ButtonHover"
         ))
-        self.ui_group.add(
-            TextBox(
-                rect=MONEY_RECT,
-                text_getter=lambda: f"Money: {self.player.money}",
-                config="HUD"))
+        self.ui_group.add(UIFactory.bubble_text(
+            rect=MONEY_RECT,
+            text_getter=lambda: f"Money: {self.player.money}",
+            config="HUD"))
     def escape(self):
         print("Add pause menu")
     def player_open_shop(self):

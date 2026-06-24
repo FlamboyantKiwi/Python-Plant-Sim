@@ -192,7 +192,7 @@ TEXT = {
 # --- COLOUR PALETTE ---
 COLOURS: dict[str, str] = {
     # UI & System
-    "DEFAULT":        "#FF00FF", # Magenta for errors
+    "DEFAULT":        "#5D5D5D", 
     "DEBUG":          "#FF00FF",
     "TEXT":           "#FFFFFF",
     "DARK_TEXT":      "#323232",
@@ -202,7 +202,7 @@ COLOURS: dict[str, str] = {
 
     # Player & Inventory
     "PLAYER":         "#0000FF",
-    "SLOT":           "#969696",
+    "SlotBG":           "#969696",
     "INVENTORY_SLOT": "#969696",
     "INV_TEXT":       "#FFFFFF",
     "MONEY":          "#FFD700",

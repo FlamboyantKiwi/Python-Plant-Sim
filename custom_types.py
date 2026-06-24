@@ -20,9 +20,8 @@ if TYPE_CHECKING:
     from core.types import EntityState, Direction, ItemCategory, ToolType, Quality, TextConfig
     # UI
     from ui.InventoryUI import InventoryUI, Inventory
-    from ui.ui_elements import UIElement, Button
+    from ui.ui_elements import UIElement, Button, Slot
     from ui.wrappers import BaseWrapper
-    Element: TypeAlias = UIElement | BaseWrapper
     # Entities
     from entities.items import Item, ToolItem, SeedItem
     from entities.entity import MovingEntity

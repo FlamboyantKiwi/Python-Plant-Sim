@@ -7,11 +7,11 @@ from core.assets import ASSETS
 if TYPE_CHECKING:
     from typing import Any
     from ui.ui_elements import StateElement, TextBox
-    from custom_types import Pos, Element
+    from custom_types import Pos, UIElement
     
 class BaseWrapper:
     """Base class for all UI wrappers. Automatically delegates missing attributes to the target."""
-    def __init__(self, target: Element):
+    def __init__(self, target: UIElement):
         self.target:Any = target
 
     def __getattr__(self, attr: str) -> Any:

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
-from ui.ui_factory import UIFactory, Button
+from ui.ui_factory import UIFactory
 from ui.InventoryUI import ShopMenu
 from settings import WIDTH, HEIGHT
 from core.types import StateID, PlayerType

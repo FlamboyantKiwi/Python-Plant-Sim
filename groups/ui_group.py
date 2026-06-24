@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING, cast
 import pygame
 
 if TYPE_CHECKING:
-    from custom_types import Element, Pos
+    from custom_types import UIElement, Pos
 
 class UIGroup(pygame.sprite.Group):
     """A custom Pygame Group specifically designed to handle dynamic and wrapped UI elements."""
 
     @property
-    def elements(self) -> list[Element]:
+    def elements(self) -> list[UIElement]:
         """Returns a strictly-typed list of UI elements or wrappers for Pylance."""
         # We cast the entire list at once, using the string forward-reference!
-        return cast("list[Element]", self.sprites())
+        return cast("list[UIElement]", self.sprites())
     
     def update(self, mouse_pos: Pos | None = None) -> None:
         """Broadcasts the current mouse position to all elements to drive hover and state logic."""

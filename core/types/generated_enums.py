@@ -7,7 +7,7 @@
 from enum import Enum
 
 class ItemID(str, Enum):
-    """Maps directly to the 'items' table in the gamedata database."""
+    """Maps directly to the 'items' table in the database."""
     APPLE = "apple"
     APPLE_SEEDS = "apple_seeds"
     BANANA = "banana"
@@ -110,11 +110,11 @@ class ItemID(str, Enum):
     WOOD_WATERING_CAN = "wood_watering_can"
 
 class ShopID(str, Enum):
-    """Maps directly to the 'shops' table in the gamedata database."""
+    """Maps directly to the 'shops' table in the database."""
     GENERAL_STORE = "general_store"
 
 class PlayerType(str, Enum):
-    """Maps directly to the filenames in the 'Player' directory."""
+    """Maps directly to filenames inside the asset folder 'Player'."""
     BLUE_BIRD = "BlueBird"
     FOX = "Fox"
     GREY_CAT = "GreyCat"
@@ -123,7 +123,7 @@ class PlayerType(str, Enum):
     WHITE_BIRD = "WhiteBird"
 
 class FarmAnimalType(str, Enum):
-    """Maps directly to the filenames in the 'Farm_Animals' directory."""
+    """Maps directly to filenames inside the asset folder 'Farm_Animals'."""
     BULL = "Bull"
     CALF = "Calf"
     CHICK = "Chick"

@@ -1,11 +1,13 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import pygame
 from ui.ui_factory import UIFactory
-from ui.ui_elements import UIElement, TextBox
+from ui.ui_elements import UIElement
 from entities.items import Item, create_item
 from settings import SHOP_MENU
 
+    from custom_types import Slot
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
@@ -72,10 +74,9 @@ class InventoryUI(UIElement):
     def __init__(self, rect, inventory_data: Inventory, columns=4, slot_size=40, padding=5):
         super().__init__(rect)
         self.data = inventory_data # Link to the pure data
-        self.slots = []
         
         # Setup Slots using UIFactory and wrappers
-        self.slots = UIFactory.create_grid(
+        self.slots:list[Slot] = UIFactory.create_grid(
             factory=UIFactory.bordered_slot,
             start_pos=(self.rect.x + padding, self.rect.y + padding),
             columns=columns,
@@ -85,29 +86,28 @@ class InventoryUI(UIElement):
         )
         
         #Setup tooltip
-        self.tooltip = TextBox(
+        self.tooltip = UIFactory.text(
             rect=pygame.Rect(self.rect.centerx, self.rect.top - 25, 0, 0),
-            text_getter=self._get_tooltip_text,
-            text="", config="HUD", align="midbottom"
-        )
+            text="", config="HUD", align="midbottom")
 
-    def _get_tooltip_text(self):
-        """ Feeds the hovered item's name to the TextBox """
-        hovered_slot = next((s for s in self.slots if getattr(s, 'is_hovered', False)), None)
-        if hovered_slot and hovered_slot.item:
-            return hovered_slot.item.name
-        return ""
 
     def update(self, mouse_pos=None):
         """ Syncs the visual slots with the backend data and runs hover logic. """
         super().update(mouse_pos)
         
+        hovered_item_name = ""
+        # High-efficiency Single Pass Loop
         for i, slot in enumerate(self.slots):
-            # Continually ensure the UI matches the data list
             slot.set_item(self.data.items[i]) 
             slot.update(mouse_pos)
             
-        self.tooltip.update()
+            # Catch the hover state immediately
+            if hovered_item_name == "" and slot.is_hovered and slot.item:
+                hovered_item_name = slot.item.name
+                
+        # Instantly apply the tracked text to the tooltip
+        self.tooltip.set_text(hovered_item_name)
+        self.tooltip.update(mouse_pos)
 
     def draw(self, screen):
         # Draw main background
@@ -122,9 +122,7 @@ class InventoryUI(UIElement):
 
     def is_click(self, mouse_pos):
         """ Checks if the overall inventory panel was clicked. """
-        if not self.is_visible: 
-            return False
-        return self.rect.collidepoint(mouse_pos)
+        return self.is_visible and self.rect.collidepoint(mouse_pos)
 
     def click(self, mouse_pos):
         """ Returns the index of the specific slot that was clicked, or None. """
@@ -148,7 +146,7 @@ class ShopMenu:
         self.inventory_data = Inventory(max_size=max_size)
         
         # The Visual Grid
-        self.ui_grid = InventoryUI(
+        self.ui_grid = UIFactory.inventory_ui(
             rect=self.rect, 
             inventory_data=self.inventory_data, 
             columns=columns, 
@@ -158,7 +156,7 @@ class ShopMenu:
         
         title_string = self.shop_data.store_name if self.shop_data else "Shop"
         
-        self.title_box = TextBox(
+        self.title_box = UIFactory.text(
             rect=pygame.Rect(self.rect.centerx, self.rect.top + 10, 0, 0),
             text=title_string,
             config="HUD", 

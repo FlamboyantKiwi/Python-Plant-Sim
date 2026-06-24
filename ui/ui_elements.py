@@ -6,7 +6,7 @@ from core.ui_utils import align_rect
 
 if TYPE_CHECKING:
     from typing import Callable, Any
-    from custom_types import Pos, Item, Element
+    from custom_types import Pos, Item, UIElement
 
 
 # --- PARENT CLASS ---
@@ -106,7 +106,7 @@ class TextBox(UIElement):
 
 class StateElement(UIElement):
     """Base class for anything that reacts to hovers or clicks."""
-    def __init__(self, rect: pygame.Rect, base_visual: Element | None = None) -> None:
+    def __init__(self, rect: pygame.Rect, base_visual: UIElement | None = None) -> None:
         super().__init__(rect) 
         self.is_hovered = False
         self.is_active = False
@@ -119,8 +119,8 @@ class StateElement(UIElement):
 class Button(StateElement):
     def __init__(self, rect: pygame.Rect, 
                  function: Callable | None = None,
-                 base_visual: Element | None = None, 
-                 content: Element | None = None) -> None:
+                 base_visual: UIElement | None = None, 
+                 content: UIElement | None = None) -> None:
         super().__init__(rect, base_visual)
         self.function = function
         self.content = content 
@@ -150,7 +150,7 @@ class Button(StateElement):
         return getattr(self.content, attr)
         
 class Slot(Button):
-    def __init__(self, rect: pygame.Rect, index: int, base_visual: Element) -> None:
+    def __init__(self, rect: pygame.Rect, index: int, base_visual: UIElement) -> None:
         super().__init__(rect, base_visual=base_visual)
         
         self.index = index
