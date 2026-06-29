@@ -6,7 +6,6 @@ from core.ui_utils import align_rect, get_grid_pos
 from core.assets import ASSETS
 from core.types import TextConfig
 
-
 if TYPE_CHECKING:
     from custom_types import Pos, Item, Any
 
