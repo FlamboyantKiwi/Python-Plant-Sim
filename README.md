@@ -125,5 +125,6 @@ python main.py
 * *Hostile Mobs:* Introduce monster encounters and combat states specifically within the cave and dungeon environments.
 * *Death & Respawn:* Create penalty mechanics and a respawn system tied to the new health and combat loops.
 
-### Created by Freddy Edmunds - View my full portfolio at freddyedmunds.co.uk. 
+---
+*Created by [Freddy Edmunds](https://github.com/FlamboyantKiwi) — View my full portfolio at [freddyedmunds.co.uk](https://freddyedmunds.co.uk).*
 
