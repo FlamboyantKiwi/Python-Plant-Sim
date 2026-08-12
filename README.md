@@ -1,7 +1,7 @@
 # Python Plant Sim 🌱
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![Pygame](https://img.shields.io/badge/Pygame-2.5+-green.svg)
+![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
+![Pygame](https://img.shields.io/badge/Pygame-2.6.1-green.svg)
 ![SQLite](https://img.shields.io/badge/SQLite-Database-lightgrey.svg)
 
 A robust, data-driven 2D farming and exploration game built entirely from scratch in Python using the Pygame library. 
@@ -126,5 +126,6 @@ python main.py
 * *Death & Respawn:* Create penalty mechanics and a respawn system tied to the new health and combat loops.
 
 ---
-*Created by [Freddy Edmunds](https://github.com/FlamboyantKiwi) — View my full portfolio at [freddyedmunds.co.uk](https://freddyedmunds.co.uk).*
-
+<div align="center">
+  <small>Created by <b>Freddy Edmunds</b> | <a href="https://github.com/FlamboyantKiwi">GitHub</a> | <a href="https://freddyedmunds.co.uk">freddyedmunds.co.uk</a></small>
+</div>
