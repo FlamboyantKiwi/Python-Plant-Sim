@@ -82,7 +82,7 @@ pip install pygame
 
 1. Clone the repository:
 ```bash
-git clone [https://github.com/FlamboyantKiwi/Python-Plant-Sim.git](https://github.com/FlamboyantKiwi/Python-Plant-Sim.git)
+git clone https://github.com/FlamboyantKiwi/Python-Plant-Sim.git
 ```
 2. Navigate to the directory:
 ```bash
