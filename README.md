@@ -97,6 +97,7 @@ python main.py
 
 **Systems & Architecture**
 * *Introduce save-state functionality via SQLite serialization.*
+* **Settings & Customization Menu:** Implement a fully interactive settings UI to manage master volume, audio sliders, and custom keybinding/rebind options.
 * *Entity Component Refactoring:* Finalize decoupling the main Player class into smaller, highly reusable ECS-style components.
 * *Asset Pipeline & Growth Overhaul:* Restructure plant sprites into individual images or a unified grid layout to resolve growth stage ordering bugs and streamline rendering logic.
 * *Crafting Architecture:* Build a data-driven crafting and recipe system utilizing the existing SQLite database structure.
