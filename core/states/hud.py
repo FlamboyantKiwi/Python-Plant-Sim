@@ -44,13 +44,15 @@ class HUD(BaseUIState):
         # Draw the buttons/text boxes
         super().draw(screen)
         # Draw the inventory UI
-        self.player.inventory_ui.draw(screen)
+        self.player.inventory.draw(screen)
+        mouse_pos = pygame.mouse.get_pos()
+        self.player.inventory_manager.draw_cursor_item(screen, mouse_pos)
 
     def update(self, dt: float, is_paused: bool = False) -> None:
         # Update the buttons and text boxes
         super().update(dt, is_paused)
         # Update the inventory slots
-        self.player.inventory_ui.update(pygame.mouse.get_pos())
+        self.player.inventory.update(pygame.mouse.get_pos())
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         """Pass events to the HUD elements and the inventory."""

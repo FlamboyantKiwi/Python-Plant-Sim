@@ -10,9 +10,8 @@ from core.controls import controls
 from entities.components.animation import AnimationController
 from entities.items import create_item
 from entities.entity import MovingEntity
-from ui.InventoryUI import InventoryUI, Inventory
 from entities.components.interaction import InteractionController
-
+from entities.components.inventoryComponent import InventoryController, InventoryManager
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
     from custom_types import Tile, Direction, Item, Group, Pos, Interactables, Num
@@ -45,46 +44,22 @@ class Player(MovingEntity):
         self.setup_inventory()
         
     def setup_inventory(self) -> None:
-        """Calculates and initializes the UI rect for the inventory."""
-        required_width = self.INV_SIZE * (self.SLOT_SIZE + self.INV_PADDING) + self.INV_PADDING
-        required_height = self.SLOT_SIZE + self.INV_PADDING * 2
-
-        inv_rect = calc_pos_rect(
-            required_width, required_height, WIDTH, HEIGHT,
-           y_offset= ((HEIGHT - required_height) // 2) - 10)
-        
-        self.inventory = Inventory(max_size=self.INV_SIZE)
-        
-        self.active_slot_index = 0 
-        
-        # Visual UI Component
-        self.inventory_ui = InventoryUI(
-            rect=inv_rect,
-            inventory_data=self.inventory,
-            columns=self.INV_SIZE,
-            slot_size=self.SLOT_SIZE,
+        """Initializes the InventoryController and the Drag/Drop Manager."""
+        # Create the all-in-one Controller for the Player
+        self.inventory = InventoryController(
+            size=self.INV_SIZE, 
+            slot_size=self.SLOT_SIZE, 
             padding=self.INV_PADDING
         )
         
-        # Tell the UI to visually highlight the first slot
-        self.inventory_ui.slots[self.active_slot_index].is_active = True
+        # Create the Manager and 'open' the player's hotbar permanently
+        self.inventory_manager = InventoryManager()
+        self.inventory_manager.open_inventory(self.inventory)
         
         # Populate initial items into the data layer
         for item_id, count in PLAYER_START_INVENTORY:
-            self.inventory.add_item(create_item(item_id, count))
-    
-    def set_active_slot(self, index: int) -> None:
-        """Safely updates the active slot and handles UI highlighting."""
-        if 0 <= index < self.INV_SIZE:
-            # Visually turn off the old slot
-            self.inventory_ui.slots[self.active_slot_index].is_active = False
-            
-            # Update data
-            self.active_slot_index = index
-            
-            # Visually turn on the new slot
-            self.inventory_ui.slots[self.active_slot_index].is_active = True
-        
+            self.inventory.data.add_item(create_item(item_id, count))
+       
     def handle_event(self, event: pygame.event.Event, interactables:Interactables) -> None:
         """Handles discrete inputs (clicks). Call this from Game Loop."""
         if event.type == pygame.KEYDOWN:
@@ -92,21 +67,12 @@ class Player(MovingEntity):
             if event.key == controls.interact:
                 self.interact(interactables)
             
-            # 2. Hotbar Selection (1-8 keys)
-            if event.key in controls.slots:
-                new_index = controls.slots[event.key]
-                self.set_active_slot(new_index)
+        #  Hotbar Selection (handled by controller) (1-8 keys)
+        self.inventory.handle_event(event, controls)
                 
     def handle_click(self, pos:Pos) -> bool:
-        """Checks if the player's UI was clicked."""
-        clicked_index = self.inventory_ui.click(pos)
-        
-        if clicked_index is not None:
-            self.set_active_slot(clicked_index)
-            print(f"Clicked hotbar slot: {clicked_index}")
-            return True
-            
-        return False
+        """Passes mouse clicks to the Drag & Drop Manager."""
+        return self.inventory_manager.handle_click(pos)
     
     def input(self) -> None:
         keys = pygame.key.get_pressed()
@@ -141,7 +107,7 @@ class Player(MovingEntity):
         else:
             self.current_speed = self.base_speed
 
-    def update(self, dt:Num, interactables:Interactables):
+    def update(self, dt:Num, interactables:Interactables, mouse_pos:Pos|None=None):
         """Main update loop. 
             Requires dt (delta time) for smooth vector movement."""
         self.input()
@@ -153,6 +119,7 @@ class Player(MovingEntity):
             self.sync_rect_to_hitbox()
         
         self.move(dt, interactables)
+        self.inventory.update(mouse_pos)
 
     def interact(self, interactables:Interactables) -> None:
         """Interacts with the tile or entity directly under the player's target offset."""
@@ -163,7 +130,7 @@ class Player(MovingEntity):
             return # Looking at nothing
             
         # Check Inventory
-        active_item = self.inventory.items[self.active_slot_index]
+        active_item = self.inventory.get_active_item()
         if not active_item: 
             print("Inventory Slot Empty! (Maybe talk to an NPC or open a chest here later?)")
             return
@@ -174,7 +141,7 @@ class Player(MovingEntity):
         
         used = active_item.use(self, target_obj, interactables, self.groups()[0])
         
-        if used and active_item.count <= 0:
-            self.inventory.items[self.active_slot_index] = None
+        if used: # clean up if consumed
+            self.inventory.consume_active_item()
             print("Item consumed entirely.")
         

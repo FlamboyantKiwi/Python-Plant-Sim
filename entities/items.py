@@ -9,9 +9,10 @@ class Item:
     def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None):
         # OPTIMIZATION: Use preloaded data from the factory if available
         self.data = preloaded_data or ASSETS.item(item_id)
-        self.count:int = min(count, self.data.max_stack)
-        self.image: pygame.Surface = ASSETS.item_image(self.data)
         self.item_id: str = item_id
+        self.count:int = min(count, self.max_stack)
+        self.image: pygame.Surface = ASSETS.item_image(self.data)
+        
 
     # --- PROPERTIES (Proxies to the Data) ---
     def __getattr__(self, attr_name: str):
@@ -24,11 +25,16 @@ class Item:
             return getattr(self.data, attr_name)
         except AttributeError:
             raise AttributeError(f"'{self.__class__.__name__}' and its data have no attribute '{attr_name}'")
+    @property
+    def max_stack(self) -> int:
+        if not getattr(self.data, 'stackable', True):
+            return 1
+        return getattr(self.data, 'max_stack', 99)
 
     # --- INVENTORY LOGIC ---
     def add_to_stack(self, amount: int) -> int:
         """Adds to the current stack and returns any leftover amount."""
-        to_add = min(amount, self.stack_size - self.count)
+        to_add = min(amount, self.max_stack - self.count)
         self.count += to_add
         return amount - to_add
 
@@ -54,6 +60,7 @@ class Item:
 # We only subclass if there is custom BEHAVIOR (methods), not custom DATA.
 class ToolItem(Item):
     """Handles logic for persistent, non-consumable tools (Hoe, Axe, Sword)."""
+
     def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
         if not target_tile: 
             return False
