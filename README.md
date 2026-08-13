@@ -6,11 +6,11 @@
 
 A robust, data-driven 2D farming and exploration game built entirely from scratch in Python using the Pygame library. 
 
-Rather than relying on hardcoded game loops, this project was developed as a technical sandbox to implement advanced software engineering concepts, including procedural map generation, SQLite database integration, custom UI component factories, and a strict State Machine architecture.
+Rather than relying on hardcoded game loops, this project was developed as a technical sandbox to implement advanced software engineering concepts, including procedural map generation, SQLite database integration, custom UI component factories, a strict State Machine architecture, and decoupled interaction controllers.
 
 ## 🎮 Gameplay Features
 * **Dynamic Farming:** Till soil, plant seeds, water crops, and harvest produce based on real-time database growth stages.
-* **Interactive Hotbar:** fully functional drag-and-drop inventory system that supports item stacking, splitting, and swapping.
+* **Interactive Hotbar:** fully functional drag-and-drop inventory system that supports item stacking, splitting, swapping, and intelligent snap-to-slot mechanics.
 * **In-Game Economy:** Buy and sell items through a dynamic shop interface synchronized with the player's wallet.
 * **Procedural Environments:** Explore uniquely generated maps on every load.
 
@@ -33,13 +33,14 @@ Assets are managed by a centralized `AssetLoader` to optimize memory and prevent
 
 ### 🖼️ Advanced UI Framework & Wrappers
 A custom, modular UI generation system built from the ground up (`ui.ui_factory`).
-* **Composition over Inheritance:** UI elements use dynamic Wrappers (`BorderWrapper`, `ShadowWrapper`, `Tooltip`, `FlashWrapper`) to add behaviors to standard buttons and slots without duplicating classes.
-* **Stateful Drag-and-Drop:** A fully realized `InventoryManager` handles logic, item stacking, and data-layer synchronization completely independently of visual rendering.
+* **Composition over Inheritance:** UI elements use dynamic Wrappers (`BorderWrapper`, `ShadowWrapper`, `Tooltip`, `FlashWrapper`) to add behaviors to standard buttons and slots. Wrappers utilize intelligent `__getattr__` and `__setattr__` routing to seamlessly pass visual states and variables downward without breaking inheritance.
+* **Decoupled Drag-and-Drop:** Interaction logic is strictly split between a `DragController` (managing mouse lifecycle events, floating UI tracking, and proximity snapping) and an `InventoryManager` (acting as a pure data broker for executing the math behind stacking and swapping).
 
 ### ⚙️ State Machine & Entity Components
 * **State Stack Pattern:** The game loop is governed by a `StateStack` (`core/states/base.py`) which allows for seamless layering. Menus, HUD, Shops, and Gameplay can pause, suppress, or draw over one another flawlessly.
 * **Component-Based Entities:** Entity logic is split into modular components (`AnimationController`, `InteractionController`, `InventoryController`) to avoid deep, messy inheritance trees.
 * **Decoupled Physics:** Custom collision detection uses axis-separated resolution and dedicated hitboxes that are independent of the sprite's visual bounds.
+* **Custom Terminal Logger:** A globally accessible, color-coded debug logger dynamically generates formatted tags (e.g., `[Info]`, `[Success]`, `[Error]`) to provide immediate, highly scannable visual feedback during playtesting. Codebase-wide implementation strongly follows Pythonic EAFP (Easier to Ask for Forgiveness than Permission) principles using safe `getattr` fallbacks.
 
 ## 📂 Project Structure
 ```text
@@ -51,6 +52,7 @@ Python-Plant-Sim/
 │   ├── assets/             # Asset loading, caching, and fallback logic
 │   ├── states/             # State Machine (Menu, Playing, HUD, Shop)
 │   ├── database.py         # SQLite connection and query manager
+│   ├── debug_logger.py     # Color-coded terminal diagnostics
 │   └── controls.py         # Dynamic keybindings
 ├── entities/               # Game objects (Player, Plants, Animals, Items)
 │   └── components/         # Modular logic (Animation, Interaction, Inventory)
@@ -67,7 +69,8 @@ Python-Plant-Sim/
 * 1 - 8: Select Inventory Hotbar Slot
 * P: Open Shop Menu
 * ESC: Close Menus / Back
-* Mouse: Click and drag to move inventory items, click UI buttons.
+* Left Click: Drag and drop inventory items, click UI buttons.
+* Right Click: Print a full asset loader debug report to the terminal.
 
 ## 🛠️ Getting Started
 
@@ -97,7 +100,7 @@ python main.py
 
 **Systems & Architecture**
 * *Introduce save-state functionality via SQLite serialization.*
-* **Settings & Customization Menu:** Implement a fully interactive settings UI to manage master volume, audio sliders, and custom keybinding/rebind options.
+* *Settings & Customization Menu:* Implement a fully interactive settings UI to manage master volume, audio sliders, and custom keybinding/rebind options.
 * *Entity Component Refactoring:* Finalize decoupling the main Player class into smaller, highly reusable ECS-style components.
 * *Asset Pipeline & Growth Overhaul:* Restructure plant sprites into individual images or a unified grid layout to resolve growth stage ordering bugs and streamline rendering logic.
 * *Crafting Architecture:* Build a data-driven crafting and recipe system utilizing the existing SQLite database structure.
