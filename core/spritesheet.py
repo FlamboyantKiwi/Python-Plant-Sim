@@ -1,5 +1,6 @@
 #spritesheet.py
 import pygame
+from core.debug_logger import Log
 
 class SpriteSheet:
     path="Assets"
@@ -9,7 +10,7 @@ class SpriteSheet:
         self.sheet = ASSETS.load_raw_image(filename)
 
         if self.sheet is None:
-            print(f"ERROR: Could not load sprite sheet {filename}")
+            Log.error(f"ERROR: Could not load sprite sheet {filename}")
     def get_image(self, x, y, width, height, scale=None):
         if scale is None:
             scale = width, height

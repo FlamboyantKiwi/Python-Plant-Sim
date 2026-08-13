@@ -1,5 +1,6 @@
 import pygame
 from core.types import  DOWN, RIGHT, LEFT, UP
+from core.debug_logger import Log
 class KeyBindings:
     def __init__(self):
         # Action Keys
@@ -48,7 +49,7 @@ class KeyBindings:
         """Helper method we can use later for a Settings menu."""
         if hasattr(self, action):
             setattr(self, action, new_key)
-            print(f"Rebound {action} to {pygame.key.name(new_key)}")
+            Log.success(f"Rebound {action} to {pygame.key.name(new_key)}")
 
 # Create a global instance that the rest of your game can import
 controls = KeyBindings()

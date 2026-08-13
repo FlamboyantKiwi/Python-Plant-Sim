@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import AssetGroup
 from core.database import DatabaseManager
 from core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
-
+from core.debug_logger import Log
 if TYPE_CHECKING:
     from core.assets import AssetLoader
 
@@ -23,7 +23,7 @@ class DatabaseGroup(AssetGroup):
     def _log_missing(self, entity_type: str, entity_id: str) -> None:
         """Helper to log missing IDs exactly once without repeating code."""
         if entity_id not in self.missing_ids:
-            print(f"[{self.__class__.__name__}] VALUE ERROR: Missing {entity_type} ID '{entity_id}'! Using Fallback.")
+            Log.error(f"[{self.__class__.__name__}] VALUE ERROR: Missing {entity_type} ID '{entity_id}'! Using Fallback.")
             self.missing_ids.add(entity_id)
 
     def get_item(self, item_id: str) -> ItemData:
@@ -78,12 +78,12 @@ class DatabaseGroup(AssetGroup):
             items_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM items").fetchone()[0]
             plants_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM plants").fetchone()[0]
             shops_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM shops").fetchone()[0]
-            print(f" Loaded: {items_cnt} Items, {plants_cnt} Plants, {shops_cnt} Shops")
+            Log.info(f" Loaded: {items_cnt} Items, {plants_cnt} Plants, {shops_cnt} Shops")
         except Exception:
-            print(" Database connection unavailable.")
+            Log.error(" Database connection unavailable.")
             
         if self.missing_ids:
-            print(f"MISSING IDs ({len(self.missing_ids)}):")
+            Log.error(f"MISSING IDs ({len(self.missing_ids)}):")
             for key in sorted(self.missing_ids):
-                print(f"  [X] {key}")
+                Log.info(f"  [X] {key}")
         self.print_line_break()

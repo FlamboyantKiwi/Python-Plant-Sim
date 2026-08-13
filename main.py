@@ -3,6 +3,8 @@ import sys
 import pygame
 from typing import TYPE_CHECKING
 
+from core.debug_logger import Log
+from core.states.menus import SettingsState
 from settings import WIDTH, HEIGHT, FPS
 from core.assets import ASSETS
 from core.types import StateStack, StateID
@@ -66,7 +68,7 @@ class Game:
         state_class = STATE_REGISTRY.get(state_id)
         
         if not state_class:
-            print(f"State {state_id} not found in registry!")
+            Log.error(f"State {state_id} not found in registry!")
             return
 
         # Initialize the state
@@ -87,9 +89,12 @@ class Game:
     def open_shop(self, player_ref, shop_data: ShopData):
         self.push(ShopState(self, player_ref, shop_data))
 
+    def open_settings(self):
+        self.push(SettingsState(self))
+
     def quit(self) -> None:
         """Safely shuts down the game, cleans assets, and exits."""
-        print("Initiating shutdown sequence...")
+        Log.info("Initiating shutdown sequence...")
         self.running = False
         ASSETS.clean_up()
         pygame.quit()

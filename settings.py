@@ -34,6 +34,8 @@ HUD_FONT_BOLD = True
 SLOT_FONT_SIZE = 14
 SLOT_FONT_BOLD = False
 
+HUD_BUTTON_SIZE = BLOCK_SIZE
+
 # Shop UI
 SHOP_MENU_WIDTH = 400
 SHOP_MENU_HEIGHT = 450
@@ -42,8 +44,12 @@ SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
                         (HEIGHT - SHOP_MENU_HEIGHT) // 2,
                         SHOP_MENU_WIDTH, SHOP_MENU_HEIGHT)
 
-#Shop Button Position
-SHOP_BUTTON = pygame.Rect(BLOCK_SIZE//2, BLOCK_SIZE//2, BLOCK_SIZE, BLOCK_SIZE) 
+#Settings UI
+SETTINGS_MENU_WIDTH = 500
+SETTINGS_MENU_HEIGHT = 400
+SETTINGS_MENU = pygame.Rect((WIDTH - SETTINGS_MENU_WIDTH) // 2,
+                            (HEIGHT - SETTINGS_MENU_HEIGHT) // 2,
+                            SETTINGS_MENU_WIDTH, SETTINGS_MENU_HEIGHT)
 MONEY_RECT = pygame.Rect(0, 10, WIDTH, 30)
 PLAYER_START_INVENTORY = [
     ("gold_hoe", 1),
@@ -51,3 +57,6 @@ PLAYER_START_INVENTORY = [
     ("red_pepper_seeds", 5),
     ("apple", 3)
 ]
+
+# Debug Settings
+DEBUG_TEXT = True  # Set to False to hide/suppress debug text across the engine

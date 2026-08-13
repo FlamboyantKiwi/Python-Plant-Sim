@@ -1,5 +1,7 @@
 from __future__ import annotations
 import pygame
+
+from core.debug_logger import Log
 from .base import ConfigGroup, AssetGroup
 from core.types import TextConfig
 from core.assets.asset_data import COLOURS, TEXT
@@ -85,7 +87,7 @@ class ImageGroup(AssetGroup):
             return img
 
         except (pygame.error, FileNotFoundError):
-            print(f"Warning: Failed to load standalone image '{filename}'.")
+            Log.error(f"Warning: Failed to load standalone image '{filename}'.")
             self.failures.add(filename)
             
             # Create and Cache the fallback so we don't recalculate it every frame
@@ -108,11 +110,11 @@ class ImageGroup(AssetGroup):
     def debug_print(self) -> None:
         super().debug_print()
         if not self.failures:
-            print("No image load failures. All good!")
+            Log.success("No image load failures. All good!")
         else:
-            print(f" MISSING IMAGES ({len(self.failures)}):")
+            Log.error(f" MISSING IMAGES ({len(self.failures)}):")
             for name in sorted(self.failures):
-                print(f"  [MISSING] • {name}")
+                Log.error(f"  [MISSING] • {name}")
         self.print_line_break()
 
 class FontGroup(AssetGroup):
@@ -144,5 +146,5 @@ class FontGroup(AssetGroup):
             if italic: 
                 styles.append("Italic")
             style_str = " + ".join(styles) if styles else "Normal"
-            print(f" Name: {name:<20} | Size: {size:<3} | Style: {style_str}")
+            Log.info(f" Name: {name:<20} | Size: {size:<3} | Style: {style_str}")
         self.print_line_break()

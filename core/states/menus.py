@@ -5,9 +5,10 @@ import pygame
 # Runtime Imports (Essential for logic/inheritance)
 from ui.ui_factory import UIFactory
 from ui.InventoryUI import ShopMenu
-from settings import WIDTH, HEIGHT
+from settings import WIDTH, HEIGHT, SETTINGS_MENU
 from core.types import StateID, PlayerType
 from .base import BaseUIState
+from core.debug_logger import Log
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
@@ -58,6 +59,7 @@ class MenuState(BaseUIState):
         self.menu_actions = {
             "New Game": lambda: self.game.open_state(StateID.CHAR_SELECT),
             "Continue": self.game.load_save_game,
+            "Settings": lambda: self.game.push(SettingsState(self.game)),
             #"Credits": self.game.open_credits,
             "Quit": self.game.quit
         }
@@ -118,7 +120,48 @@ class CharacterSelectState(BaseUIState):
         
     def select_character(self, character_type: PlayerType):
         """Passes the chosen character to the Game mediator to start the session."""
-        print(f"Character selected: {character_type}")
+        Log.success(f"Character selected: {character_type}")
         self.game.start_new_game(character_type)
 
+class SettingsState(BaseUIState):
+    state_id = StateID.SETTINGS
 
+    def __init__(self, game: Game):
+        # Uses the translucent overlay and automatically adds a Back button
+        super().__init__(game, "OVERLAY", back_button=True)
+        
+        # Freezes the game logic running underneath it
+        self.suppress_update = True 
+
+        # Draw the Main Window Panel
+        panel = UIFactory.static_border_element(
+            rect=SETTINGS_MENU,
+            colour="MenuBG",              # Dark grey background
+            border_colour="ButtonBorder", # Lighter grey rim
+            thickness=3
+        )
+        self.ui_group.add(panel)
+
+        # Title (Anchored to the top of the settings menu)
+        title_rect = pygame.Rect(0, 0, SETTINGS_MENU.width, 80)
+        title_rect.midtop = (SETTINGS_MENU.centerx, SETTINGS_MENU.top + 20)
+        
+        self.ui_group.add(UIFactory.bubble_text(
+            rect=title_rect,
+            text="Settings",
+            config="MenuTitle",
+            shadow_config="MenuTitleShadow",
+            shadow_offset=(4, 4),
+            align="center"
+        ))
+        
+        # Placeholder Text (Anchored to the dead center of the settings menu)
+        placeholder_rect = pygame.Rect(0, 0, SETTINGS_MENU.width, 50)
+        placeholder_rect.center = SETTINGS_MENU.center
+        
+        self.ui_group.add(UIFactory.text(
+            rect=placeholder_rect,
+            text="Options coming soon...",
+            config="HUD",
+            align="center"
+        ))

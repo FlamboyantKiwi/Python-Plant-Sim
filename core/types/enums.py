@@ -8,6 +8,7 @@ class StateID(Enum):
     SHOP = auto()
     CHAR_SELECT = auto()
     HUD = auto()
+    SETTINGS = auto()
 
 class EntityState(Enum):
     WALK = "Walk"

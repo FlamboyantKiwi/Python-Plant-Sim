@@ -148,13 +148,13 @@ class StateStack(Generic[T]):
             return
         
         current = self._stack[-1]
-        
-        # Layered update logic
-        if not current.suppress_update and len(self._stack) > 1:
-            # We assume T has an update method that accepts is_paused
-            self._stack[-2].update(dt, is_paused=True)
-        
         current.update(dt, is_paused=False)
+
+        # Cascade updates downwards until a state suppresses them
+        idx = len(self._stack) - 1
+        while idx > 0 and not self._stack[idx].suppress_update:
+            idx -= 1
+            self._stack[idx].update(dt, is_paused=True)
 
     def draw(self, screen: pygame.Surface) -> None:
         if not self._stack:

@@ -3,6 +3,7 @@ import os
 import re
 from dataclasses import dataclass
 from base_generator import BaseScriptGenerator
+from core.debug_logger import Log
 
 @dataclass
 class EnumDefinition:
@@ -43,7 +44,7 @@ class EnumGenerator(BaseScriptGenerator):
                             docstring=f"Maps directly to the '{table}' table in the database."
                         ))
         except sqlite3.OperationalError as e:
-            print(f"Database Error: {e}")
+            Log.error(f"Database Error: {e}")
         return self
 
     def add_asset_directories(self, *directory_paths: str, suffix: str = "Type") -> "EnumGenerator":
@@ -74,10 +75,10 @@ class EnumGenerator(BaseScriptGenerator):
 
     def run(self) -> None:
         if not self._definitions:
-            print("Enum generation aborted: No valid source definitions registered.")
+            Log.error("Enum generation aborted: No valid source definitions registered.")
             return
 
-        print("Compiling game databases and asset directories...")
+        Log.info("Compiling game databases and asset directories...")
         
         body_buffer = "from enum import Enum\n\n"
         for definition in self._definitions:

@@ -2,6 +2,7 @@ from __future__ import annotations
 import pygame
 import os
 from typing import TYPE_CHECKING, Callable
+from core.debug_logger import Log
 
 # Runtime Imports
 from core.types import (
@@ -59,13 +60,13 @@ class AssetLoader:
         """Called right before the game quits to close file connections."""
         for group in self.groups.values():
             group.clean_up()
-        print("--- All Assets Cleaned Up & Safely Closed ---")
+        Log.success("--- All Assets Cleaned Up & Safely Closed ---")
 
     def load_all(self) -> None:
         """Called once at the start of game."""
         for group in self.groups.values():
             group.load()
-        print("--- All Asset Sub-Groups Loaded ---")
+        Log.success("--- All Asset Sub-Groups Loaded ---")
         
     # --- UNIVERSAL GETTERS ---
     def get_asset_path(self, filename:str, folder:str="Assets") -> str: 
@@ -87,7 +88,7 @@ class AssetLoader:
         try:
             return pygame.image.load(full_path).convert_alpha()
         except (pygame.error, FileNotFoundError):
-            print(f"DEBUG: load_raw_image failed for '{filename}'")
+            Log.error(f"DEBUG: load_raw_image failed for '{filename}'")
             return None
        
     def _get_fallback_image(self, key: str) -> pygame.Surface:
@@ -142,12 +143,12 @@ class AssetLoader:
 
     def debug_assets(self):
         """Prints a full report of all loaded assets and any failures."""
-        print("\n" + "="*40)
-        print(f"{'ASSET LOADER DEBUG REPORT':^40}")
+        Log.divider(40, "=")
+        Log.info(f"{'ASSET LOADER DEBUG REPORT':^40}")
         
         for name, group in self.groups.items():
             group.debug_print()
                 
-        print("="*40 + "\n")
+        Log.divider(40, "=")
         
 ASSETS = AssetLoader()

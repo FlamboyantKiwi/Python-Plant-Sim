@@ -1,6 +1,7 @@
 import pygame
 from core.assets import ASSETS
 from core.types import ItemCategory
+from core.debug_logger import Log
 from typing import Any
 
 class Item:
@@ -82,29 +83,29 @@ class ToolItem(Item):
     def _use_hoe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
         """Tills the soil if it is valid ground."""
         if not getattr(tile, 'tillable', False) or getattr(tile, 'is_tilled', False):
-            print("You can't till this ground!")
+            Log.error("You can't till this ground!")
             return False
             
-        print(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
+        Log.success(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
         tile.is_tilled = True
         
         if not hasattr(tile, 'level'):
-            print("Warning: Tile doesn't have a reference to the Level!")
+            Log.error("Warning: Tile doesn't have a reference to the Level!")
             return False
         tile.level.till_map_node(tile.grid_x, tile.grid_y)            
             
         return True
 
     def _use_water(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        print(f"Watering {tile.grid_x}, {tile.grid_y}...")
+        Log.info(f"Watering {tile.grid_x}, {tile.grid_y}...")
         return True
 
     def _use_axe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        print("Chop chop")
+        Log.info("Chop chop")
         return True
     
     def _use_pickaxe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        print("Breaking stone...")
+        Log.info("Breaking stone...")
         return True
 
 class SeedItem(Item):
@@ -115,12 +116,12 @@ class SeedItem(Item):
         
         # Check if the tile is ready for a seed
         if not getattr(target_tile, 'is_tilled', False) or target_tile.occupant:
-            print("Ground not ready or occupied.")
+            Log.error("Ground not ready or occupied.")
             return False
             
         # Figure out the plant name. 
         plant_id = self.item_id.replace("_seeds", "")
-        print(f"Planting {plant_id}...")
+        Log.info(f"Planting {plant_id}...")
         
         target_tile.level.spawn_plant(plant_id, target_tile.grid_x, target_tile.grid_y, group)
         # Consume the seed
@@ -131,7 +132,7 @@ class FoodItem(Item):
     def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup):
         if self.count <= 0: 
             return False
-        print(f"Yum! Ate {self.name} for {self.data.energy_gain} energy.")
+        Log.info(f"Yum! Ate {self.name} for {self.data.energy_gain} energy.")
         # use for energy or sell?
         self.count -= 1
         return True

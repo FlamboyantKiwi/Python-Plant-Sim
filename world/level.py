@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 # Runtime Imports
 from settings import BLOCK_SIZE, DETAIL_CHANCE
 from core.assets import ASSETS
+from core.debug_logger import Log
 from entities.plant import Plant 
 from world.tile import Tile, MapTileGroup
 
@@ -34,10 +35,10 @@ class Level:
         self.tile_grid: dict[tuple[int, int], Tile] = {}
         
         if map_data:
-            print("loading existing map data")
+            Log.info("loading existing map data")
             self.node_map = map_data
         else:
-            print("Generating new procdural Map")
+            Log.info("Generating new procdural Map")
             self.node_map = self.create_node_map(map_size=32)
 
         # The tile map dimensions are 2 less than the node map dimensions
@@ -136,7 +137,7 @@ class Level:
         # Recalculate dimensions based on the tiles actually generated
         self.MAP_WIDTH = map_tile_x 
         self.MAP_HEIGHT = map_tile_y
-        print(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
+        Log.success(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
 
     def till_map_node(self, grid_x: int, grid_y: int) -> None:
         """Converts a grass grid tile into dirt and updates the surrounding visuals."""
@@ -254,7 +255,7 @@ class Level:
 
         # Add a Random Pond (WATER_NODE = 2)
         #Level.draw_pond(node_map, min_radius=6, max_radius=10)
-        print("Node map created.")
+        Log.success("Node map created.")
         return node_map
     
     

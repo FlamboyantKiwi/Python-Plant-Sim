@@ -1,5 +1,6 @@
 from __future__ import annotations
 import pygame
+from core.debug_logger import Log
 
 #Helper Function
 
@@ -17,7 +18,7 @@ def align_rect(rect: pygame.Rect, x: int, y: int, align: str = "center") -> pyga
     try:
         setattr(rect, align, (x, y))
     except AttributeError:
-        print(f"Align Error: '{align}' is not a valid Rect attribute. Defaulting to center.")
+        Log.error(f"Align Error: '{align}' is not a valid Rect attribute. Defaulting to center.")
         rect.center = (x, y)
     return rect
 

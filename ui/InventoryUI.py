@@ -7,6 +7,7 @@ from ui.ui_elements import UIElement
 from entities.items import Item, create_item
 from settings import SHOP_GRID_OFFSET_Y, SHOP_MENU
 from ui.wrappers import Tooltip
+from core.debug_logger import Log
 
 if TYPE_CHECKING:
     from custom_types import Slot
@@ -279,7 +280,7 @@ class ShopMenu:
         
         # Check Money
         if self.player.money < cost:
-            print(f"Cannot afford {item.name}! (Cost: {cost}, Have: {self.player.money})")
+            Log.error(f"Cannot afford {item.name}! (Cost: {cost}, Have: {self.player.money})")
             return False
 
         # Create a fresh copy to give to the player
@@ -290,8 +291,8 @@ class ShopMenu:
         # Try to Add item to player's actual data inventory
         if self.player.inventory.data.add_item(player_item):
             self.player.money -= cost
-            print(f"Bought {player_item.name} for {cost}g.")
+            Log.info(f"Bought {player_item.name} for {cost}g.")
             return True
             
-        print("Transaction failed (Inventory full).")
+        Log.error("Transaction failed (Inventory full).")
         return False

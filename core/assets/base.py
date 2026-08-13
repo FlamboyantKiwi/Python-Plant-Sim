@@ -3,6 +3,7 @@ import os
 import inspect
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
+from core.debug_logger import Log
 
 # Runtime Imports
 from core.spritesheet import SpriteSheet
@@ -25,10 +26,10 @@ class AssetGroup(ABC):
     
     def debug_print(self) -> None:
         """Base debug header. Subclasses should call super().debug_print() first."""
-        print(f"\n--- {self.__class__.__name__} ({len(self.storage)} items loaded) ---")
+        Log.info(f"\n--- {self.__class__.__name__} ({len(self.storage)} items loaded) ---")
 
     def print_line_break(self) -> None:
-        print("-" * 30)
+        Log.divider()
 
     def clean_up(self) -> None: pass
 
@@ -66,7 +67,7 @@ class ConfigGroup(AssetGroup):
             except Exception:
                 pass
 
-            print(f"[{self.__class__.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")            
+            Log.error(f"[{self.__class__.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")            
             self.missing.add(key)
             
         return self.default
@@ -75,11 +76,11 @@ class ConfigGroup(AssetGroup):
         super().debug_print()
         # Print Missing
         if self.missing:
-            print(f"MISSING KEYS ({len(self.missing)}):")
+            Log.error(f"MISSING KEYS ({len(self.missing)}):")
             for key in sorted(self.missing):
-                print(f"  [X] {key}")
+                Log.info(f"  [X] {key}")
         else:
-            print("No missing keys.")
+            Log.success("No missing keys.")
         self.print_line_break()
 
 class SpriteGroup(AssetGroup):
@@ -102,17 +103,17 @@ class SpriteGroup(AssetGroup):
         # Look up the filename in our kwargs dict
         filename = self.sheet_files.get(key)
         if not filename:
-            print(f"[FATAL] {self.__class__.__name__} asked for '{key}', but it wasn't provided in AssetLoader!")
+            Log.error(f"[FATAL] {self.__class__.__name__} asked for '{key}', but it wasn't provided in AssetLoader!")
             return None
             
         # Safely load and cache the new sheet
         try:
             sheet = SpriteSheet(f"{filename}.png")
             self.loaded_sheets[key] = sheet
-            print(f"[{self.__class__.__name__}] Successfully loaded sheet: {filename}.png")
+            Log.success(f"[{self.__class__.__name__}] Successfully loaded sheet: {filename}.png")
             return sheet
         except Exception as e:
-            print(f"Failed to load sheet '{filename}' for {self.__class__.__name__}: {e}")
+            Log.error(f"Failed to load sheet '{filename}' for {self.__class__.__name__}: {e}")
             return None
         
     def debug_print(self) -> None:

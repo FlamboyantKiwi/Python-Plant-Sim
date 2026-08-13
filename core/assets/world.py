@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 # Runtime Imports
 from core.spritesheet import SpriteSheet
 from core.types import SpriteRect
+from core.debug_logger import Log
 from core.assets.asset_data import (
     CROP_VISUALS, GROUND_TILE_REGIONS, TILE_DETAILS, 
     MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, 
@@ -195,11 +196,11 @@ class FruitGroup(SpriteGroup):
         fruit = fruit_data.get("GOLD")
         
         if not bag:
-            print("no bag")
+            Log.error("no bag")
             # Ask the parent manager for the fallback!
             return self.manager.images.get_image(f"MISSING_BAG_{clean_id}")
         elif not fruit: 
-            print("no fruit")
+            Log.error("no fruit")
             return bag
         
         comp = bag.copy()

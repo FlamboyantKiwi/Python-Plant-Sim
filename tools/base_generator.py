@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+from core.debug_logger import Log
 
 class BaseScriptGenerator:
     """Shared base architecture for tools that compile and generate source files."""
@@ -35,14 +36,14 @@ class BaseScriptGenerator:
         if os.path.exists(self.output_path):
             with open(self.output_path, "r", encoding="utf-8") as f:
                 if f.read() == full_compiled_text:
-                    print(f"No adjustments detected for '{self.output_path}'. Skipping file write.")
+                    Log.info(f"No adjustments detected for '{self.output_path}'. Skipping file write.")
                     return False
 
         # If mismatch detected, commit adjustments to the filesystem
         with open(self.output_path, "w", encoding="utf-8") as f:
             f.write(full_compiled_text)
             
-        print(f"Baked updates to '{self.output_path}'.")
+        Log.info(f"Baked updates to '{self.output_path}'.")
         return True
     
 
@@ -50,10 +51,10 @@ class BaseScriptGenerator:
     def generate_all(tools_dir: str = "tools") -> None:
         """Scans the specified directory for 'generate_*.py' scripts and executes them sequentially."""
         if not os.path.exists(tools_dir):
-            print(f"Error: Tools directory '{tools_dir}' does not exist.")
+            Log.error(f"Error: Tools directory '{tools_dir}' does not exist.")
             return
 
-        print(f"Master Build Started: Scanning '{tools_dir}' for generation pipelines...\n")
+        Log.info(f"Master Build Started: Scanning '{tools_dir}' for generation pipelines...\n")
         
         # Gather all files that fit your script-generated naming scheme
         scripts = [
@@ -62,7 +63,7 @@ class BaseScriptGenerator:
         ]
         
         if not scripts:
-            print("No generation scripts found.")
+            Log.info("No generation scripts found.")
             return
 
         # Sort alphabetically so they run in a predictable sequence
@@ -70,19 +71,18 @@ class BaseScriptGenerator:
         
         for script in scripts:
             script_path = os.path.join(tools_dir, script)
-            print(f"-> Launching: {script}")
-            print("-" * 40)
+            Log.info(f"-> Launching: {script}")
+            ("-" * 40)
             
             # Run the file using the exact same python execution environment
             result = subprocess.run([sys.executable, script_path])
-            
-            print("-" * 40)
+            Log.divider(40)
             if result.returncode == 0:
-                print(f"-> Completed: {script} Successfully.\n")
+                Log.success(f"-> Completed: {script} Successfully.\n")
             else:
-                print(f"-> WARNING: {script} exited with error code {result.returncode}.\n")
+                Log.error(f"-> WARNING: {script} exited with error code {result.returncode}.\n")
 
-        print("Master Build Pipeline finished completely.")
+        Log.success("Master Build Pipeline finished completely.")
         
 if __name__ == "__main__":
     # Tells the engine to look inside the "tools" folder and execute everything

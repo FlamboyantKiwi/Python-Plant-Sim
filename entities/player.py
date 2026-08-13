@@ -3,6 +3,7 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports (Needed for logic/inheritance)
+from core.debug_logger import Log
 from settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
 from core.ui_utils import calc_pos_rect
 from core.types import EntityState, PlayerType, EntityCategory
@@ -132,16 +133,16 @@ class Player(MovingEntity):
         # Check Inventory
         active_item = self.inventory.get_active_item()
         if not active_item: 
-            print("Inventory Slot Empty! (Maybe talk to an NPC or open a chest here later?)")
+            Log.error("Inventory Slot Empty! (Maybe talk to an NPC or open a chest here later?)")
             return
 
         # Use the item on the first object we hit
         target_obj = hit_objects[0]
-        print(f"Interacting with {type(target_obj).__name__}")
+        Log.info(f"Interacting with {type(target_obj).__name__}")
         
         used = active_item.use(self, target_obj, interactables, self.groups()[0])
         
         if used: # clean up if consumed
             self.inventory.consume_active_item()
-            print("Item consumed entirely.")
+            Log.info("Item consumed entirely.")
         

@@ -1,6 +1,7 @@
 # tools/generate_ghosts.py
 import os
 from base_generator import BaseScriptGenerator  # Import our shared logic!
+from core.debug_logger import Log
 
 class GhostGenerator(BaseScriptGenerator):
     """An extensible engine that cross-multiplies UI targets into type-safe ghost classes."""
@@ -24,7 +25,7 @@ class GhostGenerator(BaseScriptGenerator):
 
     def run(self) -> None:
         if not self.elements or not self.wrappers:
-            print("Matrix compilation aborted: Missing component assets.")
+            Log.error("Matrix compilation aborted: Missing component assets.")
             return
 
         ghost_names = []
@@ -53,9 +54,9 @@ class GhostGenerator(BaseScriptGenerator):
         
         # Output layout recipe instructions to console only if modifications were committed
         if did_write:
-            print("=" * 60)
-            print(f"from ui.ui_ghosts import {', '.join(ghost_names)}")
-            print("=" * 60)
+            Log.divider(40, "=")
+            Log.info(f"from ui.ui_ghosts import {', '.join(ghost_names)}")
+            Log.divider(40, "=")
         
 if __name__ == "__main__":
     # Instantiating elements, chaining wrappers, and processing the pipeline fluidly!
