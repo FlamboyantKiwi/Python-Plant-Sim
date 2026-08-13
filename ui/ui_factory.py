@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from core.assets import ASSETS
 from ui.ui_elements import UIElement, TextBox, Button, Slot
-from ui.wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper
+from ui.wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, Tooltip
 from core.ui_utils import get_grid_pos 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
@@ -163,6 +163,8 @@ class UIFactory:
     def bordered_slot(rect: pygame.Rect, index: int) -> BorderSlot:
         """Builder for an inventory slot with dynamic borders."""
         base_slot = UIFactory.slot(rect, index)
+
+
         
         return cast("BorderSlot", BorderWrapper(
             target=base_slot, normal_colour="SLOT_BORDER", 
@@ -212,3 +214,32 @@ class UIFactory:
             **shared_kwargs
         )
     
+    @staticmethod
+    def inventory_with_tooltip(rect: pygame.Rect, inventory_data: 'Inventory',
+        columns: int = 4, slot_size: int = 40, padding: int = 5,
+        tooltip_config: str = "HUD", tooltip_offset: tuple[int, int] = (15, 12)) -> 'Tooltip':
+        """Builder for an InventoryUI automatically wrapped with a mouse-following tooltip."""
+        
+        # Create the base grid
+        base_inventory_ui = InventoryUI(
+            rect=rect,
+            inventory_data=inventory_data,
+            columns=columns,
+            slot_size=slot_size,
+            padding=padding
+        )
+
+        # Create the empty TextBox that will act as the tooltip
+        tooltip_box = UIFactory.text(
+            rect=pygame.Rect(0, 0, 0, 0),
+            text="",
+            config=tooltip_config, 
+            align="topleft" 
+        )
+
+        # Wrap them together and return the wrapper
+        return Tooltip(
+            target=base_inventory_ui, 
+            tooltip_box=tooltip_box, 
+            offset=tooltip_offset
+        )

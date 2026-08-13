@@ -5,7 +5,8 @@ import pygame
 from ui.ui_factory import UIFactory
 from ui.ui_elements import UIElement
 from entities.items import Item, create_item
-from settings import SHOP_MENU
+from settings import SHOP_GRID_OFFSET_Y, SHOP_MENU
+from ui.wrappers import Tooltip
 
 if TYPE_CHECKING:
     from custom_types import Slot
@@ -16,32 +17,32 @@ class Inventory:
         self.max_size = max_size
         self.items:list[Item|None] = [None] * max_size # Just stores Item objects
 
-    def add_item(self, new_item):
+    def get_amount(self, item_name: str) -> int:
+        """Helper: Quickly get the total count of a specific item across all stacks."""
+        return sum(item.count for item in self.items if item and item.name == item_name)
+
+    def add_item(self, new_item:Item):
         """ Handles stacking and splitting large stacks into multiple empty slots. """
         remaining = new_item.count
         
-        # 1. Try to add to existing stacks first
+        # Try to add to existing stacks first
         if new_item.max_stack > 1:
-            for i in range(self.max_size):
-                item = self.items[i]
-                if item and item.name == new_item.name:
-                    space_left = item.max_stack - item.count
-                    if space_left > 0:
-                        amount_to_add = min(remaining, space_left)
-                        item.count += amount_to_add
-                        remaining -= amount_to_add
-                        
-                    if remaining <= 0:
-                        return True # Everything was stacked
+            for item in self.items:
+                if item and item.name == new_item.name and item.count < item.max_stack:
+                    added = min(remaining, item.max_stack - item.count)
+                    item.count += added
+                    remaining -= added
+                    
+                    if remaining <= 0: 
+                        return True # Fully stacked
 
-        # 2. Spill over into empty slots
+        # Spill over into empty slots
         for i in range(self.max_size):
             if self.items[i] is None:
                 to_add = new_item.copy_one()
-                count = min(remaining, to_add.max_stack)
-                to_add.count = count
+                to_add.count = min(remaining, to_add.max_stack)
                 self.items[i] = to_add
-                remaining -= count
+                remaining -= to_add.count
                 
                 if remaining <= 0:
                     return True # Everything found a slot
@@ -49,65 +50,102 @@ class Inventory:
         # Return False if the inventory filled up before everything could be added
         return False
 
-    def remove_item(self, item_name, amount=1):
-        """Removes an item by name, starting from the end of the inventory first."""
-        remaining = amount
-        
+    def remove_item(self, item_name:str, amount:int=1):
+        """Removes an item by name, starting from the end of the inventory first."""        
+        #make sure we have enough BEFORE removing
+        if self.get_amount(item_name) < amount:
+            return False
         # Iterate backwards
         for i in range(self.max_size - 1, -1, -1):
             item = self.items[i]
             if item and item.name == item_name:
-                if item.count > remaining:
-                    item.count -= remaining
+                if item.count > amount:
+                    item.count -= amount
                     return True
                 else:
                     # Consumed whole slot
-                    remaining -= item.count
+                    amount -= item.count
                     self.items[i] = None # Clear slot in data
                     
-                if remaining <= 0: 
+                if amount <= 0: 
                     return True
                     
         return False # Didn't have enough of the item to remove the full amount
 
+    def transfer_to(self, target_inventory: 'Inventory', item_name: str, amount: int) -> bool:
+        """Programmatically moves an item from this inventory to another."""
+        if self.get_amount(item_name) < amount:
+            return False # We don't have enough to give
+
+        # Create a detached copy of the item to transfer
+        for item in self.items:
+            if item and item.name == item_name:
+                item_to_give = item.copy_one()
+                item_to_give.count = amount
+                break
+                
+        # Try to put it in the target's inventory
+        if target_inventory.add_item(item_to_give):
+            # If successful, remove it from our own inventory
+            self.remove_item(item_name, amount)
+            return True
+            
+        return False # Target inventory was full!
+
 class InventoryUI(UIElement):
     """Handles all drawing and clicking for a grid of slots."""
-    def __init__(self, rect, inventory_data: Inventory, columns=4, slot_size=40, padding=5):
+    def __init__(self, rect:pygame.Rect, inventory_data: Inventory, columns:int=4, slot_size:int=40, padding:int=5):
         super().__init__(rect)
         self.data = inventory_data # Link to the pure data
         
-        # Setup Slots using UIFactory and wrappers
-        self.slots:list[Slot] = UIFactory.create_grid(
+        # Calculate the exact width of the slots + gaps
+        grid_width = (columns * slot_size) + ((columns - 1) * padding)
+        
+        # Reuse vertical stack math pattern: Center X, Top Y
+        start_x = self.rect.centerx - (grid_width // 2)
+        start_y = self.rect.y + padding
+        
+        # Setup Slots using the perfectly centered starting position
+        self.slots: list[Slot] = UIFactory.create_grid(
             factory=UIFactory.bordered_slot,
-            start_pos=(self.rect.x + padding, self.rect.y + padding),
+            start_pos=(start_x, start_y),
             columns=columns,
             item_size=(slot_size, slot_size),
             gap=(padding, padding),
             data=self.data.max_size
         )
-        
-        #Setup tooltip
-        self.tooltip = UIFactory.text(
-            rect=pygame.Rect(self.rect.centerx, self.rect.top - 25, 0, 0),
-            text="", config="HUD", align="midbottom")
 
+        self.tooltip = UIFactory.text(
+            rect=pygame.Rect(0, 0, 0, 0), # Position will be updated dynamically
+            text="", 
+            config="HUD", # Ensure this matches a config in your ASSETS
+            align="midbottom"
+        )
 
     def update(self, mouse_pos=None):
         """ Syncs the visual slots with the backend data and runs hover logic. """
         super().update(mouse_pos)
-        
         hovered_item_name = ""
-        # High-efficiency Single Pass Loop
+        
+        # Update all slots and check for hovers
         for i, slot in enumerate(self.slots):
             slot.set_item(self.data.items[i]) 
             slot.update(mouse_pos)
             
-            # Catch the hover state immediately
-            if hovered_item_name == "" and slot.is_hovered and slot.item:
+            if slot.is_hovered and slot.item:
                 hovered_item_name = slot.item.name
                 
-        # Instantly apply the tracked text to the tooltip
-        self.tooltip.set_text(hovered_item_name)
+        # 3. Update Tooltip text and position
+        if hovered_item_name:
+            self.tooltip.set_text(hovered_item_name)
+            self.tooltip.is_visible = True
+            
+            if mouse_pos:
+                # Make the tooltip follow the mouse, offset slightly up and to the right
+                self.tooltip.rect.midbottom = (mouse_pos[0] + 15, mouse_pos[1] - 10)
+        else:
+            self.tooltip.is_visible = False
+            
         self.tooltip.update(mouse_pos)
 
     def draw(self, screen):
@@ -117,9 +155,6 @@ class InventoryUI(UIElement):
         # Draw slots
         for slot in self.slots:
             slot.draw(screen)
-            
-        # Draw tooltip
-        self.tooltip.draw(screen)
 
     def is_click(self, mouse_pos):
         """ Checks if the overall inventory panel was clicked. """
@@ -141,19 +176,38 @@ class ShopMenu:
         self.rect = SHOP_MENU
 
         # Background visual
-        self.background = UIFactory.image_element(self.rect, "SHOP_MENU")
+        self.background = UIFactory.static_border_element(
+            rect=self.rect, 
+            colour="MenuBG",              # The dark grey used in your main menu
+            border_colour="ButtonBorder", # A lighter grey for the rim
+            thickness=3
+        )
 
         # The Pure Data
         self.inventory_data = Inventory(max_size=max_size)
+
+        grid_rect = self.rect.copy()
+        grid_rect.y += SHOP_GRID_OFFSET_Y
         
         # The Visual Grid
-        self.ui_grid = UIFactory.inventory_ui(
-            rect=self.rect, 
+        base_grid = UIFactory.inventory_ui(
+            rect=grid_rect, 
             inventory_data=self.inventory_data, 
             columns=columns, 
             slot_size=70, 
             padding=20
         )
+        
+        # Create the detached tooltip box
+        tooltip_box = UIFactory.text(
+            rect=pygame.Rect(self.rect.centerx, self.rect.top - 25, 0, 0),
+            text="", 
+            config="HUD", 
+            align="midbottom"
+        )
+        
+        # Wrap them together so self.ui_grid acts as a single functional unit
+        self.ui_grid = Tooltip(base_grid, tooltip_box)
         
         title_string = self.shop_data.store_name if self.shop_data else "Shop"
         
@@ -234,7 +288,7 @@ class ShopMenu:
         player_item.count = 1 
         
         # Try to Add item to player's actual data inventory
-        if self.player.inventory.add_item(player_item):
+        if self.player.inventory.data.add_item(player_item):
             self.player.money -= cost
             print(f"Bought {player_item.name} for {cost}g.")
             return True

@@ -37,6 +37,7 @@ SLOT_FONT_BOLD = False
 # Shop UI
 SHOP_MENU_WIDTH = 400
 SHOP_MENU_HEIGHT = 450
+SHOP_GRID_OFFSET_Y = 30 #push the slots down away from the title
 SHOP_MENU = pygame.Rect((WIDTH - SHOP_MENU_WIDTH) // 2,
                         (HEIGHT - SHOP_MENU_HEIGHT) // 2,
                         SHOP_MENU_WIDTH, SHOP_MENU_HEIGHT)

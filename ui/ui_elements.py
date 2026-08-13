@@ -219,3 +219,4 @@ class Slot(Button):
             #draw text on top of item 
             self.info_text.draw(screen)
    
+ 

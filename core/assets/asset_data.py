@@ -187,6 +187,7 @@ TEXT = {
     "TITLE": TextConfig(size=80, bold=True),
     "MenuTitle": TextConfig(size=60, bold=True, colour=("MenuTitle")),
     "MenuTitleShadow": TextConfig(size=60, bold=True, colour=("MenuTitleShadow")),
+    "shadow_default": TextConfig(size=20, bold=True, colour="DARK_TEXT"),
 }
 
 # --- COLOUR PALETTE ---
