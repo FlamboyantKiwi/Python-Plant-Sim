@@ -19,6 +19,18 @@ class BaseWrapper:
         if attr == "target":
             raise AttributeError(f"'{type(self).__name__}' has no target initialized.")
         return getattr(self.target, attr)
+
+    def __setattr__(self, attr: str, value: Any) -> None:
+        """Intelligently routes variable assignments to either the Wrapper or the Target."""
+        # Allow the wrapper to set its own variables (like 'target', 'interval', 'surf_normal')
+        if attr == "target" or attr in self.__dict__:
+            super().__setattr__(attr, value)
+        # If the target owns the attribute (like 'is_active' or 'is_hovered'), forward it down!
+        elif hasattr(self, "target") and hasattr(self.target, attr):
+            setattr(self.target, attr, value)
+        # Fallback
+        else:
+            super().__setattr__(attr, value)
     
     def update(self, *args, **kwargs) -> None:
         """Default pass-through for the update loop."""

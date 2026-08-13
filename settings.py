@@ -60,3 +60,5 @@ PLAYER_START_INVENTORY = [
 
 # Debug Settings
 DEBUG_TEXT = True  # Set to False to hide/suppress debug text across the engine
+
+DRAG_DROP_THRESHOLD = 10

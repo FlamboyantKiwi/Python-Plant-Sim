@@ -75,9 +75,10 @@ class HUD(BaseUIState):
         if super().handle_event(event):
             return True
         
-        # Check if the Inventory slots were clicked
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.player.handle_click(event.pos):
-                return True
+        # Pass mouse press, motion, and release events to the inventory drag/drop manager
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+            if getattr(event, 'button', 1) == 1:
+                if self.player.inventory_manager.handle_event(event):
+                    return True
                 
         return False

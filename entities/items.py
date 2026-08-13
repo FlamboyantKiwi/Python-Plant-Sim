@@ -1,6 +1,6 @@
 import pygame
 from core.assets import ASSETS
-from core.types import ItemCategory
+from core.types import ItemCategory, ToolType
 from core.debug_logger import Log
 from typing import Any
 
@@ -12,8 +12,7 @@ class Item:
         self.data = preloaded_data or ASSETS.item(item_id)
         self.item_id: str = item_id
         self.count:int = min(count, self.max_stack)
-        self.image: pygame.Surface = ASSETS.item_image(self.data)
-        
+        self.image: pygame.Surface = ASSETS.item_image(self.data)  
 
     # --- PROPERTIES (Proxies to the Data) ---
     def __getattr__(self, attr_name: str):
@@ -56,57 +55,66 @@ class Item:
     def copy_one(self) -> 'Item':
         """Creates a new instance with a count of 1 (Useful for UI dragging)."""
         return create_item(self.item_id, 1)
-    
+
+
+# --- INDEPENDENT TOOL STRATEGY FUNCTIONS ---
+def _use_hoe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+    """Tills the soil if it is valid ground."""
+    if not getattr(tile, 'tillable', False) or getattr(tile, 'is_tilled', False):
+        Log.error("You can't till this ground!")
+        return False                  
+
+    Log.success(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
+    tile.is_tilled = True
+
+    if not hasattr(tile, 'level'):
+        Log.error("Warning: Tile doesn't have a reference to the Level!")
+        return False
+        
+    tile.level.till_map_node(tile.grid_x, tile.grid_y)
+    return True
+
+def _use_water_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+    Log.info(f"Watering {tile.grid_x}, {tile.grid_y}...")
+    return True
+
+def _use_axe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+    Log.info("Chop chop")
+    return True
+
+def _use_pickaxe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+    Log.info("Breaking stone...")
+    return True
+
+def _use_generic_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+    """Fallback for tools with no specific logic yet."""
+    return False
+
+
+
 # --- SUBCLASSES ---
-# We only subclass if there is custom BEHAVIOR (methods), not custom DATA.
 class ToolItem(Item):
-    """Handles logic for persistent, non-consumable tools (Hoe, Axe, Sword)."""
+    """Handles logic for persistent, non-consumable tools using the Strategy Pattern."""
+    
+    # Strategy registry mapping ToolTypes directly to decoupled functions
+    STRATEGIES = {
+        ToolType.HOE: _use_hoe_strategy,
+        ToolType.WATER: _use_water_strategy,
+        ToolType.AXE: _use_axe_strategy,
+        ToolType.PICKAXE: _use_pickaxe_strategy,
+    }
 
     def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
         if not target_tile: 
             return False
-        
+
         t_type = self.tool_type
         if not t_type:
-            return self._use_generic(player, target_tile, all_tiles, group)
-        
-        # Dynamically build the method name (e.g., _use_hoe)
-        method_name = f"_use_{t_type.name.lower()}"
-        use_func = getattr(self, method_name, self._use_generic)
-        
-        return use_func(player, target_tile, all_tiles, group)
-    
-    def _use_generic(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-        """Fallback for tools with no specific logic yet."""
-        return False
+            return _use_generic_strategy(player, target_tile, all_tiles, group)
 
-    def _use_hoe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-        """Tills the soil if it is valid ground."""
-        if not getattr(tile, 'tillable', False) or getattr(tile, 'is_tilled', False):
-            Log.error("You can't till this ground!")
-            return False
-            
-        Log.success(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
-        tile.is_tilled = True
-        
-        if not hasattr(tile, 'level'):
-            Log.error("Warning: Tile doesn't have a reference to the Level!")
-            return False
-        tile.level.till_map_node(tile.grid_x, tile.grid_y)            
-            
-        return True
-
-    def _use_water(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        Log.info(f"Watering {tile.grid_x}, {tile.grid_y}...")
-        return True
-
-    def _use_axe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        Log.info("Chop chop")
-        return True
-    
-    def _use_pickaxe(self, player, tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        Log.info("Breaking stone...")
-        return True
+        # Look up the strategy from the dictionary, defaulting to generic if not found
+        strategy_func = self.STRATEGIES.get(t_type, _use_generic_strategy)
+        return strategy_func(player, target_tile, all_tiles, group)
 
 class SeedItem(Item):
     """Handles planting logic and consumes 1 stack count upon success."""

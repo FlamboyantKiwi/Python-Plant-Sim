@@ -5,7 +5,7 @@ import pygame
 from ui.ui_factory import UIFactory
 from ui.InventoryUI import InventoryUI, Inventory
 from core.ui_utils import calc_pos_rect
-from settings import WIDTH, HEIGHT
+from settings import WIDTH, HEIGHT, DRAG_DROP_THRESHOLD
 from entities.items import Item
 
 if TYPE_CHECKING:
@@ -127,15 +127,102 @@ class InventoryController:
         if self.tooltip.is_visible:
             self.tooltip.draw(screen)
 
+class DragController:
+    """Handles mouse tracking, drag thresholds, and visual state for dragging items."""
+    def __init__(self, manager: 'InventoryManager') -> None:
+        self.manager = manager
+        self.cursor_item: Item | None = None
+        
+        # Bundled drag state
+        self.drag_origin: tuple['InventoryController', int] | None = None
+        self.drag_start_pos: tuple[int, int] | None = None
+        self.is_dragging: bool = False
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        """Routes mouse events to their specific lifecycle handlers."""
+        if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, 'button', 1) == 1:
+            return self._handle_mouse_down(event.pos)
+            
+        elif event.type == pygame.MOUSEMOTION:
+            return self._handle_mouse_motion(event.pos)
+            
+        elif event.type == pygame.MOUSEBUTTONUP and getattr(event, 'button', 1) == 1:
+            return self._handle_mouse_up(event.pos)
+            
+        return False
+
+    def _handle_mouse_down(self, pos: tuple[int, int]) -> bool:
+        """Phase 1: Select slot and prepare for a potential drag."""
+        slot_data = self.manager.get_slot_at(pos)
+        
+        if slot_data is not None:
+            ctrl, idx = slot_data
+            ctrl.set_active_slot(idx)
+            
+            if ctrl.data.items[idx]: 
+                self.drag_origin = (ctrl, idx)
+                self.drag_start_pos = pos
+                self.is_dragging = False
+            return True
+        return False
+
+    def _handle_mouse_motion(self, pos: tuple[int, int]) -> bool:
+        """Phase 2: Detect movement threshold and lift item into cursor."""
+        if self.drag_origin and self.drag_start_pos and not self.is_dragging:
+            dx = pos[0] - self.drag_start_pos[0]
+            dy = pos[1] - self.drag_start_pos[1]
+            
+            if (dx**2 + dy**2) > 25: 
+                ctrl, idx = self.drag_origin
+                self.cursor_item = ctrl.data.items[idx]
+                ctrl.data.items[idx] = None 
+                self.is_dragging = True
+        return False
+
+    def _handle_mouse_up(self, pos: tuple[int, int]) -> bool:
+        """Phase 3: Drop the item, snap to closest, or return to origin."""
+        if not self.is_dragging:
+            self.drag_origin = None
+            self.drag_start_pos = None
+            return False
+
+        target_data = self.manager.get_slot_at(pos)
+
+        # If dropped in the void, try to snap to the closest slot
+        if not target_data:
+            target_data = self.manager.find_closest_slot(pos)
+
+        # Let the InventoryManager handle the actual data manipulation
+        if target_data is not None:
+            target_ctrl, target_idx = target_data
+            self.manager.drop_item(self, target_ctrl, target_idx)
+        else:
+            self.manager.return_to_origin(self)
+
+        self.is_dragging = False
+        self.drag_origin = None
+        self.drag_start_pos = None
+        return True
+
+    def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]) -> None:
+        """Draws the item floating on the mouse."""
+        if self.cursor_item:
+            rect = self.cursor_item.image.get_rect(center=mouse_pos)
+            screen.blit(self.cursor_item.image, rect)
 
 class InventoryManager:
-    """Handles drag/drop logic and routes clicks between all open inventories."""
+    """Manages open inventories and executes item data manipulation (stacking/swapping)."""
     def __init__(self) -> None:
-        # A list of InventoryControllers currently visible on screen
-        self.open_controllers: list[InventoryController] = []
-        
-        # The item currently attached to the mouse cursor
-        self.cursor_item: Item | None = None 
+        self.open_controllers: list['InventoryController'] = []
+        self.drag_controller = DragController(self)
+
+    # --- EXPOSED API FOR HUD/PLAYER ---
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        return self.drag_controller.handle_event(event)
+
+    def draw_cursor_item(self, screen: pygame.Surface, mouse_pos: tuple[int, int]) -> None:
+        self.drag_controller.draw(screen, mouse_pos)
 
     def open_inventory(self, controller: 'InventoryController') -> None:
         if controller not in self.open_controllers:
@@ -145,52 +232,62 @@ class InventoryManager:
         if controller in self.open_controllers:
             self.open_controllers.remove(controller)
 
-    def handle_click(self, mouse_pos: Pos) -> bool:
-        """Checks all open UIs. If a slot is clicked, process drag/drop logic."""
-        # Iterate backwards to click the top-most overlapping UI first
+    # --- LOOKUP UTILITIES FOR THE DRAG CONTROLLER ---
+    def get_slot_at(self, pos: tuple[int, int]) -> tuple['InventoryController', int] | None:
         for controller in reversed(self.open_controllers):
-            clicked_index = controller.get_clicked_index(mouse_pos)
-            
-            if clicked_index is not None:
-                self._process_slot_click(controller.data, clicked_index)
-                return True # Click was consumed
-        return False
+            idx = controller.get_clicked_index(pos)
+            if idx is not None:
+                return controller, idx
+        return None
 
-    def _process_slot_click(self, target_data: 'Inventory', slot_index: int) -> None:
-        """The core Drag & Drop logic directly manipulating pure data."""
-        clicked_item = target_data.items[slot_index]
+    def find_closest_slot(self, drop_pos: tuple[int, int]) -> tuple['InventoryController', int] | None:
+        best_target = None
+        min_dist = DRAG_DROP_THRESHOLD
 
-        # 1. EMPTY HAND -> Pick up item
-        if not self.cursor_item:
-            self.cursor_item = clicked_item
-            target_data.items[slot_index] = None
+        for ctrl in self.open_controllers:
+            for slot in ctrl.slots:
+                cx, cy = slot.rect.center
+                dist = ((cx - drop_pos[0])**2 + (cy - drop_pos[1])**2)**0.5
+                if dist < min_dist:
+                    min_dist = dist
+                    best_target = (ctrl, slot.index)
+                    
+        return best_target
+
+    # --- DATA MANIPULATION FOR THE DRAG CONTROLLER ---
+    def drop_item(self, drag_ctrl: 'DragController', target_ctrl: 'InventoryController', target_idx: int) -> None:
+        """Executes placing, stacking, or swapping data logic."""
+        if not drag_ctrl.cursor_item:
             return
 
-        # 2. HOLDING ITEM -> Place in empty slot
-        if not clicked_item:
-            target_data.items[slot_index] = self.cursor_item
-            self.cursor_item = None
-            return
+        target_item = target_ctrl.data.items[target_idx]
 
-        # 3. BOTH HAVE ITEMS -> Compare them
-        if self.cursor_item.name == clicked_item.name:
-            # Same type -> Try to stack
-            space_left = clicked_item.max_stack - clicked_item.count
+        # Try to Stack
+        if target_item and drag_ctrl.cursor_item.name == target_item.name:
+            space_left = target_item.max_stack - target_item.count
             if space_left > 0:
-                amount_to_move = min(space_left, self.cursor_item.count)
-                clicked_item.count += amount_to_move
-                self.cursor_item.count -= amount_to_move
-                
-                # Delete cursor item if empty
-                if self.cursor_item.count <= 0:
-                    self.cursor_item = None
-        else:
-            # Different type -> Swap them instantly using tuple unpacking
-            target_data.items[slot_index], self.cursor_item = self.cursor_item, clicked_item
+                moved = min(space_left, drag_ctrl.cursor_item.count)
+                target_item.count += moved
+                drag_ctrl.cursor_item.count -= moved
+
+        # Swap if the cursor still holds an item
+        if drag_ctrl.cursor_item and drag_ctrl.cursor_item.count > 0:
+            target_ctrl.data.items[target_idx], drag_ctrl.cursor_item = drag_ctrl.cursor_item, target_ctrl.data.items[target_idx]
             
-    def draw_cursor_item(self, screen: pygame.Surface, mouse_pos: Pos) -> None:
-        """Draws the item floating on the mouse."""
-        if self.cursor_item:
-            rect = self.cursor_item.image.get_rect(center=mouse_pos)
-            screen.blit(self.cursor_item.image, rect)
-          
+            # If swap resulted in holding a new item, snap it back
+            if drag_ctrl.cursor_item:
+                self.return_to_origin(drag_ctrl)
+        else:
+            drag_ctrl.cursor_item = None
+
+    def return_to_origin(self, drag_ctrl: 'DragController') -> None:
+        """Safely snaps the cursor item data back to its starting slot."""
+        if not drag_ctrl.cursor_item or not drag_ctrl.drag_origin:
+            return
+            
+        ctrl, idx = drag_ctrl.drag_origin
+        if ctrl.data.items[idx] is None:
+            ctrl.data.items[idx] = drag_ctrl.cursor_item
+        else:
+            ctrl.data.add_item(drag_ctrl.cursor_item) 
+        drag_ctrl.cursor_item = None

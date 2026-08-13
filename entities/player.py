@@ -71,10 +71,6 @@ class Player(MovingEntity):
         #  Hotbar Selection (handled by controller) (1-8 keys)
         self.inventory.handle_event(event, controls)
                 
-    def handle_click(self, pos:Pos) -> bool:
-        """Passes mouse clicks to the Drag & Drop Manager."""
-        return self.inventory_manager.handle_click(pos)
-    
     def input(self) -> None:
         keys = pygame.key.get_pressed()
        
