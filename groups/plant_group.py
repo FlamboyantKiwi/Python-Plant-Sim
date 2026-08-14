@@ -2,6 +2,7 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, cast
 from entities.plant import Plant
+from collections.abc import Iterable
 
 if TYPE_CHECKING:
     from custom_types import Any, Num
@@ -25,8 +26,7 @@ class PlantGroup(pygame.sprite.Group):
         for item in sprites:
             if isinstance(item, Plant):
                 super().add(item)
-            elif isinstance(item, (pygame.sprite.AbstractGroup, list, tuple)) or hasattr(item, "__iter__"):
-                # It's a collection! Recursively unfold it through this same check
+            elif isinstance(item, Iterable):
                 for sprite in item:
                     self.add(sprite)
             else:

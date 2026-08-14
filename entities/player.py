@@ -1,9 +1,10 @@
 from __future__ import annotations
 import pygame
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 # Runtime Imports (Needed for logic/inheritance)
 from core.debug_logger import Log
+from core.types.enums import ToolType
 from settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
 from core.ui_utils import calc_pos_rect
 from core.types import EntityState, PlayerType, EntityCategory
@@ -13,9 +14,12 @@ from entities.items import create_item
 from entities.entity import MovingEntity
 from entities.components.interaction import InteractionController
 from entities.components.inventoryComponent import InventoryController, InventoryManager
+from world.tile import Tile
+from groups.camera import CameraGroup
+
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
-    from custom_types import Tile, Direction, Item, Group, Pos, Interactables, Num
+    from custom_types import Direction, Item, Group, Pos, Interactables, Num
 
 class Player(MovingEntity):
     #Inventory Variables
@@ -32,7 +36,8 @@ class Player(MovingEntity):
         
         # Hand them to the PhysicsEntity to do the rest!
         super().__init__(initial_image, start_rect, start_hitbox, 200, group)
-        
+
+        self.camera_group: CameraGroup = cast(CameraGroup, group)
         self.player_type = type
         self.animator = AnimationController(EntityCategory.PLAYER, type) 
         
@@ -67,10 +72,22 @@ class Player(MovingEntity):
             # Interact
             if event.key == controls.interact:
                 self.interact(interactables)
+            elif event.key == controls.refill:  # Listen for 'R'
+                self.refill_active_watering_can()
             
         #  Hotbar Selection (handled by controller) (1-8 keys)
         self.inventory.handle_event(event, controls)
-                
+
+    def refill_active_watering_can(self) -> None:
+        ### WILL BE RMOVED LATER - when water / water sources are added
+        """Refills the currently equipped watering can to max capacity."""
+        active_item = self.inventory.get_active_item()
+        if active_item and getattr(active_item, 'tool_type', None) == ToolType.WATER:
+            active_item.water_level = active_item.max_water
+            Log.success(f"Refilled {active_item.name}! Water level: {active_item.water_level}/{active_item.max_water}")
+        else:
+            Log.info("Equip a watering can to refill it.")
+    
     def input(self) -> None:
         keys = pygame.key.get_pressed()
        
@@ -92,7 +109,7 @@ class Player(MovingEntity):
             self.facing = controls.facing_map[lookup_key]
 
         # Normalization (Fixes diagonal speed boost)
-        if self.direction.magnitude() > 0:
+        if self.direction.magnitude_squared() > 0:
             self.direction = self.direction.normalize()
             self.state = EntityState.RUN if keys[controls.run] else EntityState.WALK
         else:
@@ -136,7 +153,8 @@ class Player(MovingEntity):
         target_obj = hit_objects[0]
         Log.info(f"Interacting with {type(target_obj).__name__}")
         
-        used = active_item.use(self, target_obj, interactables, self.groups()[0])
+        # Pass the raw target and full interactables list directly to the item
+        used = active_item.use(self, target_obj, interactables, self.camera_group)
         
         if used: # clean up if consumed
             self.inventory.consume_active_item()

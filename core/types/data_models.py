@@ -45,7 +45,7 @@ class ItemData:
     grow_time: int = 0          # For seeds (days)
     tool_type: ToolType|None = None
     @property
-    def get_sell_price(self) -> int:
+    def calculate_sell_price(self) -> int:
         """Dynamically calculates sell price if one wasn't explicitly set."""
         if self.sell_price is not None:
             return self.sell_price

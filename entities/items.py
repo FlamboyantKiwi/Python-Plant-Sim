@@ -1,21 +1,32 @@
+from __future__ import annotations
 import pygame
 from core.assets import ASSETS
 from core.types import ItemCategory, ToolType
 from core.debug_logger import Log
-from typing import Any
+from typing import TYPE_CHECKING, Any
+from world.tile import Tile
+from entities.entity import Entity
+
+if TYPE_CHECKING:
+    from entities.player import Player
+    from groups.camera import CameraGroup
+    from custom_types import Interactables
 
 class Item:
     """ Base class for an inventory item. 
     Manages stack counts and proxies core data from the SQLite database. """
-    def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None):
+    def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None) -> None:
         # OPTIMIZATION: Use preloaded data from the factory if available
-        self.data = preloaded_data or ASSETS.item(item_id)
+        self.data:Any  = preloaded_data or ASSETS.item(item_id)
         self.item_id: str = item_id
         self.count:int = min(count, self.max_stack)
         self.image: pygame.Surface = ASSETS.item_image(self.data)  
 
+        self.water_level: int | None = None
+        self.max_water: int | None = None
+
     # --- PROPERTIES (Proxies to the Data) ---
-    def __getattr__(self, attr_name: str):
+    def __getattr__(self, attr_name: str) -> Any:
         """ Magic Proxy: Routes missing attribute requests (like .name or .buy_price)
         directly to the underlying ItemData object."""
         # SAFETY CHECK: Ignore Python's internal dunder methods and prevent recursion on 'data'
@@ -25,6 +36,7 @@ class Item:
             return getattr(self.data, attr_name)
         except AttributeError:
             raise AttributeError(f"'{self.__class__.__name__}' and its data have no attribute '{attr_name}'")
+
     @property
     def max_stack(self) -> int:
         if not getattr(self.data, 'stackable', True):
@@ -48,48 +60,72 @@ class Item:
         self.count -= amount
         return amount
 
-    def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-        """Default behavior for unusable items (e.g., Wood, Stone). Returns True if action succeeded."""
+    def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+        """Default behavior for unusable items. Returns True if action succeeded."""
         return False
         
-    def copy_one(self) -> 'Item':
+    def copy_one(self) -> Item:
         """Creates a new instance with a count of 1 (Useful for UI dragging)."""
         return create_item(self.item_id, 1)
 
 
 # --- INDEPENDENT TOOL STRATEGY FUNCTIONS ---
-def _use_hoe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-    """Tills the soil if it is valid ground."""
-    if not getattr(tile, 'tillable', False) or getattr(tile, 'is_tilled', False):
+def _use_hoe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+    """Tills the soil if it is a valid ground tile."""
+    # Ensure we are targeting a Tile, not an Entity
+    if not isinstance(target, Tile):
+        Log.error("You can't use a hoe on this!")
+        return False
+
+    if not target.tillable or target.is_tilled:
         Log.error("You can't till this ground!")
         return False                  
 
-    Log.success(f"Tilled the soil at {tile.grid_x}, {tile.grid_y}!")
-    tile.is_tilled = True
+    Log.success(f"Tilled the soil at {target.grid_x}, {target.grid_y}!")
+    target.is_tilled = True
 
-    if not hasattr(tile, 'level'):
+    if not target.level:
         Log.error("Warning: Tile doesn't have a reference to the Level!")
         return False
         
-    tile.level.till_map_node(tile.grid_x, tile.grid_y)
+    target.level.till_map_node(target.grid_x, target.grid_y)
     return True
 
-def _use_water_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-    Log.info(f"Watering {tile.grid_x}, {tile.grid_y}...")
+def _use_water_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+    if not isinstance(target, Tile):
+        Log.error("You can only water soil tiles!")
+        return False
+
+    if not target.is_tilled:
+        Log.error("You can only water tilled soil!")
+        return False
+        
+    if target.watered:
+        Log.error("This tile is already watered!")
+        return False
+
+    active_item = player.inventory.get_active_item()
+    if not isinstance(active_item, ToolItem) or not active_item.has_water():
+        Log.error("Watering can is empty or invalid! Press 'R' to refill.")
+        return False
+        
+    target.watered = True
+    active_item.consume_water()
+    
+    Log.success(f"Watered tile at {target.grid_x}, {target.grid_y}! (Water left: {active_item.water_level}/{active_item.max_water})")
     return True
 
-def _use_axe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+def _use_axe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
     Log.info("Chop chop")
     return True
 
-def _use_pickaxe_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+def _use_pickaxe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
     Log.info("Breaking stone...")
     return True
 
-def _use_generic_strategy(player, tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
+def _use_generic_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
     """Fallback for tools with no specific logic yet."""
     return False
-
 
 
 # --- SUBCLASSES ---
@@ -104,44 +140,55 @@ class ToolItem(Item):
         ToolType.PICKAXE: _use_pickaxe_strategy,
     }
 
-    def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup) -> bool:
-        if not target_tile: 
+    def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None):
+        super().__init__(item_id, count, preloaded_data)
+        self.max_water = 10
+        if getattr(self, 'tool_type', None) == ToolType.WATER:
+            self.max_water = 10
+            self.water_level = 10
+
+    def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+        if not target: 
             return False
 
         t_type = self.tool_type
         if not t_type:
-            return _use_generic_strategy(player, target_tile, all_tiles, group)
+            return _use_generic_strategy(player, target, interactables, group)
 
-        # Look up the strategy from the dictionary, defaulting to generic if not found
         strategy_func = self.STRATEGIES.get(t_type, _use_generic_strategy)
-        return strategy_func(player, target_tile, all_tiles, group)
+        return strategy_func(player, target, interactables, group)
+    
+    def has_water(self) -> bool:
+        """Safely checks if the watering can has available water."""
+        return self.water_level is not None and self.water_level > 0
+
+    def consume_water(self) -> None:
+        """Safely decrements the water level."""
+        if self.water_level is not None and self.water_level > 0:
+            self.water_level -= 1
 
 class SeedItem(Item):
     """Handles planting logic and consumes 1 stack count upon success."""
-    def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup):
-        if self.count <= 0 or not target_tile: 
+    def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+        if self.count <= 0 or not isinstance(target, Tile): 
             return False
         
-        # Check if the tile is ready for a seed
-        if not getattr(target_tile, 'is_tilled', False) or target_tile.occupant:
+        if not target.is_tilled or target.occupant:
             Log.error("Ground not ready or occupied.")
             return False
             
-        # Figure out the plant name. 
         plant_id = self.item_id.replace("_seeds", "")
         Log.info(f"Planting {plant_id}...")
         
-        target_tile.level.spawn_plant(plant_id, target_tile.grid_x, target_tile.grid_y, group)
-        # Consume the seed
+        target.level.spawn_plant(plant_id, target.grid_x, target.grid_y, group)
         self.count -= 1
         return True
 
 class FoodItem(Item):
-    def use(self, player, target_tile, all_tiles, group: pygame.sprite.AbstractGroup):
+   def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
         if self.count <= 0: 
             return False
         Log.info(f"Yum! Ate {self.name} for {self.data.energy_gain} energy.")
-        # use for energy or sell?
         self.count -= 1
         return True
 

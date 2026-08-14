@@ -10,19 +10,21 @@ from ui.wrappers import Tooltip
 from core.debug_logger import Log
 
 if TYPE_CHECKING:
-    from custom_types import Slot
+    from custom_types import Slot, Pos
+    from entities.player import Player
+    from core.types import ShopData
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
-    def __init__(self, max_size=16):
-        self.max_size = max_size
+    def __init__(self, max_size:int=16) -> None:
+        self.max_size:int = max_size
         self.items:list[Item|None] = [None] * max_size # Just stores Item objects
 
     def get_amount(self, item_name: str) -> int:
         """Helper: Quickly get the total count of a specific item across all stacks."""
         return sum(item.count for item in self.items if item and item.name == item_name)
 
-    def add_item(self, new_item:Item):
+    def add_item(self, new_item:Item) -> bool:
         """ Handles stacking and splitting large stacks into multiple empty slots. """
         remaining = new_item.count
         
@@ -51,7 +53,7 @@ class Inventory:
         # Return False if the inventory filled up before everything could be added
         return False
 
-    def remove_item(self, item_name:str, amount:int=1):
+    def remove_item(self, item_name:str, amount:int=1) -> bool:
         """Removes an item by name, starting from the end of the inventory first."""        
         #make sure we have enough BEFORE removing
         if self.get_amount(item_name) < amount:
@@ -95,9 +97,9 @@ class Inventory:
 
 class InventoryUI(UIElement):
     """Handles all drawing and clicking for a grid of slots."""
-    def __init__(self, rect:pygame.Rect, inventory_data: Inventory, columns:int=4, slot_size:int=40, padding:int=5):
+    def __init__(self, rect:pygame.Rect, inventory_data: Inventory, columns:int=4, slot_size:int=40, padding:int=5) -> None:
         super().__init__(rect)
-        self.data = inventory_data # Link to the pure data
+        self.data: Inventory = inventory_data # Link to the pure data
         
         # Calculate the exact width of the slots + gaps
         grid_width = (columns * slot_size) + ((columns - 1) * padding)
@@ -123,7 +125,7 @@ class InventoryUI(UIElement):
             align="midbottom"
         )
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos:Pos|None=None) -> None:
         """ Syncs the visual slots with the backend data and runs hover logic. """
         super().update(mouse_pos)
         hovered_item_name = ""
@@ -149,7 +151,7 @@ class InventoryUI(UIElement):
             
         self.tooltip.update(mouse_pos)
 
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface) -> None:
         # Draw main background
         super().draw(screen)
         
@@ -157,11 +159,11 @@ class InventoryUI(UIElement):
         for slot in self.slots:
             slot.draw(screen)
 
-    def is_click(self, mouse_pos):
+    def is_click(self, mouse_pos:Pos) -> bool:
         """ Checks if the overall inventory panel was clicked. """
         return self.is_visible and self.rect.collidepoint(mouse_pos)
 
-    def click(self, mouse_pos):
+    def click(self, mouse_pos:Pos) -> int | None:
         """ Returns the index of the specific slot that was clicked, or None. """
         for slot in self.slots:
             if slot.is_click(mouse_pos):
@@ -170,11 +172,11 @@ class InventoryUI(UIElement):
     
 class ShopMenu:
     """Controller for the Shop. Uses Composition to manage data and UI."""
-    def __init__(self, player, data, columns=4, max_size=16):
-        self.player = player
-        self.shop_data = data
-        self.is_open = False
-        self.rect = SHOP_MENU
+    def __init__(self, player:Player, data:ShopData|None, columns:int=4, max_size:int=16) -> None:
+        self.player:Player = player
+        self.shop_data:ShopData|None = data
+        self.is_open:bool = False
+        self.rect:pygame.Rect = SHOP_MENU
 
         # Background visual
         self.background = UIFactory.static_border_element(
@@ -185,7 +187,7 @@ class ShopMenu:
         )
 
         # The Pure Data
-        self.inventory_data = Inventory(max_size=max_size)
+        self.inventory_data:Inventory = Inventory(max_size=max_size)
 
         grid_rect = self.rect.copy()
         grid_rect.y += SHOP_GRID_OFFSET_Y
@@ -208,11 +210,11 @@ class ShopMenu:
         )
         
         # Wrap them together so self.ui_grid acts as a single functional unit
-        self.ui_grid = Tooltip(base_grid, tooltip_box)
+        self.ui_grid:Tooltip = Tooltip(base_grid, tooltip_box)
         
         title_string = self.shop_data.store_name if self.shop_data else "Shop"
         
-        self.title_box = UIFactory.text(
+        self.title_box:UIElement = UIFactory.text(
             rect=pygame.Rect(self.rect.centerx, self.rect.top + 10, 0, 0),
             text=title_string,
             config="HUD", 
@@ -221,7 +223,7 @@ class ShopMenu:
 
         self.populate_shop()
 
-    def populate_shop(self):
+    def populate_shop(self) -> None:
         """ Reads IDs from shop_data and fills the backend data structure. """
         if not self.shop_data: 
             return
@@ -236,7 +238,7 @@ class ShopMenu:
             
             self.ui_grid.slots[i].set_price(new_item.data.buy_price)
 
-    def update(self, mouse_pos=None):
+    def update(self, mouse_pos:Pos|None=None) -> None:
         """ Runs the UI updates and re-applies price tags. """
         if not self.is_open: 
             return
@@ -245,7 +247,7 @@ class ShopMenu:
         self.ui_grid.update(mouse_pos)
         self.title_box.update()
 
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface) ->None:
         if not self.is_open: 
             return
         
@@ -258,7 +260,7 @@ class ShopMenu:
         # Draw the Grid UI
         self.ui_grid.draw(screen)
   
-    def handle_click(self, pos):
+    def handle_click(self, pos:Pos) -> bool:
         """Handles interaction. Returns a string action code if the State needs to react."""
         if not self.is_open: 
             return False
@@ -274,7 +276,7 @@ class ShopMenu:
                 
         return False
 
-    def try_buy_item(self, item):
+    def try_buy_item(self, item:Item) -> bool:
         """Validates and executes the purchase logic"""
         cost = item.data.buy_price
         
@@ -284,9 +286,7 @@ class ShopMenu:
             return False
 
         # Create a fresh copy to give to the player
-        import copy
-        player_item = copy.copy(item)
-        player_item.count = 1 
+        player_item = item.copy_one()
         
         # Try to Add item to player's actual data inventory
         if self.player.inventory.data.add_item(player_item):

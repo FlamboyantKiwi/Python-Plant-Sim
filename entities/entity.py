@@ -65,12 +65,12 @@ class MovingEntity(Entity):
     @staticmethod
     def _hitbox_collide(entity:Any, obj:Any) -> bool:
         """Custom Pygame collision callback to check hitboxes instead of visual rects."""
-        target_rect = obj.hitbox if hasattr(obj, 'hitbox') else obj.rect
+        target_rect = getattr(obj, 'hitbox', obj.rect)
         return entity.hitbox.colliderect(target_rect)
 
     def move(self, dt:Num, collidable_objects:Interactables) -> None:
         """Applies vector movement and handles axis-separated collisions."""
-        if self.direction.magnitude() == 0: 
+        if self.direction.magnitude_squared() == 0: 
             self.finalize_movement()
             return
       

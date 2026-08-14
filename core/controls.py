@@ -6,6 +6,7 @@ class KeyBindings:
         # Action Keys
         self.interact = pygame.K_SPACE
         self.run = pygame.K_LSHIFT
+        self.refill = pygame.K_r
 
         # Movement Keys (Stored as lists to allow primary/secondary bindings)
         self.up = [pygame.K_w, pygame.K_UP]
@@ -47,9 +48,13 @@ class KeyBindings:
 
     def rebind(self, action: str, new_key: int):
         """Helper method we can use later for a Settings menu."""
-        if hasattr(self, action):
+        try:
+            # Attempt to get it just to prove it exists, then set it
+            getattr(self, action)
             setattr(self, action, new_key)
             Log.success(f"Rebound {action} to {pygame.key.name(new_key)}")
+        except AttributeError:
+            Log.error(f"Cannot rebind: '{action}' is not a valid control.")
 
 # Create a global instance that the rest of your game can import
 controls = KeyBindings()

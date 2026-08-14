@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame
 from core.assets import ASSETS
-from ui.ui_elements import UIElement, TextBox, Button, Slot
+from ui.ui_elements import ProgressBar, UIElement, TextBox, Button, Slot
 from ui.wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, Tooltip
 from core.ui_utils import get_grid_pos 
 from typing import TYPE_CHECKING, cast
@@ -171,6 +171,29 @@ class UIFactory:
             hover_colour="HOVER_COLOUR", active_colour="ACTIVE_COLOUR",
             thickness=2
         ))
+
+    # ----- Progress Bar Varieties -----
+    @classmethod
+    def progress_bar(cls, rect: pygame.Rect, percentage: float = 1.0,
+                   value_getter: Callable[[], float] | None = None,
+                   fill_colour: Any = (56, 220, 245),
+                   bg_colour: Any = (30, 30, 30),
+                   alignment: str = "midleft",
+                   is_horizontal: bool | None = None) -> ProgressBar:
+        """Assembles a HealthBar using standard solid_element blocks with dynamic anchoring."""
+        
+        bg_element = cls.solid_element(rect=rect.copy(), colour=bg_colour)
+        fill_element = cls.solid_element(rect=rect.copy(), colour=fill_colour)
+        
+        return ProgressBar(
+            rect=rect,
+            bg_element=bg_element,
+            fill_element=fill_element,
+            percentage=percentage,
+            value_getter=value_getter,
+            alignment=alignment,
+            is_horizontal=is_horizontal
+        )
     
     # ----- Layout Factories -----
     @staticmethod

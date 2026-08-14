@@ -43,9 +43,11 @@ class Tile(pygame.sprite.Sprite):
         
         self.occupant: Entity|None = None 
         
-        # Internal flag for the terrain itself
-        if not hasattr(self, '_base_obstructed'): 
-            self._base_obstructed = False
+        # Unified Tile Attributes
+        self._base_obstructed = False
+        self.tillable: bool = False
+        self.is_tilled: bool = False
+        self.watered: bool = False
 
         # Generate initial visual
         self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
@@ -71,14 +73,12 @@ class GroundTile(Tile):
     """Tile containing all farming logic."""
     def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
                  group: Group, detail_image: pygame.Surface | None = None) -> None:    
+        # Call the parent __init__ to set up position and visuals
+        super().__init__(level, x, y, tile_type_key, neighbors, group, detail_image)
         self.is_tilled = False
         self.tillable = (tile_type_key in ["GRASS_A", "GRASS_B", "DIRT"])
         self.watered = False
         
-        # Call the parent __init__ to set up position and visuals
-        super().__init__(level, x, y, tile_type_key, neighbors, group, detail_image)
-        
-
     def refresh_terrain(self, new_neighbors: list[bool]) -> None:
         # LAYER 1: Base Dirt Background
         dirt_img = ASSETS.get_image("DIRT_IMAGE")
@@ -111,8 +111,8 @@ class WaterTile(Tile):
     """Tile representing water. Blocks movement."""
     def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
                  group: Group, detail_image: pygame.Surface | None = None) -> None:
-        self._base_obstructed = True
         super().__init__(level, x, y, tile_type_key, neighbors, group, detail_image)
+        self._base_obstructed = True
         
         
     def refresh_terrain(self, new_neighbors: list[bool]) -> None:
