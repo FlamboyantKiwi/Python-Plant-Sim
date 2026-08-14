@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING
 from core.types import PlantData
 from core.assets import ASSETS
 from entities.entity import Entity
+from entities.items import create_item, Item
+from entities.player import Player
 from settings import BLOCK_SIZE
+from core.debug_logger import Log
 
 # Type-Only Imports
 if TYPE_CHECKING:
@@ -23,6 +26,7 @@ class Plant(Entity):
         # State
         self.age:float = 0.0
         self.days_old:int = 0
+        self.is_harvested:bool = False
         
         # Make trees solid for collisions and set their hitbox scale to 50%
         self.obstructed = self.data.is_tree
@@ -49,7 +53,7 @@ class Plant(Entity):
     
     def _get_current_image(self) -> pygame.Surface:
         """Helper to generate the current stage key and fetch the image."""
-        image_key = f"{self.data.name}_{self.data.get_stage_index(self.age)}"
+        image_key = f"{self.data.name}_{self.data.get_stage_index(self.age, self.is_harvested)}"
         return ASSETS.get_image(image_key)
     
     def grow(self, amount: float) -> None:
@@ -59,6 +63,42 @@ class Plant(Entity):
             self.age = self.data.grow_time
         
         self.update_visuals()
+
+    def harvest(self) -> Item|None:
+        """Triggers when player interacts with fully grown crops"""
+        if self.age >= self.data.grow_time and not self.is_harvested:
+
+            # Spawn item
+            yielded_item = create_item(self.data.harvest_item, count=1)
+
+            # Change Visuals
+            if self.data.regrows or self.data.is_tree:
+                # Drop the age back to 75%. resume growing 
+                self.age = self.data.grow_time * 0.75 
+            else:
+                # Single harvest crop permanently transitions to Frame 4 (Stump/Empty)
+                self.is_harvested = True
+                
+            self.update_visuals()
+            return yielded_item
+            
+        return None
+
+    def on_interact(self, player: Player) -> bool:
+        """ When player clicks on this plant with empty hand, ,try harvest it"""
+        harvested_item = self.harvest()
+        
+        if harvested_item:
+            # Try to push it into the player's inventory
+            if player.inventory.data.add_item(harvested_item):
+                Log.success(f"Harvested {harvested_item.name}!")
+                return True
+            else:
+                Log.error("Inventory is full! Cannot harvest.")
+                # (Optional: Revert the harvest state here if you want them to try again later)
+                return False
+                
+        return False
     
     def update_visuals(self) -> None:
         """ Checks if the plant grew into a new stage and updates the sprite. """

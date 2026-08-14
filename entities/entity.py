@@ -7,6 +7,7 @@ from core.types import Direction, EntityState
 
 if TYPE_CHECKING:
     from custom_types import Num, Group, Interactables
+    from entities.player import Player
 
 class Entity(pygame.sprite.Sprite):
     """Absolute base class for anything that exists in the game world."""
@@ -44,6 +45,10 @@ class Entity(pygame.sprite.Sprite):
         draw_rect.x -= int(offset_x)
         draw_rect.y -= int(offset_x)
         surface.blit(self.image, draw_rect)
+
+    def on_interact(self, player: 'Player') -> bool:
+        """Default behavior when the player interacts with this object empty-handed."""
+        return False
 
 class MovingEntity(Entity):
     """Base class for entities that can move and collide dynamically."""

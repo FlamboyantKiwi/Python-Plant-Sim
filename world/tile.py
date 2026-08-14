@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from custom_types import Group, Num
     from world.level import Level
     from entities.entity import Entity
+    from entities.player import Player
 
 class MapTileGroup(pygame.sprite.Group):
     def __init__(self) -> None:

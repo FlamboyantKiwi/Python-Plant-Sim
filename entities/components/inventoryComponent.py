@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import pygame
 
+from core.debug_logger import Log
 from ui.ui_factory import UIFactory
 from ui.InventoryUI import InventoryUI, Inventory
 from core.ui_utils import calc_pos_rect
@@ -67,6 +68,7 @@ class InventoryController:
         item = self.get_active_item()
         if item and item.count <= 0:
             self.data.items[self.active_slot_index] = None
+            Log.info("Item consumed entirely.")
 
     def handle_event(self, event: pygame.event.Event, controls_map) -> None:
         """Listens for hotbar hotkeys."""

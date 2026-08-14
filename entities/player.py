@@ -11,7 +11,7 @@ from core.types import EntityState, PlayerType, EntityCategory
 from core.controls import controls
 from entities.components.animation import AnimationController
 from entities.items import create_item
-from entities.entity import MovingEntity
+from entities.entity import Entity, MovingEntity
 from entities.components.interaction import InteractionController
 from entities.components.inventoryComponent import InventoryController, InventoryManager
 from world.tile import Tile
@@ -143,20 +143,32 @@ class Player(MovingEntity):
         if not hit_objects:
             return # Looking at nothing
             
-        # Check Inventory
-        active_item = self.inventory.get_active_item()
-        if not active_item: 
-            Log.error("Inventory Slot Empty! (Maybe talk to an NPC or open a chest here later?)")
-            return
-
         # Use the item on the first object we hit
         target_obj = hit_objects[0]
-        Log.info(f"Interacting with {type(target_obj).__name__}")
+        active_item = self.inventory.get_active_item()
+       
+        if active_item: 
+            # Pass the raw target and full interactables list directly to the item
+            used = active_item.use(self, target_obj, interactables, self.camera_group)
         
-        # Pass the raw target and full interactables list directly to the item
-        used = active_item.use(self, target_obj, interactables, self.camera_group)
-        
-        if used: # clean up if consumed
-            self.inventory.consume_active_item()
-            Log.info("Item consumed entirely.")
-        
+            if used: # clean up if consumed
+                self.inventory.consume_active_item()
+            return
+
+        # Empty hand interaction:
+        # Prioritize non-tiles (Plants, NPCs, Items, etc.)
+        for target_obj in hit_objects:
+            if not isinstance(target_obj, Tile):
+                if target_obj.on_interact(self):
+                    return # Action complete! Stop here.
+
+        """ May add later?
+        # Fallback to the tiles if entity failed or didn't exist
+        for target_obj in hit_objects:
+            if isinstance(target_obj, Tile):
+                if target_obj.on_interact(self):
+                    return # Action complete! Stop here."""
+      
+        Log.whisper(f"Nothing happened when interacting with {type(target_obj).__name__}.")
+
+

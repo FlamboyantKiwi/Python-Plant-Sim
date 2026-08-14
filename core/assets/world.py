@@ -141,8 +141,8 @@ class PlantGroup(SpriteGroup):
                 if is_tree:
                     slices = TREE_FRAME_SLICES
                 else:
-                    frame_w = world_w // len(PLANT_FRAME_ORDER)
-                    slices = [(idx * frame_w, frame_w) for idx in PLANT_FRAME_ORDER]    
+                    frame_w = world_w // 4
+                    slices = [(idx * frame_w, frame_w) for idx in range(4)]    
                 
                 for frame_idx, (offset, width) in enumerate(slices):
                     frame_img = tight_strip.subsurface((offset, 0, width, bounds.h))

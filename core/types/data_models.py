@@ -55,23 +55,33 @@ class PlantData:
     is_tree: bool = False # True = Tree behavior (collision?), False = Crop (walkable)
     regrows: bool = False # True = Returns to previous stage after harvest (like berries)
 
-    def get_stage_index(self, current_age: float) -> int:
-        """Calculates the correct image index based on age."""
-        #Prevent division by 0
-        if self.grow_time <= 0:
-            return self.image_stages - 1
-        # Ready to Harvest?
-        if current_age >= self.grow_time:   
-            return self.image_stages - 1
+    def get_stage_index(self, current_age: float, is_harvested:bool = False) -> int:
+        """Calculates the correct image index based on age and harvest state."""
 
-        # Calculate percentage of growth
-        growth_percent = current_age / self.grow_time
-        growing_stage_count = self.image_stages - 1
-        
-        stage = int(growth_percent * growing_stage_count)
-        
-        # Clamp to ensure we don't exceed the second-to-last stage
-        return min(stage, growing_stage_count - 1)
+        # --- TREES (5 Frames) ---
+        if self.is_tree:
+            if is_harvested: return 3 # Stump / Empty branches
+            if current_age >= self.grow_time: return 4 # Mature with fruit
+            # Growing stages: 0, 1, 2, 3
+            stage = int((current_age / self.grow_time) * 4)
+            return min(stage, 3)
+            
+        # --- REGROWING CROPS (4 Frames) ---
+        # e.g., Red Pepper
+        if self.regrows:
+            if is_harvested: return 2 # Returns to the 'no-fruit' stage after harvest
+            if current_age >= self.grow_time: return 3 # Mature (Wait for player input)
+            # Growing stages: 0, 1, 2
+            stage = int((current_age / self.grow_time) * 3)
+            return min(stage, 2)
+            
+        # --- SINGLE HARVEST CROPS (4 Frames) ---
+        # e.g., Onion, Beet, Mushroom
+        if is_harvested: return 3 # Harvested/Dead/Empty ground
+        if current_age >= self.grow_time: return 2 # Mature (Wait for player input)
+        # Growing stages: 0, 1
+        stage = int((current_age / self.grow_time) * 2)
+        return min(stage, 1)
 
 @dataclass(frozen=True)
 class ShopData:
