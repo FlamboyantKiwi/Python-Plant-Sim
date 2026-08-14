@@ -1,4 +1,4 @@
-from core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, CropVisualData, STANDARD_DIRECTIONS, UP, LEFT, RIGHT, DOWN
+from core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, STANDARD_DIRECTIONS, UP, LEFT, RIGHT, DOWN
 from core.types.generated_enums import PlayerType, FarmAnimalType
 from settings import (
     HUD_FONT_SIZE, HUD_FONT_BOLD,
@@ -6,112 +6,16 @@ from settings import (
 )
 from dataclasses import dataclass, field
 import random
-  
-CROP_VISUALS = {
-    # --- SINGLE HARVEST VEGETABLES ---
-    "Beet": CropVisualData(
-        container=SpriteRect(240, 192, 48, 16),
-        fruit=SpriteRect(224, 60, 16, 32),
-        world_art=SpriteRect(144, 404, 64, 36)),
-    "Onion": CropVisualData(
-        container=SpriteRect(48, 208, 48, 16),
-        fruit=SpriteRect(192, 60, 16, 32),
-        world_art=SpriteRect(144, 368, 64, 36)),
-    "Cabbage": CropVisualData(
-        container=SpriteRect(48, 192, 48, 16),
-        fruit=SpriteRect(260, 11, 24, 32),
-        world_art=SpriteRect(0, 211, 128, 24)),
-    "Squash": CropVisualData(
-        container=SpriteRect(96, 208, 48, 16),
-        fruit=SpriteRect(0, 0, 32, 48),
-        world_art=SpriteRect(0, 235, 128, 36)),
-    "Cauliflower": CropVisualData(
-        container=SpriteRect(0, 192, 48, 16),
-        fruit=SpriteRect(128, 8, 32, 38),
-        world_art=SpriteRect(0, 133, 128, 24)),
-    "Melon": CropVisualData(
-        container=SpriteRect(60, 160, 48, 32),
-        fruit=SpriteRect(64, 0, 32, 48),
-        world_art=SpriteRect(0, 280, 128, 36)),
-    
-    # --- REGROWING CROPS ---
-    "Green Bean": CropVisualData(
-        container=SpriteRect(0, 208, 48, 16),
-        fruit=SpriteRect(160, 60, 16, 32),
-        world_art=SpriteRect(0, 171, 128, 36)),
-    "Cucumber": CropVisualData(
-        container=SpriteRect(240, 144, 48, 16),
-        fruit=SpriteRect(100, 60, 24, 32),
-        world_art=SpriteRect(0, 53, 128, 42)),
-    "Red Pepper": CropVisualData(
-        container=SpriteRect(192, 160, 48, 16),
-        fruit=SpriteRect(4, 60, 24, 32),
-        world_art=SpriteRect(0, 95, 128, 36)),
-    "Grape": CropVisualData(
-        container=SpriteRect(240, 208, 48, 16),
-        fruit=SpriteRect(196, 11, 24, 32),
-        world_art=SpriteRect(0, 6, 128, 42)),
-    "Pineapple": CropVisualData(
-        container=SpriteRect(240, 160, 48, 32),
-        fruit=SpriteRect(32, 0, 32, 48),
-        world_art=SpriteRect(0, 316, 128, 36)),
 
-    # --- MUSHROOMS ---
-    "Mushroom": CropVisualData(
-        container=SpriteRect(192, 192, 48, 16),
-        fruit=SpriteRect(68, 60, 24, 32),
-        world_art=SpriteRect(224, 404, 64, 36)),
-    "Chestnut Mushroom": CropVisualData(
-        container=SpriteRect(144, 208, 48, 16),
-        fruit=SpriteRect(36, 60, 24, 32),
-        world_art=SpriteRect(224, 368, 64, 36)),
+CROPS_ORDER = [
+    "Beet", "Onion", "Cabbage", "Squash", "Cauliflower", "Melon",
+    "Green Bean", "Cucumber", "Red Pepper", "Grape", "Pineapple",
+    "Mushroom", "Chestnut Mushroom", "Corn", "Sunflower"
+]
 
-    # --- TREES ---
-    "Apple": CropVisualData(
-        container=SpriteRect(192, 144, 48, 16),
-        fruit=SpriteRect(228, 11, 24, 32),
-        world_art=SpriteRect(128, 146, 255, 64),
-        is_tree=True),
-    "Lemon": CropVisualData(
-        container=SpriteRect(240, 128, 48, 16),
-        fruit=SpriteRect(128, 60, 16, 32),
-        world_art=SpriteRect(128, 82, 255, 64),
-        is_tree=True),
-    "Plum": CropVisualData(
-        container=SpriteRect(192, 208, 48, 16),
-        fruit=SpriteRect(256, 60, 16, 32),
-        world_art=SpriteRect(128, 4, 255, 78),
-        is_tree=True),
-    "Coconut": CropVisualData(
-        container=SpriteRect(192, 176, 48, 16),
-        fruit=SpriteRect(160, 8, 32, 38),
-        world_art=SpriteRect(128, 290, 255, 78),
-        is_tree=True),
-    "Banana": CropVisualData(
-        container=SpriteRect(0, 176, 48, 16),
-        fruit=SpriteRect(96, 8, 32, 38),
-        world_art=SpriteRect(128, 212, 255, 78),
-        is_tree=True),
-
-    # --- OTHERS (Missing Art) ---
-    "Corn": CropVisualData(
-        container=SpriteRect(0, 0, 16, 16),
-        fruit=SpriteRect(0, 0, 16, 16),
-        world_art=SpriteRect(0, 352, 128, 36)),
-    "Sunflower": CropVisualData(
-        container=SpriteRect(0, 0, 16, 16),
-        fruit=SpriteRect(0, 0, 16, 16),
-        world_art=SpriteRect(0, 396, 128, 36)),
-    "Wheat": CropVisualData(
-        container=SpriteRect(0,0,16,16),
-        fruit=SpriteRect(0,0,16,16),
-        world_art=SpriteRect(0,0,16,16)),
-    "Tomato": CropVisualData(
-        container=SpriteRect(0,0,16,16),
-        fruit=SpriteRect(0,0,16,16),
-        world_art=SpriteRect(0,0,16,16))
-}
-
+TREES_ORDER = [
+    "Apple", "Lemon", "Plum", "Coconut", "Banana"
+]
 SEED_BAGS_POS = SpriteRect(240, 100, 32, 24) # 2 different seed bags
 
 FRUIT_RANKS = (Quality.GOLD, Quality.SILVER, Quality.BRONZE)

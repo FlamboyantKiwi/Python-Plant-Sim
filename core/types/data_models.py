@@ -10,14 +10,6 @@ if TYPE_CHECKING:
     from custom_types import Colour
     from core.states import GameState
 
-@dataclass(frozen=True)
-class CropVisualData:
-    """Holds ONLY the rendering coordinates for crops, no gameplay stats."""
-    container: SpriteRect
-    fruit: SpriteRect
-    world_art: SpriteRect
-    is_tree: bool = False
-
 class EntityConfig(NamedTuple):
     """Blueprint for registering a new entity type."""
     sheets: list[str]   # List of filenames (e.g. ["Fox", "Cat"])

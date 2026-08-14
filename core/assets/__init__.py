@@ -35,8 +35,8 @@ class AssetLoader:
             details="ground_grass_details"
         )
         self.tools = ToolGroup(self, main="Tools_All")
-        self.plants = PlantGroup(self, main="Plants")
-        self.fruits = FruitGroup(self, main="Supplies")
+        self.plants = PlantGroup(self, crops="plants/crops", trees="plants/trees")
+        self.fruits = FruitGroup(self, crops="plants/crops", trees="plants/trees", supplies="Supplies")
         self.entities = EntityGroup(self)
         self.images = ImageGroup(self)
         self.fonts = FontGroup(self)

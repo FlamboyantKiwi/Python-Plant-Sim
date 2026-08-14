@@ -8,7 +8,7 @@ from core.spritesheet import SpriteSheet
 from core.types import SpriteRect
 from core.debug_logger import Log
 from core.assets.asset_data import (
-    CROP_VISUALS, GROUND_TILE_REGIONS, TILE_DETAILS, 
+    CROPS_ORDER, TREES_ORDER, GROUND_TILE_REGIONS, TILE_DETAILS, 
     MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT, TREE_FRAME_SLICES, 
     PLANT_FRAME_ORDER, FRUIT_RANKS, SEED_BAGS_POS,
     MarchingLayout, Quality)
@@ -115,24 +115,44 @@ class ToolGroup(SpriteGroup):
 
 class PlantGroup(SpriteGroup):
     def load(self) -> None:
-        sheet = self.get_sheet("main")
-        if not sheet: 
-            return
-
-        for name, visual_data in CROP_VISUALS.items():
-            rect = visual_data.world_art
+        def extract_plants(sheet_key: str, order_list: list, world_x: int, world_w: int, is_tree: bool):
+            sheet = self.get_sheet(sheet_key)
+            if not sheet or not order_list: 
+                return
             
-            if visual_data.is_tree:
-                slices = TREE_FRAME_SLICES
-            else:
-                frame_w = rect.w // len(PLANT_FRAME_ORDER)
-                slices = [(idx * frame_w, frame_w) for idx in PLANT_FRAME_ORDER]    
+            # The image height dictates the uniform grid height
+            row_h = sheet.sheet.get_height() // len(order_list)
+            
+            for i, name in enumerate(order_list):
+                current_y = i * row_h
                 
-            for i, (offset, width) in enumerate(slices):
-                self.storage[f"{name}_{i}"] = sheet.get_image(
-                    rect.x + offset, rect.y, width, rect.h,
-                    (width * self.SCALE_FACTOR, rect.h * self.SCALE_FACTOR)
-                )
+                # Grab the uniform padded strip from the grid
+                padded_strip = sheet.get_image(world_x, current_y, world_w, row_h)
+                
+                # Get the tight bounding box to strip bottom transparency
+                bounds = padded_strip.get_bounding_rect()
+                if bounds.h <= 0: 
+                    continue # Skip empty items (like Corn/Sunflower)
+                    
+                # Create the tightly cropped strip (keeps physics accurate)
+                tight_strip = padded_strip.subsurface((0, bounds.y, world_w, bounds.h))
+
+                # Slice the tight strip into animation frames
+                if is_tree:
+                    slices = TREE_FRAME_SLICES
+                else:
+                    frame_w = world_w // len(PLANT_FRAME_ORDER)
+                    slices = [(idx * frame_w, frame_w) for idx in PLANT_FRAME_ORDER]    
+                
+                for frame_idx, (offset, width) in enumerate(slices):
+                    frame_img = tight_strip.subsurface((offset, 0, width, bounds.h))
+                    
+                    # Apply SCALE_FACTOR manually
+                    scaled_size = (width * self.SCALE_FACTOR, bounds.h * self.SCALE_FACTOR)
+                    self.storage[f"{name}_{frame_idx}"] = pygame.transform.scale(frame_img, scaled_size)
+
+        extract_plants("crops", CROPS_ORDER, world_x=80, world_w=128, is_tree=False)
+        extract_plants("trees", TREES_ORDER, world_x=80, world_w=255, is_tree=True)
         
 class FruitGroup(SpriteGroup):
     def __init__(self, manager: AssetLoader, **sheet_files: str) -> None:
@@ -143,25 +163,54 @@ class FruitGroup(SpriteGroup):
         self.cache = {}
 
     def load(self) -> None:
-        sheet = self.get_sheet("main")
-        if not sheet: 
-            return
+        def extract_supplies(sheet_key: str, order_list: list):
+            sheet = self.get_sheet(sheet_key)
+            if not sheet or not order_list: return
+            
+            row_h = sheet.sheet.get_height() // len(order_list)
+            c_x, c_w = 0, 48
+            f_x, f_w = 48, 32
 
-        for name, visual_data in CROP_VISUALS.items():
-            clean_key = name.lower().replace(" ", "_") 
-            
-            # Note: Assuming 3 quality levels for all fruits for this visual extraction
-            self.storage[clean_key] = self._create_strip(
-                sheet, visual_data.container, FRUIT_RANKS, 3, 2
-            )
-            
-            self.containers[clean_key] = sheet.get_image(
-                visual_data.fruit.x, visual_data.fruit.y, 
-                visual_data.fruit.w, visual_data.fruit.h
-            )
-            
-        self.seed_bags = self._create_strip(sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
+            for i, name in enumerate(order_list):
+                clean_key = name.lower().replace(" ", "_") 
+                current_y = i * row_h
+                
+                # --- Container Strip (Quality levels) ---
+                padded_container = sheet.get_image(c_x, current_y, c_w, row_h)
+                c_bounds = padded_container.get_bounding_rect()
+                
+                if c_bounds.h > 0:
+                    tight_container = padded_container.subsurface((0, c_bounds.y, c_w, c_bounds.h))
+                    
+                    # Emulate previous _create_strip slicing
+                    num_ranks = 3
+                    rank_w = c_w // num_ranks
+                    scale_f = 2
+                    
+                    items = {}
+                    for rank_idx, rank in enumerate(FRUIT_RANKS):
+                        rank_key = rank.value if isinstance(rank, Enum) else rank
+                        rank_img = tight_container.subsurface((rank_idx * rank_w, 0, rank_w, c_bounds.h))
+                        items[rank_key] = pygame.transform.scale(rank_img, (rank_w * scale_f, c_bounds.h * scale_f))
+                        
+                    self.storage[clean_key] = items
 
+                # --- Fruit Image ---
+                padded_fruit = sheet.get_image(f_x, current_y, f_w, row_h)
+                f_bounds = padded_fruit.get_bounding_rect()
+                
+                if f_bounds.h > 0:
+                    self.containers[clean_key] = padded_fruit.subsurface((0, 0, f_w, f_bounds.h))
+
+        # Extract fruits & containers from the new sheets
+        extract_supplies("crops", CROPS_ORDER)
+        extract_supplies("trees", TREES_ORDER)
+
+        # Fallback to extract Seed Bags from the master Supplies sheet
+        supplies_sheet = self.get_sheet("supplies")
+        if supplies_sheet:
+            self.seed_bags = self._create_strip(supplies_sheet, SEED_BAGS_POS, FRUIT_RANKS[1:], 2, 3)
+            
     def _create_strip(self, sheet: SpriteSheet, rect: SpriteRect, ranks: Sequence[Any], num: int, scale_f: int) -> dict[str, pygame.Surface]:
         items:dict[str, pygame.Surface] = {}
         w = rect.w // num

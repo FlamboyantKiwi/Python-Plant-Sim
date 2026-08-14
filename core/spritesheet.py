@@ -7,10 +7,15 @@ class SpriteSheet:
     def __init__(self, filename):
         from core.assets import ASSETS
         self.name = filename
-        self.sheet = ASSETS.load_raw_image(filename)
+        loaded_sheet = ASSETS.load_raw_image(filename)
 
-        if self.sheet is None:
-            Log.error(f"ERROR: Could not load sprite sheet {filename}")
+        if loaded_sheet is None:
+            Log.error(f"ERROR: Could not load sprite sheet {filename}. Generating Glitch Fallback.")
+            # Pull the generic pink square fallback directly from your engine
+            self.sheet: pygame.Surface = ASSETS._get_fallback_image(filename)
+        else:
+            self.sheet: pygame.Surface = loaded_sheet
+
     def get_image(self, x, y, width, height, scale=None):
         if scale is None:
             scale = width, height
