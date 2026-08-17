@@ -7,8 +7,6 @@ from collections.abc import Iterable
 if TYPE_CHECKING:
     from src.custom_types import Any, Num
 
-
-
 class PlantGroup(pygame.sprite.Group):
     def __init__(self):
         super().__init__()

@@ -5,16 +5,16 @@ import os
 from typing import TYPE_CHECKING, Callable
 from src.core import Log
 
+# Type-Only Imports
+if TYPE_CHECKING:
+    from src.custom_types import Num, EntityType, Colour
+
 # Runtime Imports
 from src.core.types import (
     ItemCategory, ItemData, EntityState, Direction, PlantData, 
     ShopData, TextConfig, EntityCategory
 )
 from src.core.assets.asset_data import MarchingLayout
-
-# Type-Only Imports
-if TYPE_CHECKING:
-    from src.custom_types import Num, EntityType, Colour
 
 # Sub-Group Relative Imports
 from .base import AssetGroup

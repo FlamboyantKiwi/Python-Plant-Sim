@@ -1,11 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from .base import AssetGroup
-from src.core import DatabaseManager
+
+from src.core import DatabaseManager, Log
 from src.core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
-from src.core import Log
+
 if TYPE_CHECKING:
     from src.core.assets import AssetLoader
+
+from .base import AssetGroup
 
 class DatabaseGroup(AssetGroup):
     """Manages the SQLite connection and handles fallback logic for missing data."""

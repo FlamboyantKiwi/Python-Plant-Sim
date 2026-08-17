@@ -1,12 +1,10 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, cast
-
 from src.settings import WIDTH, HEIGHT, DEBUG
 
 if TYPE_CHECKING:
-    from src.entities import Player
-    from src.entities import Entity
+    from src.entities import Player, Entity
 
 class CameraGroup(pygame.sprite.Group):
     def __init__(self)-> None:

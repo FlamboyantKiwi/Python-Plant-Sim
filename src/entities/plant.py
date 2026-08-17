@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from src.core.types import PlantData
 from src.core.assets import ASSETS
 from src.entities.entity import Entity
-
 from src.settings import BLOCK_SIZE
 from src.core import Log
 

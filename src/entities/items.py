@@ -6,7 +6,6 @@ from src.core import Log
 from typing import TYPE_CHECKING, Any
 from src.world.tile import Tile
 
-
 if TYPE_CHECKING:
     from src.entities import Player, Entity
     from src.groups import CameraGroup

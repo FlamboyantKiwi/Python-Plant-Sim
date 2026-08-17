@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 import pygame
 from src.ui.ui_factory import UIFactory
 from src.ui.ui_elements import UIElement

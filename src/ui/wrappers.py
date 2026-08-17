@@ -1,8 +1,8 @@
 from __future__ import annotations
-from src.ui.timer import Timer
 from typing import TYPE_CHECKING, Any
 import pygame
 from src.core.assets import ASSETS
+from src.ui.timer import Timer
 
 if TYPE_CHECKING:
     from src.ui import StateElement, TextBox

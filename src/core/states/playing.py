@@ -3,20 +3,19 @@ from typing import TYPE_CHECKING
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
-from src.entities import Player
 from src.core.states.hud import HUD
+from src.core.types import PlayerType, StateID
+from src.core.assets import ASSETS
+from src.entities import Player
 from src.world.level import Level
 from src.settings import WIDTH, HEIGHT
-from src.core.assets import ASSETS
-from src.groups import CameraGroup
-from src.groups import PlantGroup
-from src.core.types import PlayerType
-from .base import GameState
-from src.core.types import StateID
+from src.groups import CameraGroup, PlantGroup
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from src.custom_types import Game, Pos
+
+from .base import GameState
 
 class PlayingState(GameState):
     state_id = StateID.PLAYING

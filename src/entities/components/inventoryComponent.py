@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from src.core import Log
-from src.ui import UIFactory
-from src.ui import InventoryUI, Inventory
+from src.ui import UIFactory, InventoryUI, Inventory
 from src.core import calc_pos_rect
 from src.settings import WIDTH, HEIGHT, DRAG_DROP_THRESHOLD
 

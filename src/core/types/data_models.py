@@ -3,12 +3,13 @@ import pygame
 from dataclasses import dataclass
 from typing import NamedTuple, TYPE_CHECKING, TypeVar, Generic
 
-from .enums import ItemCategory, ToolType, EntityState, Direction
-from .geometry import SpriteRect, AnimationGrid
-
 if TYPE_CHECKING:
     from src.custom_types import Colour
     from src.core.states import GameState
+
+from .enums import ItemCategory, ToolType, EntityState, Direction
+from .geometry import SpriteRect, AnimationGrid
+
 
 class EntityConfig(NamedTuple):
     """Blueprint for registering a new entity type."""

@@ -3,16 +3,11 @@ import pygame
 from typing import TYPE_CHECKING, cast
 
 # Runtime Imports (Needed for logic/inheritance)
-from src.core import Log
-from src.core.types import ToolType
+from src.core import Log, calc_pos_rect, controls
 from src.settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from src.core import calc_pos_rect
-from src.core.types import EntityState, PlayerType, EntityCategory
-from src.core import controls
-from src.entities.components import AnimationController
+from src.core.types import EntityState, PlayerType, EntityCategory, ToolType
 from src.entities.entity import MovingEntity
-from src.entities.components import InteractionController
-from src.entities.components import InventoryController, InventoryManager
+from src.entities.components import AnimationController, InteractionController, InteractionHandler, InputController, InventoryController, InventoryManager
 from src.world.tile import Tile
 from src.groups import CameraGroup
 
@@ -41,8 +36,8 @@ class Player(MovingEntity):
         self.animator = AnimationController(EntityCategory.PLAYER, type) 
         
         self.targeter = InteractionController(self, INTERACTION_DISTANCE)
-
-        self.run_multiplier = 1.5  
+        self.interaction_handler = InteractionHandler(self, self.camera_group)
+        self.input_controller = InputController(self, base_speed=200, run_multiplier=1.5)
         
         #Inventory + Stats
         self.money = 500
@@ -87,44 +82,11 @@ class Player(MovingEntity):
             Log.success(f"Refilled {active_item.name}! Water level: {active_item.water_level}/{active_item.max_water}")
         else:
             Log.info("Equip a watering can to refill it.")
-    
-    def input(self) -> None:
-        keys = pygame.key.get_pressed()
-       
-        input_x = 0
-        input_y = 0
-
-        for key, (x, y) in controls.direction_keys.items():
-            if keys[key]:
-                input_x += x
-                input_y += y
-
-        # Update Direction Vector (for physics)
-        self.direction.x = input_x
-        self.direction.y = input_y
-
-        # Update direction player is facing
-        lookup_key = (input_x, input_y)
-        if lookup_key in controls.facing_map:
-            self.facing = controls.facing_map[lookup_key]
-
-        # Normalization (Fixes diagonal speed boost)
-        if self.direction.magnitude_squared() > 0:
-            self.direction = self.direction.normalize()
-            self.state = EntityState.RUN if keys[controls.run] else EntityState.WALK
-        else:
-            self.state = EntityState.IDLE
-            
-        # Running Logic
-        if keys[controls.run]:
-            self.current_speed = self.base_speed * self.run_multiplier
-        else:
-            self.current_speed = self.base_speed
-
+   
     def update(self, dt:Num, interactables:Interactables, mouse_pos:Pos|None=None):
         """Main update loop. 
             Requires dt (delta time) for smooth vector movement."""
-        self.input()
+        self.input_controller.update()
         
         frame = self.animator.get_frame(self.state, self.facing, dt)
         if frame: 
@@ -135,41 +97,9 @@ class Player(MovingEntity):
         self.move(dt, interactables)
         self.inventory.update(mouse_pos)
 
-    def interact(self, interactables:Interactables) -> None:
+    def interact(self, interactables: Interactables) -> None:
         """Interacts with the tile or entity directly under the player's target offset."""
-        # Ask the Component what we are looking at!
-        hit_objects = self.targeter.get_target_objects(interactables)
-        
-        if not hit_objects:
-            return # Looking at nothing
-            
-        # Use the item on the first object we hit
-        target_obj = hit_objects[0]
-        active_item = self.inventory.get_active_item()
-       
-        if active_item: 
-            # Pass the raw target and full interactables list directly to the item
-            used = active_item.use(self, target_obj, interactables, self.camera_group)
-        
-            if used: # clean up if consumed
-                self.inventory.consume_active_item()
-            return
-
-        # Empty hand interaction:
-        # Prioritize non-tiles (Plants, NPCs, Items, etc.)
-        for target_obj in hit_objects:
-            if not isinstance(target_obj, Tile):
-                if target_obj.on_interact(self):
-                    return # Action complete! Stop here.
-
-        """ May add later?
-        # Fallback to the tiles if entity failed or didn't exist
-        for target_obj in hit_objects:
-            if isinstance(target_obj, Tile):
-                if target_obj.on_interact(self):
-                    return # Action complete! Stop here."""
-      
-        Log.whisper(f"Nothing happened when interacting with {type(target_obj).__name__}.")
+        self.interaction_handler.handle_interaction(interactables)
 
     def receive_item(self, item_id: str, count: int = 1) -> bool:
         """The Logic Middle Man: Instantiates an item and adds it to the inventory."""

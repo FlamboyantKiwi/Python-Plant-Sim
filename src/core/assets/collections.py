@@ -1,15 +1,15 @@
 from __future__ import annotations
 import pygame
-
-from src.core import Log
-from .base import ConfigGroup, AssetGroup
-from src.core.types import TextConfig
-from src.core.assets.asset_data import COLOURS, TEXT
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.custom_types import Colour
     from src.core.assets import AssetLoader
+
+from src.core import Log
+from .base import ConfigGroup, AssetGroup
+from src.core.types import TextConfig
+from src.core.assets.asset_data import COLOURS, TEXT
 
 class TextGroup(ConfigGroup):
     """Manages TextConfig styles (presets like 'TITLE', 'HUD')."""

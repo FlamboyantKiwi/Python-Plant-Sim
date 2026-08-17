@@ -1,6 +1,7 @@
 import pygame
 from src.core.types import  DOWN, RIGHT, LEFT, UP
 from src.core.debug_logger import Log
+
 class KeyBindings:
     def __init__(self):
         # Action Keys

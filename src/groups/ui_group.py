@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-
 import pygame
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from src.custom_types import UIElement, Pos
