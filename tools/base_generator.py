@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from core.debug_logger import Log
+from src.core.debug_logger import Log
 
 class BaseScriptGenerator:
     """Shared base architecture for tools that compile and generate source files."""

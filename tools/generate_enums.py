@@ -3,7 +3,7 @@ import os
 import re
 from dataclasses import dataclass
 from base_generator import BaseScriptGenerator
-from core.debug_logger import Log
+from src.core.debug_logger import Log
 
 @dataclass
 class EnumDefinition:

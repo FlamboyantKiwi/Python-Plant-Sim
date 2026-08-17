@@ -1,0 +1,99 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+import pygame
+
+# Runtime Imports (Essential for logic/inheritance)
+from src.entities.player import Player
+from src.core.states.hud import HUD
+from src.world.level import Level
+from src.settings import WIDTH, HEIGHT
+from src.core.assets import ASSETS
+from src.groups.camera import CameraGroup
+from src.groups.plant_group import PlantGroup
+from src.core.types import PlayerType
+from .base import GameState
+from src.core.types import StateID
+
+# Type-Only Imports (Breaks circular loops)
+if TYPE_CHECKING:
+    from src.custom_types import Game, Pos, PlayerType
+
+class PlayingState(GameState):
+    state_id = StateID.PLAYING
+    def __init__(self, game: Game, character_type: PlayerType = PlayerType.RACOON):
+        super().__init__(game)
+
+        self.transparent = False
+        self.suppress_update = True
+
+        self.all_sprites = CameraGroup()
+        self.plant_group = PlantGroup()
+
+        self.player = Player(WIDTH // 2, HEIGHT // 2, self.all_sprites, character_type)
+        self.hud = HUD(self.game, self.player)
+
+        self.level = Level(
+            plant_group=self.plant_group,
+            player_sprite=self.player,
+            map_data=None 
+        )
+     
+        self.level.spawn_plant("apple", 5, 5, self.all_sprites)
+        self.level.spawn_plant("onion", 6, 5, self.all_sprites)
+
+        self.key_binds = {
+            pygame.K_ESCAPE: self.game.quit,
+            pygame.K_p: lambda: self.open_shop("general_store"),
+            pygame.K_SPACE: lambda: self.plant_group.grow_all(0.1)
+        }
+
+    def update(self, dt:float, is_paused: bool = False):
+        # Always update world animations (plants, water, etc.)
+        self.level.update(dt)
+        
+        # 3. Handle Player Logic (Only if not paused)
+        if not is_paused:
+            # Gather everything the player can bump into or use
+            interactables = self.level.tile_list + self.plant_group.plants
+            
+            # Explicitly update the player
+            self.player.update(dt, interactables)
+
+        # 4. Update the rest of the sprites (Excluding the player to avoid double-dip)
+        for sprite in self.all_sprites:
+            if sprite != self.player:
+                # We assume other sprites only need dt for simple animations
+                sprite.update(dt)
+        
+        # 6. Update HUD (Money/Buttons)
+        self.hud.update(dt, is_paused)
+
+    def draw(self, screen: pygame.Surface) -> None:
+        # Layer 1: The Water/Map
+        screen.fill(ASSETS.colour("WATER"))
+        self.level.draw(self.all_sprites.offset)
+        
+        # Layer 2: The Entities
+        self.all_sprites.custom_draw(self.player)
+        
+        # Layer 3: The HUD
+        self.hud.draw(screen)
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        if self.hud.handle_event(event):
+            return True
+        collidables = self.level.tile_list + self.plant_group.plants
+        self.player.handle_event(event, collidables)
+        return super().handle_event(event)
+
+    def on_left_click(self,pos: Pos) -> None:
+        pass
+        
+    def on_right_click(self, pos: Pos) -> None:
+        ASSETS.debug_assets()
+  
+    def open_shop(self, shop_id: str = "general_store") -> None:
+        """ Opens the shop state with data loaded from the database. """
+        shop_data = ASSETS.shop(shop_id)
+        self.game.open_shop(self.player, shop_data)
+        

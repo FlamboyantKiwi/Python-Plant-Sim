@@ -1,17 +1,18 @@
 from __future__ import annotations
 import sys
+import traceback
 import pygame
 from typing import TYPE_CHECKING
 
-from core.debug_logger import Log
-from core.states.menus import SettingsState
-from settings import WIDTH, HEIGHT, FPS
-from core.assets import ASSETS
-from core.types import StateStack, StateID
-from core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
+from src.core.debug_logger import Log
+from src.core.states.menus import SettingsState
+from src.settings import WIDTH, HEIGHT, FPS
+from src.core.assets import ASSETS
+from src.core.types import StateStack, StateID
+from src.core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
 
 if TYPE_CHECKING:
-    from core.types import ShopData
+    from src.core.types import ShopData
 
 class Game:
     def __init__(self) -> None:
@@ -101,7 +102,14 @@ class Game:
         sys.exit()
 
 if __name__ == "__main__":
-    game = Game()
-    game.run()
-    
+    try:
+        game = Game()
+        game.run()
+    except Exception as e:
+        print("\n" + "="*60)
+        print(" [FATAL ERROR] The game crashed with the following error:")
+        print("="*60)
+        traceback.print_exc()
+        print("="*60)
+        input("\nPress Enter to close this window...")
     
