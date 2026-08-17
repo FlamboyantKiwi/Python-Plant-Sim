@@ -2,16 +2,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import pygame
 
-from src.core.debug_logger import Log
-from src.ui.ui_factory import UIFactory
-from src.ui.InventoryUI import InventoryUI, Inventory
-from src.core.ui_utils import calc_pos_rect
+from src.core import Log
+from src.ui import UIFactory
+from src.ui import InventoryUI, Inventory
+from src.core import calc_pos_rect
 from src.settings import WIDTH, HEIGHT, DRAG_DROP_THRESHOLD
-from src.entities.items import Item
 
 if TYPE_CHECKING:
     from src.custom_types import Pos, Item
-    from src.core.controls import controls
+    from src.core import controls
 
 class InventoryController:
     """Manages data, UI, and interactions for an entity's inventory."""

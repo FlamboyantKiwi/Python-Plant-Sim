@@ -2,14 +2,14 @@ from __future__ import annotations
 import pygame
 from src.core.assets import ASSETS
 from src.core.types import ItemCategory, ToolType
-from src.core.debug_logger import Log
+from src.core import Log
 from typing import TYPE_CHECKING, Any
 from src.world.tile import Tile
-from src.entities.entity import Entity
+
 
 if TYPE_CHECKING:
-    from src.entities.player import Player
-    from src.groups.camera import CameraGroup
+    from src.entities import Player, Entity
+    from src.groups import CameraGroup
     from src.custom_types import Interactables
 
 class Item:

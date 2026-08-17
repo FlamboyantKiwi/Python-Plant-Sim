@@ -3,10 +3,10 @@ import os
 import inspect
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-from src.core.debug_logger import Log
+from src.core import Log
 
 # Runtime Imports
-from src.core.spritesheet import SpriteSheet
+from src.core import SpriteSheet
 
 # Type-Only Imports
 if TYPE_CHECKING:

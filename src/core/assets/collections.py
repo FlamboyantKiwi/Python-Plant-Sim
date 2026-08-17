@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame
 
-from src.core.debug_logger import Log
+from src.core import Log
 from .base import ConfigGroup, AssetGroup
 from src.core.types import TextConfig
 from src.core.assets.asset_data import COLOURS, TEXT

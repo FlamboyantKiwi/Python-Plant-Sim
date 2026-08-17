@@ -3,14 +3,13 @@ import pygame
 from typing import TYPE_CHECKING
 
 from src.settings import HUD_BUTTON_SIZE, MONEY_RECT
-from src.ui.ui_factory import UIFactory, TextBox
+from src.ui import UIFactory, TextBox
 from .base import BaseUIState
 from src.core.types import StateID
-from src.core.debug_logger import Log
+from src.core import Log
 
 if TYPE_CHECKING:
-    from src.entities.player import Player
-    from src.custom_types import Pos, Game
+    from src.custom_types import Game, Pos, Player
 
 
 class HUD(BaseUIState):

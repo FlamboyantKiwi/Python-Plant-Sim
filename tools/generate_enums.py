@@ -3,7 +3,7 @@ import os
 import re
 from dataclasses import dataclass
 from base_generator import BaseScriptGenerator
-from src.core.debug_logger import Log
+from src.core import Log
 
 @dataclass
 class EnumDefinition:
@@ -89,13 +89,13 @@ class EnumGenerator(BaseScriptGenerator):
 
         
 if __name__ == "__main__":
-    DB_PATH = os.path.join("Assets", "data", "gamedata.db")
+    DB_PATH = os.path.join("assets", "data", "gamedata.db")
     OUTPUT_PATH = os.path.join("core", "types", "generated_enums.py")
     
     (EnumGenerator(db_path=DB_PATH, output_path=OUTPUT_PATH)
         .add_database_tables("items", "shops")
         .add_asset_directories(
-            os.path.join("Assets", "Player"),
-            os.path.join("Assets", "Farm_Animals")
+            os.path.join("assets", "Player"),
+            os.path.join("assets", "Farm_Animals")
         )
         .run())

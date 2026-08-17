@@ -9,10 +9,7 @@ from src.core.assets.asset_data import LAYOUT
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num
-    from src.world.level import Level
-    from src.entities.entity import Entity
-    from src.entities.player import Player
+    from src.custom_types import Group, Num, Level, Entity
 
 class MapTileGroup(pygame.sprite.Group):
     def __init__(self) -> None:

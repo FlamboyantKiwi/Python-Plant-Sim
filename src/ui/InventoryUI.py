@@ -4,15 +4,13 @@ from typing import TYPE_CHECKING
 import pygame
 from src.ui.ui_factory import UIFactory
 from src.ui.ui_elements import UIElement
+from src.ui.wrappers import Tooltip
 from src.entities.items import Item, create_item
 from src.settings import SHOP_GRID_OFFSET_Y, SHOP_MENU
-from src.ui.wrappers import Tooltip
-from src.core.debug_logger import Log
+from src.core import Log
 
 if TYPE_CHECKING:
-    from src.custom_types import Slot, Pos
-    from src.entities.player import Player
-    from src.core.types import ShopData
+    from src.custom_types import Slot, Pos, Player, ShopData
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""

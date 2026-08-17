@@ -1,6 +1,6 @@
 #spritesheet.py
 import pygame
-from src.core.debug_logger import Log
+from src.core import Log
 
 class SpriteSheet:
     path="assets"

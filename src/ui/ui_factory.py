@@ -3,13 +3,12 @@ import pygame
 from src.core.assets import ASSETS
 from src.ui.ui_elements import ProgressBar, UIElement, TextBox, Button, Slot
 from src.ui.wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, Tooltip
-from src.core.ui_utils import get_grid_pos 
+from src.core import get_grid_pos 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from typing import Callable, Any
-    from src.custom_types import Inventory
-    from src.ui.InventoryUI import InventoryUI
-    from src.ui.ui_ghosts import BorderButton, BorderSlot, BorderTextBox, FlashButton, FlashSlot, FlashTextBox, ShadowButton, ShadowSlot, ShadowTextBox  # noqa: F401
+    from src.custom_types import Inventory, InventoryUI
+    from src.ui import BorderButton, BorderSlot, BorderTextBox, FlashButton, FlashSlot, FlashTextBox, ShadowButton, ShadowSlot, ShadowTextBox  # noqa: F401
 
 class UIFactory:
     """A collection of static methods to build and arrange UI assemblies."""
@@ -54,7 +53,7 @@ class UIFactory:
     def inventory_ui(rect: pygame.Rect, inventory_data: Inventory, 
                      columns: int = 4, slot_size: int = 40, padding: int = 5) -> InventoryUI:
         """Assembles a composite grid layer panel connected directly to a backend Inventory structure."""
-        from src.ui.InventoryUI import InventoryUI
+        from src.ui import InventoryUI
         return InventoryUI(
             rect=rect, 
             inventory_data=inventory_data, 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.debug_logger import Log
+from src.core import Log
 
 #Helper Function
 

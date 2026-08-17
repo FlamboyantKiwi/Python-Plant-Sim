@@ -6,14 +6,15 @@ from typing import TYPE_CHECKING
 from src.core.types import PlantData
 from src.core.assets import ASSETS
 from src.entities.entity import Entity
-from src.entities.items import create_item, Item
-from src.entities.player import Player
+
 from src.settings import BLOCK_SIZE
-from src.core.debug_logger import Log
+from src.core import Log
 
 # Type-Only Imports
 if TYPE_CHECKING:
     from src.custom_types import Group
+    from src.entities.items import Item
+    from src.entities.player import Player
 
 class Plant(Entity):
     def __init__(self, plant_id: str, grid_x: int, grid_y: int, *groups:Group) -> None:
@@ -64,13 +65,12 @@ class Plant(Entity):
         
         self.update_visuals()
 
-    def harvest(self) -> Item|None:
+    def harvest(self) -> str|None:
         """Triggers when player interacts with fully grown crops"""
         if self.age >= self.data.grow_time and not self.is_harvested:
 
             # Spawn item
-            yielded_item = create_item(self.data.harvest_item, count=1)
-
+            yielded_item_id = self.data.harvest_item
             # Change Visuals
             if self.data.regrows or self.data.is_tree:
                 # Drop the age back to 75%. resume growing 
@@ -80,18 +80,17 @@ class Plant(Entity):
                 self.is_harvested = True
                 
             self.update_visuals()
-            return yielded_item
+            return yielded_item_id
             
         return None
 
     def on_interact(self, player: Player) -> bool:
         """ When player clicks on this plant with empty hand, ,try harvest it"""
-        harvested_item = self.harvest()
+        harvested_item_id = self.harvest()
         
-        if harvested_item:
+        if harvested_item_id:
             # Try to push it into the player's inventory
-            if player.inventory.data.add_item(harvested_item):
-                Log.success(f"Harvested {harvested_item.name}!")
+            if player.receive_item(harvested_item_id):
                 return True
             else:
                 Log.error("Inventory is full! Cannot harvest.")

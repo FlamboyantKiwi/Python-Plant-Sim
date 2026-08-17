@@ -4,15 +4,16 @@ import traceback
 import pygame
 from typing import TYPE_CHECKING
 
-from src.core.debug_logger import Log
-from src.core.states.menus import SettingsState
+from src.core import Log
+from src.core.states import SettingsState
 from src.settings import WIDTH, HEIGHT, FPS
+
 from src.core.assets import ASSETS
 from src.core.types import StateStack, StateID
 from src.core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
 
 if TYPE_CHECKING:
-    from src.core.types import ShopData
+    from src.core.types import ShopData     
 
 class Game:
     def __init__(self) -> None:

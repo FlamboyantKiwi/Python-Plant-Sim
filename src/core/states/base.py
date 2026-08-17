@@ -3,11 +3,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Any, Type
 import pygame
-from src.groups.ui_group import UIGroup
+from src.groups import UIGroup
 from src.settings import WIDTH, HEIGHT
 from src.core.assets import ASSETS
-from src.ui.ui_factory import UIFactory
-from src.core.types.enums import StateID
+from src.ui import UIFactory
+from src.core.types import StateID
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:

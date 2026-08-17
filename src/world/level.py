@@ -7,16 +7,13 @@ from typing import TYPE_CHECKING, cast
 # Runtime Imports
 from src.settings import BLOCK_SIZE, DETAIL_CHANCE
 from src.core.assets import ASSETS
-from src.core.debug_logger import Log
+from src.core import Log
 from src.entities.plant import Plant 
 from src.world.tile import Tile, MapTileGroup
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.entities.player import Player
-    from src.groups.plant_group import PlantGroup
-    from src.groups.camera import CameraGroup
-    from src.custom_types import NodeMap
+    from src.custom_types import Player, PlantGroup, CameraGroup, NodeMap
 
 class Level:
     DIRT_NODE = 0

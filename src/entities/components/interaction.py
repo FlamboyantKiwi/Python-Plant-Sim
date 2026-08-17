@@ -3,14 +3,11 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.core.controls import controls
+from src.core import controls
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Interactables
-    from src.world.tile import Tile
-    from src.entities.entity import MovingEntity, Entity
-    from src.core.types import Direction
+    from src.custom_types import Interactables, Tile, MovingEntity, Entity, Direction
 
 class InteractionController:
     """A component attached to a player or NPC that handles targeting."""

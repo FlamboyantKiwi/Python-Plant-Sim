@@ -1,0 +1,814 @@
+classDiagram
+  class Animal {
+    pos : tuple
+    type : str
+  }
+  class AnimationController {
+    category : EntityCategory
+    current_time : float
+    frame_index : int
+    name
+    speed : float
+    get_frame(state: EntityState, direction: Direction, dt: Num) pygame.Surface | None
+  }
+  class AnimationGrid {
+    non_directional(rect: SpriteRect, assign_to_all: bool)
+  }
+  class AssetGroup {
+    manager
+    storage : dict[Any, Any]
+    clean_up()* None
+    debug_print() None
+    load()* None
+    print_line_break() None
+  }
+  class AssetLoader {
+    colours
+    database
+    entities
+    fonts
+    fruits
+    groups : dict[str, AssetGroup]
+    images
+    plants
+    text
+    tiles
+    tools
+    autotile(tileset_key: str, layout: MarchingLayout, neighbors: list[bool]) pygame.Surface
+    clean_up() None
+    colour(name: Colour, fallback: Colour | None) pygame.Color
+    config(key: str) TextConfig
+    debug_assets()
+    font(config: TextConfig) pygame.font.Font
+    get_image(key: str) pygame.Surface
+    get_image_path(filename: str, subfolder: str) str
+    item(item_id: str) ItemData
+    item_image(data: ItemData) pygame.Surface
+    load_all() None
+    load_image(filename: str, scale) pygame.Surface
+    load_raw_image(filename: str) pygame.Surface | None
+    plant(plant_id: str) PlantData
+    shop(shop_id: str) ShopData
+    sprite(category: EntityCategory, name: EntityType, state: EntityState, direction: Direction, frame: int) pygame.Surface | None
+  }
+  class BaseUIState {
+    back_button : bool
+    background : NoneType
+    colour
+    draw_bg
+    suppress_update : bool
+    transparent
+    ui_group
+    add_back_button(x: int, y: int, width: int, height: int, text: str)
+    draw(screen: pygame.Surface) None
+    handle_event(event: pygame.event.Event) bool
+    update(dt: float, is_paused: bool) None
+  }
+  class BaseWrapper {
+    target : Any
+    draw(screen: pygame.Surface) None
+    update() None
+  }
+  class BorderButton {
+  }
+  class BorderSlot {
+  }
+  class BorderTextBox {
+  }
+  class BorderWrapper {
+    surf_active : NoneType
+    surf_hover : NoneType
+    surf_normal : NoneType
+    draw(screen: pygame.Surface) None
+  }
+  class Button {
+    content : UIElement | None
+    function : Callable | None
+    draw(screen: pygame.Surface) None
+    handle_click() Any
+    is_click(mouse_pos: Pos) bool
+    update(mouse_pos: Pos | None) None
+  }
+  class CameraGroup {
+    display_surface
+    entities : list['Entity']
+    offset
+    custom_draw(player: Player) None
+  }
+  class CharacterSelectState {
+    state_id : CHAR_SELECT
+    select_character(character_type: PlayerType)
+  }
+  class ColourGroup {
+    default
+    get_colour(name: Colour, fallback_type: Colour | None) pygame.Color
+    load() None
+  }
+  class ConfigGroup {
+    default : NoneType
+    missing : set
+    debug_print() None
+    get_val(key: Any) Any
+  }
+  class DatabaseGroup {
+    db
+    missing_ids : set
+    clean_up() None
+    debug_print() None
+    get_item(item_id: str) ItemData
+    get_plant(plant_id: str) PlantData
+    get_shop(shop_id: str) ShopData
+    load()* None
+  }
+  class DatabaseManager {
+    TABLES : dict
+    VIEWS : dict
+    conn
+    cursor
+    close() None
+    get_item_data(item_id: str) ItemData | None
+    get_items_by_category(category: ItemCategory) list[ItemData]
+    get_plant_data(plant_id: str) PlantData | None
+    get_shop_data(shop_id: str) ShopData | None
+    insert_record(table_name: str, data: dict[str, Any]) None
+    setup_tables() None
+  }
+  class Direction {
+    name
+  }
+  class DragController {
+    cursor_item : Item | None
+    drag_origin : NoneType, tuple['InventoryController', int] | None
+    drag_start_pos : NoneType, tuple[int, int] | None
+    is_dragging : bool
+    manager : str
+    draw(screen: pygame.Surface, mouse_pos: tuple[int, int]) None
+    handle_event(event: pygame.event.Event) bool
+  }
+  class Entity {
+    hitbox
+    hitbox_offset : int
+    image : pygame.Surface | None
+    rect
+    draw(surface: pygame.Surface, offset_x: Num, offset_y: Num) None
+    on_interact(player: 'Player') bool
+    sync_rect_to_hitbox() None
+  }
+  class EntityCategory {
+    name
+  }
+  class EntityConfig {
+    animations : dict[EntityState, AnimationGrid]
+    frame_size : int
+    sheets : list[str]
+    get_animation(state: EntityState) dict[Direction, SpriteRect]
+  }
+  class EntityGroup {
+    get_sprite(cat: EntityCategory, name: EntityType, state: EntityState, direction: Direction, frame: int) pygame.Surface | None
+    load() None
+  }
+  class EntityState {
+    name
+  }
+  class FarmAnimalType {
+    name
+  }
+  class FlashButton {
+  }
+  class FlashSlot {
+  }
+  class FlashTextBox {
+  }
+  class FlashWrapper {
+    flash_timer
+    interval : float
+    is_blank : bool
+    is_flashing : bool
+    draw(screen: Any) None
+    start_flash() None
+    stop_flash() None
+    update() None
+  }
+  class FontGroup {
+    debug_print() None
+    get_font(config: TextConfig) pygame.font.Font
+    load()* None
+  }
+  class FontType {
+    name
+  }
+  class FoodItem {
+    count
+    use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
+  }
+  class FruitGroup {
+    cache : dict
+    containers : dict
+    seed_bags : dict
+    get(key: str) pygame.Surface | None
+    get_seed(item_id: str, quality: Quality) pygame.Surface | None
+    load() None
+  }
+  class GameState {
+    back_button : bool
+    game : Game
+    key_binds : dict[int, Callable]
+    mouse_binds : dict[int, Callable[[Pos], None]]
+    state_id : StateID | None
+    suppress_update : bool
+    transparent : bool
+    draw(screen: pygame.Surface)* None
+    enter_state()* None
+    exit_state()* None
+    handle_event(event: pygame.event.Event) bool
+    on_left_click(pos: Pos)* None
+    on_middle_click(pos: Pos)* None
+    on_right_click(pos: Pos)* None
+    update(dt: float, is_paused: bool)* None
+  }
+  class GroundTile {
+    base_image
+    image
+    is_tilled : bool
+    tillable
+    watered : bool
+    refresh_terrain(new_neighbors: list[bool]) None
+  }
+  class HUD {
+    player
+    state_id : HUD
+    suppress_update : bool
+    transparent : bool
+    draw(screen: pygame.Surface) None
+    escape()
+    handle_event(event: pygame.event.Event) bool
+    open_settings()
+    player_open_shop()
+    update(dt: float, is_paused: bool) None
+  }
+  class ImageGroup {
+    failures : set
+    debug_print() None
+    generate_fallback(name: str, scale: tuple[int, int] | None) pygame.Surface
+    get_image(filename: str, scale: tuple[int, int] | None) pygame.Surface
+    load()* None
+  }
+  class ImageSwapWrapper {
+    surf_active
+    surf_hover
+    surf_normal
+    update(mouse_pos: Pos | None) None
+  }
+  class InteractionController {
+    distance : int
+    entity
+    offsets : dict[Direction, pygame.math.Vector2]
+    get_target_objects(interactables: Interactables) list[Tile | Entity]
+  }
+  class Inventory {
+    items : list[Item | None]
+    max_size : int
+    add_item(new_item: Item) bool
+    get_amount(item_name: str) int
+    remove_item(item_name: str, amount: int) bool
+    transfer_to(target_inventory: 'Inventory', item_name: str, amount: int) bool
+  }
+  class InventoryController {
+    active_slot_index : int
+    background : UIElement
+    data : Inventory
+    rect
+    size : int
+    slots : list
+    tooltip : TextBox
+    consume_active_item() None
+    draw(screen: pygame.Surface) None
+    get_active_item() Item | None
+    get_clicked_index(pos: 'Pos') int | None
+    handle_click(pos: Pos) bool
+    handle_event(event: pygame.event.Event, controls_map) None
+    set_active_slot(index: int) None
+    update(mouse_pos: Pos | None) None
+  }
+  class InventoryManager {
+    drag_controller
+    open_controllers : list['InventoryController']
+    close_inventory(controller: 'InventoryController') None
+    draw_cursor_item(screen: pygame.Surface, mouse_pos: tuple[int, int]) None
+    drop_item(drag_ctrl: 'DragController', target_ctrl: 'InventoryController', target_idx: int) None
+    find_closest_slot(drop_pos: tuple[int, int]) tuple['InventoryController', int] | None
+    get_slot_at(pos: tuple[int, int]) tuple['InventoryController', int] | None
+    handle_event(event: pygame.event.Event) bool
+    open_inventory(controller: 'InventoryController') None
+    return_to_origin(drag_ctrl: 'DragController') None
+  }
+  class InventoryUI {
+    data
+    slots : list[Slot]
+    tooltip : TextBox
+    click(mouse_pos: Pos) int | None
+    draw(screen: pygame.Surface) None
+    is_click(mouse_pos: Pos) bool
+    update(mouse_pos: Pos | None) None
+  }
+  class Item {
+    count : int
+    data : Any
+    image
+    item_id : str
+    max_stack : int
+    max_water : int | None
+    water_level : int | None
+    add_to_stack(amount: int) int
+    copy_one() Item
+    remove_from_stack(amount: int) int
+    use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
+  }
+  class ItemCategory {
+    name
+  }
+  class ItemData {
+    buy_price : int
+    calculate_sell_price : int
+    category : ItemCategory
+    description : str
+    energy_gain : int
+    grow_time : int
+    image_key : str
+    max_stack : int
+    name : str
+    sell_price : int | None
+    stackable : bool
+    tool_type : ToolType | None
+  }
+  class ItemID {
+    name
+  }
+  class ItemType {
+    category : str
+    name
+    use_id : str
+  }
+  class KeyBindings {
+    direction_keys
+    down : list
+    facing_map : dict
+    interact
+    left : list
+    refill
+    right : list
+    run
+    slots : dict
+    up : list
+    rebind(action: str, new_key: int)
+  }
+  class Level {
+    DIRT_NODE : int
+    GRASS_NODE : int
+    MAP_HEIGHT : int
+    MAP_WIDTH : int
+    WATER_NODE : int
+    all_tiles
+    node_map
+    plant_group
+    player_sprite
+    tile_grid : dict[tuple[int, int], Tile]
+    tile_list : list[Tile]
+    tilesets : dict
+    create_node_map(map_size: int, active: int, passive: int) NodeMap
+    draw(camera_offset: pygame.math.Vector2) None
+    draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int) None
+    generate_level() None
+    get_tile(grid_x: int, grid_y: int) Tile | None
+    spawn_plant(plant_name: str, grid_x: int, grid_y: int, camera_group: CameraGroup) Plant
+    till_map_node(grid_x: int, grid_y: int) None
+    update(dt) None
+  }
+  class Log {
+    COLORS : dict
+    divider(length: int, char) None
+    error(message: str) None
+    info(message: str) None
+    line(length: int) None
+    success(message: str) None
+    todo(message: str) None
+    whisper(message: str) None
+  }
+  class MapTileGroup {
+    display_surface
+    custom_draw(camera_offset: pygame.math.Vector2) None
+  }
+  class MarchingLayout {
+    mapping : dict
+    raw_mapping : dict
+    get_variant(mask: int, fallback_mask: int) tuple[int, int, int]
+  }
+  class Material {
+    name
+  }
+  class MenuState {
+    menu_actions : dict
+    state_id : MENU
+    suppress_update : bool
+  }
+  class MovingEntity {
+    base_speed
+    current_speed
+    direction
+    facing : Direction
+    pos
+    state : EntityState
+    check_horizontal(collidable_objects: Interactables) None
+    check_vertical(collidable_objects: Interactables) None
+    finalize_movement() None
+    move(dt: Num, collidable_objects: Interactables) None
+  }
+  class Plant {
+    age : float, int
+    data
+    days_old : int
+    grid_x
+    grid_y
+    hitbox
+    hitbox_scale : float
+    image : NoneType
+    is_harvested : bool
+    obstructed : bool
+    plant_id : str
+    rect
+    grow(amount: float) None
+    harvest() str | None
+    on_interact(player: Player) bool
+    update_visuals() None
+  }
+  class PlantData {
+    grow_time : int
+    harvest_item : str
+    image_rect : SpriteRect
+    image_stages : int
+    is_tree : bool
+    name : str
+    regrows : bool
+    get_stage_index(current_age: float, is_harvested: bool) int
+  }
+  class PlantGroup {
+    load() None
+  }
+  class PlantGroup {
+    plants : list[Plant]
+    add() None
+    get_plant_at_grid(grid_x: int, grid_y: int) Plant | None
+    grow_all(amount: Num) None
+  }
+  class Player {
+    INV_PADDING : int
+    INV_SIZE : int
+    SLOT_SIZE : int
+    animator
+    camera_group
+    current_speed
+    direction
+    facing
+    image
+    inventory : InventoryController
+    inventory_manager : InventoryManager
+    money : int
+    player_type
+    run_multiplier : float
+    state : IDLE, RUN, WALK
+    targeter
+    handle_event(event: pygame.event.Event, interactables: Interactables) None
+    input() None
+    interact(interactables: Interactables) None
+    receive_item(item_id: str, count: int) bool
+    refill_active_watering_can() None
+    setup_inventory() None
+    update(dt: Num, interactables: Interactables, mouse_pos: Pos | None)
+  }
+  class PlayerType {
+    name
+  }
+  class PlayingState {
+    all_sprites
+    hud
+    key_binds : dict
+    level
+    plant_group
+    player
+    state_id : PLAYING
+    suppress_update : bool
+    transparent : bool
+    draw(screen: pygame.Surface) None
+    handle_event(event: pygame.event.Event) bool
+    on_left_click(pos: Pos)* None
+    on_right_click(pos: Pos) None
+    open_shop(shop_id: str) None
+    update(dt: float, is_paused: bool)
+  }
+  class ProgressBar {
+    alignment : str
+    bg_element : UIElement
+    fill_element : UIElement
+    is_horizontal
+    percentage
+    value_getter : Callable[[], float] | None
+    draw(screen: pygame.Surface) None
+    update(mouse_pos: Pos | None) None
+  }
+  class Quality {
+    name
+  }
+  class RectPair {
+    a
+    b
+  }
+  class ScaleRect {
+    tile_h : int
+    tile_w : int
+  }
+  class SeedItem {
+    count
+    use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
+  }
+  class SettingsState {
+    state_id : SETTINGS
+    suppress_update : bool
+  }
+  class ShadowButton {
+  }
+  class ShadowSlot {
+  }
+  class ShadowTextBox {
+  }
+  class ShadowWrapper {
+    cached_shadow_surf : NoneType, pygame.Surface | None
+    offset : tuple[int, int]
+    shadow_config_data : NoneType
+    draw(screen: pygame.Surface) None
+    set_text(new_text: Any) None
+    update(mouse_pos: Pos | None) None
+  }
+  class ShopData {
+    items_ids : list[str]
+    store_name : str
+  }
+  class ShopID {
+    name
+  }
+  class ShopMenu {
+    background : UIElement
+    inventory_data
+    is_open : bool
+    player
+    rect
+    shop_data : ShopData | None
+    title_box : UIElement
+    ui_grid : Tooltip
+    draw(screen: pygame.Surface) None
+    handle_click(pos: Pos) bool
+    populate_shop() None
+    try_buy_item(item: Item) bool
+    update(mouse_pos: Pos | None) None
+  }
+  class ShopState {
+    player
+    shop_menu : ShopMenu
+    state_id : SHOP
+    draw(screen: pygame.Surface) None
+    on_left_click(pos: Pos) None
+    on_right_click(pos: Pos) None
+    update(dt, is_paused: bool) None
+  }
+  class Slot {
+    index : int
+    info_text
+    item : Item | None
+    last_count : int
+    price : int | None
+    draw(screen: pygame.Surface) None
+    set_item(item: Item | None) None
+    set_price(price: int) None
+    update(mouse_pos: Pos | None) None
+  }
+  class SpriteGroup {
+    SCALE_FACTOR : int
+    TILE_SIZE : int
+    loaded_sheets : dict[str, SpriteSheet]
+    sheet_files : dict
+    debug_print() None
+    get_sheet(key: str) SpriteSheet | None
+  }
+  class SpriteRect {
+    h : int
+    w : int
+    x : int
+    y : int
+  }
+  class SpriteSheet {
+    name
+    path : str
+    sheet
+    extract_tiles_by_dimensions(start_x, start_y, region_width, region_height, tile_width, tile_height, scale_factor)
+    get_image(x, y, width, height, scale)
+  }
+  class StateElement {
+    image : NoneType
+    is_active : bool
+    is_hovered : bool
+    update(mouse_pos: Pos | None) None
+  }
+  class StateID {
+    name
+  }
+  class StateStack {
+    change(state: T) None
+    draw(screen: pygame.Surface) None
+    peek() T | None
+    pop() T | None
+    push(state: T) None
+    update(dt) None
+  }
+  class TextBox {
+    align : str
+    config : NoneType
+    is_visible : bool
+    text_getter : Callable[[], Any] | None
+    text_rect : pygame.Rect | None
+    text_surf : NoneType, pygame.Surface | None
+    draw(screen: pygame.Surface) None
+    set_text(new_text: Any) None
+    update(mouse_pos: Pos | None) None
+  }
+  class TextConfig {
+    antialias : bool
+    bold : bool
+    colour
+    italic : bool
+    name : str
+    size : int
+    render(text: str, custom_colour: Colour | None) pygame.Surface
+  }
+  class TextGroup {
+    default
+    get_config(key: str) TextConfig
+    load() None
+  }
+  class Tile {
+    detail_image : pygame.Surface | None
+    grid_x : int
+    grid_y : int
+    image : NoneType
+    is_tilled : bool
+    level
+    occupant : Entity | None
+    position : tuple
+    rect
+    tile_type_key : str
+    tillable : bool
+    watered : bool
+    create(level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], group: Group, detail_image: pygame.Surface | None) Tile
+    refresh_terrain(new_neighbors: list[bool])* None
+  }
+  class TileGroup {
+    build_marching_tile(tileset_key: str, layout: MarchingLayout, neighbors: list[bool], sheet_width) pygame.Surface
+    load() None
+  }
+  class Timer {
+    active : bool
+    duration : float
+    paused : bool
+    start_time : int
+    time_left : int
+    progress(scale: float)
+    start()
+    toggle_pause(force: bool | None)
+    update()
+  }
+  class ToolGroup {
+    ITEM_SIZE : int
+    get(key: str) pygame.Surface | None
+    load() None
+  }
+  class ToolItem {
+    STRATEGIES : dict
+    max_water : int
+    water_level : int
+    consume_water() None
+    has_water() bool
+    use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
+  }
+  class ToolType {
+    name
+  }
+  class Tooltip {
+    offset : tuple[int, int]
+    tooltip : str
+    draw(screen: pygame.Surface) None
+    update(mouse_pos: Pos | None) None
+  }
+  class UIFactory {
+    bordered_slot(rect: pygame.Rect, index: int) BorderSlot
+    bordered_text_button(rect: pygame.Rect, text: str, function: Callable, config: str, bg_colour: str, border_colour: str, hover_colour: str, active_colour: str, thickness: int) BorderButton
+    bubble_text(rect: pygame.Rect, text: str, text_getter: Callable[[], str] | None, config: str, shadow_config: str, shadow_offset: tuple[int, int], align: str, bg_surface: pygame.Surface | None) ShadowTextBox
+    bubble_text_button(rect: pygame.Rect, text: str, function: Callable, config: str, shadow_config: str, shadow_offset: tuple[int, int], bg_colour: str, border_colour: str, hover_colour: str, active_colour: str, thickness: int) BorderButton
+    button(rect: pygame.Rect, text: str, function: Callable, config: str) Button
+    color_swap_text_button(rect: pygame.Rect, text: str, function: Callable, config: str, bg_normal: str, bg_hover: str, bg_active: str) Button
+    create_grid(factory: Callable, start_pos: tuple[int, int], columns: int, item_size: tuple[int, int], gap: tuple[int, int], data: int | list[dict[str, Any]]) list[Any]
+    create_vertical_stack(factory: Callable, center_pos: tuple[int, int], item_size: tuple[int, int], gap: int, data: list[dict[str, Any]]) list[Any]
+    flashing_text(rect: pygame.Rect, text: str, text_getter: Callable[[], str] | None, interval: float, config: str, align: str, auto_start: bool) FlashTextBox
+    image_element(rect: pygame.Rect, image_file: str) UIElement
+    inventory_ui(rect: pygame.Rect, inventory_data: Inventory, columns: int, slot_size: int, padding: int) InventoryUI
+    inventory_with_tooltip(rect: pygame.Rect, inventory_data: 'Inventory', columns: int, slot_size: int, padding: int, tooltip_config: str, tooltip_offset: tuple[int, int]) 'Tooltip'
+    progress_bar(rect: pygame.Rect, percentage: float, value_getter: Callable[[], float] | None, fill_colour: Any, bg_colour: Any, alignment: str, is_horizontal: bool | None) ProgressBar
+    slot(rect: pygame.Rect, index: int, bg_colour: str, image_file: str | None) Slot
+    solid_element(rect: pygame.Rect, colour: str) UIElement
+    static_border_element(rect: pygame.Rect, colour: str, border_colour: str, thickness: int) UIElement
+    text(rect: pygame.Rect, text: str, text_getter: Callable[[], str] | None, config: str, align: str) TextBox
+  }
+  class UIGroup {
+    elements : list[UIElement]
+    draw(surface: pygame.Surface, bgsurf: pygame.Surface | None, special_flags: int) list[pygame.Rect]
+    handle_event(event: pygame.event.Event) bool
+    update(mouse_pos: Pos | None) None
+  }
+  class WaterTile {
+    base_image : NoneType
+    image
+    refresh_terrain(new_neighbors: list[bool]) None
+  }
+  ConfigGroup --|> AssetGroup
+  SpriteGroup --|> AssetGroup
+  ColourGroup --|> ConfigGroup
+  FontGroup --|> AssetGroup
+  ImageGroup --|> AssetGroup
+  TextGroup --|> ConfigGroup
+  DatabaseGroup --|> AssetGroup
+  EntityGroup --|> SpriteGroup
+  FruitGroup --|> SpriteGroup
+  PlantGroup --|> SpriteGroup
+  TileGroup --|> SpriteGroup
+  ToolGroup --|> SpriteGroup
+  BaseUIState --|> GameState
+  HUD --|> BaseUIState
+  CharacterSelectState --|> BaseUIState
+  MenuState --|> BaseUIState
+  SettingsState --|> BaseUIState
+  ShopState --|> BaseUIState
+  PlayingState --|> GameState
+  ScaleRect --|> SpriteRect
+  MovingEntity --|> Entity
+  FoodItem --|> Item
+  SeedItem --|> Item
+  ToolItem --|> Item
+  Plant --|> Entity
+  Player --|> MovingEntity
+  Button --|> StateElement
+  Slot --|> Button
+  BorderWrapper --|> BaseWrapper
+  FlashWrapper --|> BaseWrapper
+  ImageSwapWrapper --|> BaseWrapper
+  ShadowWrapper --|> BaseWrapper
+  Tooltip --|> BaseWrapper
+  GroundTile --|> Tile
+  WaterTile --|> Tile
+  SpriteGroup --> SpriteSheet : loaded_sheets
+  RectPair --> SpriteRect : a
+  RectPair --> SpriteRect : b
+  Level --> Tile : tile_grid
+  ColourGroup --* AssetLoader : colours
+  FontGroup --* AssetLoader : fonts
+  ImageGroup --* AssetLoader : images
+  TextGroup --* AssetLoader : text
+  DatabaseGroup --* AssetLoader : database
+  EntityGroup --* AssetLoader : entities
+  FruitGroup --* AssetLoader : fruits
+  PlantGroup --* AssetLoader : plants
+  TileGroup --* AssetLoader : tiles
+  ToolGroup --* AssetLoader : tools
+  DatabaseManager --* DatabaseGroup : db
+  HUD --* PlayingState : hud
+  PlantData --* Plant : data
+  AnimationController --* Player : animator
+  InteractionController --* Player : targeter
+  DragController --* InventoryManager : drag_controller
+  Player --* PlayingState : player
+  CameraGroup --* PlayingState : all_sprites
+  CameraGroup --* Player : camera_group
+  PlantGroup --* PlayingState : plant_group
+  UIGroup --* BaseUIState : ui_group
+  Inventory --* ShopMenu : inventory_data
+  Timer --* FlashWrapper : flash_timer
+  TextBox --* Slot : info_text
+  Level --* PlayingState : level
+  MapTileGroup --* Level : all_tiles
+  AssetLoader --o AssetGroup : manager
+  AssetGroup --o AssetLoader : groups
+  PlayerType --o Player : player_type
+  MovingEntity --o InteractionController : entity
+  Player --o HUD : player
+  Player --o ShopState : player
+  Player --o ShopMenu : player
+  Player --o Level : player_sprite
+  PlantGroup --o Level : plant_group
+  Inventory --o InventoryUI : data
+  Level --o Tile : level

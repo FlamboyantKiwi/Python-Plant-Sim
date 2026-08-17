@@ -1,12 +1,11 @@
 from __future__ import annotations
 from src.ui.timer import Timer
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import pygame
 from src.core.assets import ASSETS
 
 if TYPE_CHECKING:
-    from typing import Any
-    from src.ui.ui_elements import StateElement, TextBox
+    from src.ui import StateElement, TextBox
     from src.custom_types import Pos, UIElement
     
 class BaseWrapper:

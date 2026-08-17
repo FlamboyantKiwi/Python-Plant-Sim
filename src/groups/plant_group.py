@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, cast
-from src.entities.plant import Plant
+from src.entities import Plant
 from collections.abc import Iterable
 
 if TYPE_CHECKING:

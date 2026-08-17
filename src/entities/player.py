@@ -3,19 +3,18 @@ import pygame
 from typing import TYPE_CHECKING, cast
 
 # Runtime Imports (Needed for logic/inheritance)
-from src.core.debug_logger import Log
-from src.core.types.enums import ToolType
+from src.core import Log
+from src.core.types import ToolType
 from src.settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from src.core.ui_utils import calc_pos_rect
+from src.core import calc_pos_rect
 from src.core.types import EntityState, PlayerType, EntityCategory
-from src.core.controls import controls
-from src.entities.components.animation import AnimationController
-from src.entities.items import create_item
-from src.entities.entity import Entity, MovingEntity
-from src.entities.components.interaction import InteractionController
-from src.entities.components.inventoryComponent import InventoryController, InventoryManager
+from src.core import controls
+from src.entities.components import AnimationController
+from src.entities.entity import MovingEntity
+from src.entities.components import InteractionController
+from src.entities.components import InventoryController, InventoryManager
 from src.world.tile import Tile
-from src.groups.camera import CameraGroup
+from src.groups import CameraGroup
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
@@ -51,6 +50,7 @@ class Player(MovingEntity):
         
     def setup_inventory(self) -> None:
         """Initializes the InventoryController and the Drag/Drop Manager."""
+        from src.entities import create_item
         # Create the all-in-one Controller for the Player
         self.inventory = InventoryController(
             size=self.INV_SIZE, 
@@ -171,4 +171,14 @@ class Player(MovingEntity):
       
         Log.whisper(f"Nothing happened when interacting with {type(target_obj).__name__}.")
 
-
+    def receive_item(self, item_id: str, count: int = 1) -> bool:
+        """The Logic Middle Man: Instantiates an item and adds it to the inventory."""
+        from entities.items import create_item
+        new_item = create_item(item_id, count)
+        
+        if self.inventory.data.add_item(new_item):
+            Log.success(f"Received {new_item.name}!")
+            return True
+        else:
+            Log.error("Inventory is full! Cannot receive item.")
+            return False

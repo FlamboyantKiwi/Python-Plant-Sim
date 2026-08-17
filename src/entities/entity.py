@@ -7,7 +7,7 @@ from src.core.types import Direction, EntityState
 
 if TYPE_CHECKING:
     from src.custom_types import Num, Group, Interactables
-    from src.entities.player import Player
+    from src.entities import Player
 
 class Entity(pygame.sprite.Sprite):
     """Absolute base class for anything that exists in the game world."""

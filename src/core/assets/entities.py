@@ -4,7 +4,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.core.spritesheet import SpriteSheet
+from src.core import SpriteSheet
 from src.core.types import EntityState, Direction, EntityCategory
 from src.core.assets.asset_data import  GAME_ENTITIES
 from src.core.assets.base import SpriteGroup

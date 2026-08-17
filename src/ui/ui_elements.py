@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pygame
-from src.core.ui_utils import align_rect
+from src.core import align_rect
 
 if TYPE_CHECKING:
     from typing import Callable, Any

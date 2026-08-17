@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from .base import AssetGroup
-from src.core.database import DatabaseManager
+from src.core import DatabaseManager
 from src.core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
-from src.core.debug_logger import Log
+from src.core import Log
 if TYPE_CHECKING:
     from src.core.assets import AssetLoader
 
