@@ -11,7 +11,7 @@ from core.assets import ASSETS
 from groups.camera import CameraGroup
 from groups.plant_group import PlantGroup
 from core.types import PlayerType
-from .base import GameState
+from core.states.base import GameState
 from core.types import StateID
 
 # Type-Only Imports (Breaks circular loops)

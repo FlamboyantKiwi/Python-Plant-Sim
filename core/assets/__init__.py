@@ -15,12 +15,11 @@ if TYPE_CHECKING:
     from custom_types import Num, EntityType, Colour
 
 
-from .base import AssetGroup
-from .collections import ColourGroup, TextGroup, FontGroup, ImageGroup
-from .database import DatabaseGroup
-from .entities import EntityGroup
-from.world import TileGroup, ToolGroup, PlantGroup, FruitGroup
-
+from core.assets.base import AssetGroup
+from core.assets.collections import ColourGroup, TextGroup, FontGroup, ImageGroup
+from core.assets.database import DatabaseGroup
+from core.assets.entities import EntityGroup
+from core.assets.world import TileGroup, ToolGroup, PlantGroup, FruitGroup
 
 class AssetLoader:
     def __init__(self):

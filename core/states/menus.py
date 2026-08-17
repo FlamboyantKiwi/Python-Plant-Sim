@@ -7,7 +7,7 @@ from ui.ui_factory import UIFactory
 from ui.InventoryUI import ShopMenu
 from settings import WIDTH, HEIGHT, SETTINGS_MENU
 from core.types import StateID, PlayerType
-from .base import BaseUIState
+from core.states.base import BaseUIState
 from core.debug_logger import Log
 
 # Type-Only Imports (Breaks circular loops)

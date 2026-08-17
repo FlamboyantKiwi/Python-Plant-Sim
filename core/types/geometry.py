@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from .enums import Direction, STANDARD_DIRECTIONS
+from core.types.enums import Direction, STANDARD_DIRECTIONS
 
 @dataclass(frozen=True)
 class SpriteRect:

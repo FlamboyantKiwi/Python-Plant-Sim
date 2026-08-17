@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from .base import AssetGroup
+from core.assets.base import AssetGroup
 from core.database import DatabaseManager
 from core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
 from core.debug_logger import Log

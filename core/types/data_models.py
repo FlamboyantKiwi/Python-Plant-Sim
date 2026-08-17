@@ -3,8 +3,8 @@ import pygame
 from dataclasses import dataclass
 from typing import NamedTuple, TYPE_CHECKING, TypeVar, Generic
 
-from .enums import ItemCategory, ToolType, EntityState, Direction
-from .geometry import SpriteRect, AnimationGrid
+from core.types.enums import ItemCategory, ToolType, EntityState, Direction
+from core.types.geometry import SpriteRect, AnimationGrid
 
 if TYPE_CHECKING:
     from custom_types import Colour

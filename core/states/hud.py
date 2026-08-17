@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from settings import HUD_BUTTON_SIZE, MONEY_RECT
 from ui.ui_factory import UIFactory, TextBox
-from .base import BaseUIState
+from core.states.base import BaseUIState
 from core.types import StateID
 from core.debug_logger import Log
 

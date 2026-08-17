@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 
 from core.debug_logger import Log
-from .base import ConfigGroup, AssetGroup
+from core.assets.base import ConfigGroup, AssetGroup
 from core.types import TextConfig
 from core.assets.asset_data import COLOURS, TEXT
 from typing import TYPE_CHECKING
