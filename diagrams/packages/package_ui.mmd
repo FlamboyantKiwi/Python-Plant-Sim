@@ -1,0 +1,45 @@
+flowchart TB
+    direction TB
+
+    subgraph ui [Ui Package]
+        subgraph ui_files [Ui Modules]
+            timer
+            ui_factory
+            ui_ghosts
+        end
+        subgraph elements [Elements Package]
+            base_element
+            button
+            progress_bar
+            slot
+            state_element
+            textbox
+        end
+        subgraph inventory [Inventory Package]
+            inventory_ui
+            shop_menu
+        end
+        subgraph wrappers [Wrappers Package]
+            base_wrapper
+            border_wrapper
+            flash_wrapper
+            image_swap_wrapper
+            shadow_wrapper
+            tooltip_wrapper
+        end
+    end
+    subgraph core [Core Package]
+        inventory
+    end
+
+    %% Structural & Dependency Links
+    ui --> elements
+    ui --> elements
+    ui --> inventory
+    ui --> inventory
+    ui --> ui_files
+    ui --> wrappers
+    ui --> wrappers
+    inventory --> inventory_ui
+    inventory --> shop_menu
+    shop_menu --> inventory

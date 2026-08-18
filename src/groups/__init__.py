@@ -1,3 +1,3 @@
 from .camera import CameraGroup
-from .plant_group import PlantGroup
-from .ui_group import UIGroup
+from .plant_sprites import PlantGroup
+from .ui_sprites import UIGroup

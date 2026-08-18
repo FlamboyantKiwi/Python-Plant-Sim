@@ -17,11 +17,17 @@ from src.core.types import (
 from src.core.assets.asset_data import MarchingLayout
 
 # Sub-Group Relative Imports
-from .base import AssetGroup
-from .collections import ColourGroup, TextGroup, FontGroup, ImageGroup
-from .database import DatabaseGroup
-from .entities import EntityGroup
-from .world import TileGroup, ToolGroup, PlantGroup, FruitGroup
+from .base_group import AssetGroup
+from .colour_group import ColourGroup
+from .text_group import TextGroup
+from .font_group import FontGroup
+from .image_group import ImageGroup
+from .database_group import DatabaseGroup
+from .entity_group import EntityGroup
+from .tile_group import TileGroup
+from .tool_group import ToolGroup
+from .plant_group import PlantGroup
+from .fruit_group import FruitGroup
 
 class AssetLoader:
     def __init__(self):

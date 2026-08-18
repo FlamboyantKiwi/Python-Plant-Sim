@@ -1,8 +1,4 @@
-from src.core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, FontType, TextConfig, Material, Quality, PlayerType, FarmAnimalType, STANDARD_DIRECTIONS, UP, LEFT, RIGHT, DOWN
-from src.settings import (
-    HUD_FONT_SIZE, HUD_FONT_BOLD,
-    SLOT_FONT_SIZE, SLOT_FONT_BOLD
-)
+from src.core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, TextConfig, Material, Quality, PlayerType, FarmAnimalType
 from dataclasses import dataclass, field
 import random
 

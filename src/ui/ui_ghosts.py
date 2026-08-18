@@ -5,7 +5,7 @@
 # ==========================================
 
 from __future__ import annotations
-from src.ui.ui_elements import Button, Slot, TextBox
+from src.ui.elements import Button, Slot, TextBox
 from src.ui.wrappers import BorderWrapper, FlashWrapper, ShadowWrapper
 
 # --- Matrix Combinations ---

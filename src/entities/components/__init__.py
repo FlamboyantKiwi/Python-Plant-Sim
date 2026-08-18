@@ -1,5 +1,7 @@
 from .animation import AnimationController
-from .interactionController import InteractionController
-from .inventoryComponent import InventoryController, DragController, InventoryManager
-from .inputController import InputController
-from .interactionHandler import InteractionHandler
+from .interaction_controller import InteractionController
+from .inventory_controller import InventoryController
+from .drag_controller import DragController
+from .inventory_manager import InventoryManager
+from .input_controller import InputController
+from .interaction_handler import InteractionHandler

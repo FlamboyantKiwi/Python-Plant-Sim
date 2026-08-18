@@ -1,8 +1,8 @@
-
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Any, Type
+from typing import TYPE_CHECKING, Callable, Type
 import pygame
+
 from src.groups import UIGroup
 from src.settings import WIDTH, HEIGHT
 from src.core.assets import ASSETS

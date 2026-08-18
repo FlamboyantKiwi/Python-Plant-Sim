@@ -10,7 +10,7 @@ from src.core import Log
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
-    from src.custom_types import Game, Pos, PlayerType, Player, ShopData
+    from src.custom_types import Game, Pos, PlayerType, Player, ShopData, Item
 
 from .base import BaseUIState
 
@@ -22,7 +22,11 @@ class ShopState(BaseUIState):
         self.key_binds[pygame.K_p] = self.game.pop
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
 
-        self.shop_menu = ShopMenu(self.player, data=shop_data) 
+        self.shop_menu = ShopMenu(
+            buy_callback=self._handle_purchase,
+            money_getter=lambda: self.player.money,
+            data=shop_data
+        )
         self.shop_menu.is_open = True
     
     def update(self, dt, is_paused: bool = False) -> None:
@@ -36,7 +40,6 @@ class ShopState(BaseUIState):
         # Draw the bright shop menu on top of default overlay
         super().draw(screen) # Draw BG+Buttons
         self.shop_menu.draw(screen)
-        
 
     def on_left_click(self, pos: Pos) -> None:
         # Check if we clicked inside the shop menu (slots/buying)
@@ -48,6 +51,22 @@ class ShopState(BaseUIState):
             self.game.pop()
     def on_right_click(self, pos: Pos) -> None:
         self.game.pop()
+
+    def _handle_purchase(self, item: Item) -> bool:
+        """Validates and executes the purchase logic for the shop."""
+        cost = item.data.buy_price
+        if self.player.money < cost:
+            Log.error(f"Cannot afford {item.name}! (Cost: {cost}, Have: {self.player.money})")
+            return False
+        
+        player_item = item.copy_one()
+        if self.player.inventory.data.add_item(player_item):
+            self.player.money -= cost
+            Log.info(f"Bought {player_item.name} for {cost}g.")
+            return True
+        
+        Log.error("Transaction failed (Inventory full).")
+        return False
 
 class MenuState(BaseUIState):
     state_id = StateID.MENU

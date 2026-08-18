@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
+from src.core import controls
 from src.core.states.hud import HUD
 from src.core.types import PlayerType, StateID
 from src.core.assets import ASSETS
@@ -82,7 +83,18 @@ class PlayingState(GameState):
         if self.hud.handle_event(event):
             return True
         collidables = self.level.tile_list + self.plant_group.plants
-        self.player.handle_event(event, collidables)
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == controls.interact:
+                self.player.interact(collidables)
+                return True
+            elif event.key == controls.refill:
+                self.player.refill_active_watering_can()
+                return True
+                
+        # 3. Route hotbar selection to the inventory
+        self.player.inventory.handle_event(event, controls)
+        
         return super().handle_event(event)
 
     def on_left_click(self,pos: Pos) -> None:

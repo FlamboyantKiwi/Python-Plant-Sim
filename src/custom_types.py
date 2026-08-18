@@ -4,8 +4,8 @@ import pygame
 
 # Safe Runtime Imports 
 # Base classes that don't import anything else - safe to load at runtime.
-from src.entities.entity import Entity
-from src.world.tile import Tile
+from entities.base_entity import Entity
+from src.world.tiles import Tile
 from src.core.types import PlayerType, FarmAnimalType
 
 #  Runtime Aliases
@@ -28,11 +28,11 @@ if TYPE_CHECKING:
         TextConfig, ShopData, PlantData, ItemData
     )
     from src.core.states import GameState, BaseUIState
-    
+    from src.core.inventory import Inventory
     # UI
     from src.ui import (
-        InventoryUI, Inventory, UIElement, Button, Slot, BaseWrapper, 
-        ShopMenu, Tooltip, ProgressBar
+        InventoryUI, UIElement, Button, Slot, BaseWrapper, 
+        ShopMenu, TooltipWrapper, ProgressBar
     )
     
     # Entities & Components

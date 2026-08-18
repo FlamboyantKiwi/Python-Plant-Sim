@@ -1,2 +1,2 @@
 from .level import Level
-from .tile import MapTileGroup, Tile, GroundTile, WaterTile
+from .tiles import MapTileGroup, Tile, GroundTile, WaterTile

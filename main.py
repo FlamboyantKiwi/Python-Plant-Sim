@@ -27,7 +27,7 @@ class Game:
         self.dt = 0.0 # Delta time
 
         # Load Assets
-        ASSETS.load_all()
+        ASSETS.load_all()  
         
         # State Management
         self.stack: StateStack[GameState] = StateStack()

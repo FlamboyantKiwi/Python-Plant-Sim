@@ -259,11 +259,22 @@ classDiagram
     surf_normal
     update(mouse_pos: Pos | None) None
   }
+  class InputController {
+    base_speed
+    entity
+    run_multiplier : float
+    update() None
+  }
   class InteractionController {
     distance : int
     entity
     offsets : dict[Direction, pygame.math.Vector2]
     get_target_objects(interactables: Interactables) list[Tile | Entity]
+  }
+  class InteractionHandler {
+    camera_group
+    player
+    handle_interaction(interactables: Interactables) None
   }
   class Inventory {
     items : list[Item | None]
@@ -276,7 +287,7 @@ classDiagram
   class InventoryController {
     active_slot_index : int
     background : UIElement
-    data : Inventory
+    data
     rect
     size : int
     slots : list
@@ -466,19 +477,14 @@ classDiagram
     SLOT_SIZE : int
     animator
     camera_group
-    current_speed
-    direction
-    facing
     image
+    input_controller
+    interaction_handler
     inventory : InventoryController
-    inventory_manager : InventoryManager
+    inventory_manager
     money : int
     player_type
-    run_multiplier : float
-    state : IDLE, RUN, WALK
     targeter
-    handle_event(event: pygame.event.Event, interactables: Interactables) None
-    input() None
     interact(interactables: Interactables) None
     receive_item(item_id: str, count: int) bool
     refill_active_watering_can() None
@@ -557,13 +563,14 @@ classDiagram
   }
   class ShopMenu {
     background : UIElement
+    buy_callback : Callable[[Item], bool]
     inventory_data
     is_open : bool
-    player
+    money_getter : Callable[[], int]
     rect
     shop_data : ShopData | None
     title_box : UIElement
-    ui_grid : Tooltip
+    ui_grid
     draw(screen: pygame.Surface) None
     handle_click(pos: Pos) bool
     populate_shop() None
@@ -581,7 +588,7 @@ classDiagram
   }
   class Slot {
     index : int
-    info_text
+    info_text : TextBox
     item : Item | None
     last_count : int
     price : int | None
@@ -700,11 +707,21 @@ classDiagram
   class ToolType {
     name
   }
-  class Tooltip {
+  class TooltipWrapper {
     offset : tuple[int, int]
     tooltip : str
     draw(screen: pygame.Surface) None
     update(mouse_pos: Pos | None) None
+  }
+  class UIElement {
+    image : pygame.Surface | None
+    is_visible : bool
+    rect
+    copy_image() pygame.Surface
+    draw(screen: pygame.Surface) None
+    handle_click() Any
+    is_click(mouse_pos: Pos) bool
+    update(mouse_pos: Pos | None)* None
   }
   class UIFactory {
     bordered_slot(rect: pygame.Rect, index: int) BorderSlot
@@ -718,7 +735,7 @@ classDiagram
     flashing_text(rect: pygame.Rect, text: str, text_getter: Callable[[], str] | None, interval: float, config: str, align: str, auto_start: bool) FlashTextBox
     image_element(rect: pygame.Rect, image_file: str) UIElement
     inventory_ui(rect: pygame.Rect, inventory_data: Inventory, columns: int, slot_size: int, padding: int) InventoryUI
-    inventory_with_tooltip(rect: pygame.Rect, inventory_data: 'Inventory', columns: int, slot_size: int, padding: int, tooltip_config: str, tooltip_offset: tuple[int, int]) 'Tooltip'
+    inventory_with_tooltip(rect: pygame.Rect, inventory_data: 'Inventory', columns: int, slot_size: int, padding: int, tooltip_config: str, tooltip_offset: tuple[int, int]) 'TooltipWrapper'
     progress_bar(rect: pygame.Rect, percentage: float, value_getter: Callable[[], float] | None, fill_colour: Any, bg_colour: Any, alignment: str, is_horizontal: bool | None) ProgressBar
     slot(rect: pygame.Rect, index: int, bg_colour: str, image_file: str | None) Slot
     solid_element(rect: pygame.Rect, colour: str) UIElement
@@ -737,17 +754,10 @@ classDiagram
     refresh_terrain(new_neighbors: list[bool]) None
   }
   ConfigGroup --|> AssetGroup
-  SpriteGroup --|> AssetGroup
-  ColourGroup --|> ConfigGroup
+  DatabaseGroup --|> AssetGroup
   FontGroup --|> AssetGroup
   ImageGroup --|> AssetGroup
-  TextGroup --|> ConfigGroup
-  DatabaseGroup --|> AssetGroup
-  EntityGroup --|> SpriteGroup
-  FruitGroup --|> SpriteGroup
-  PlantGroup --|> SpriteGroup
-  TileGroup --|> SpriteGroup
-  ToolGroup --|> SpriteGroup
+  SpriteGroup --|> AssetGroup
   BaseUIState --|> GameState
   HUD --|> BaseUIState
   CharacterSelectState --|> BaseUIState
@@ -756,19 +766,12 @@ classDiagram
   ShopState --|> BaseUIState
   PlayingState --|> GameState
   ScaleRect --|> SpriteRect
-  MovingEntity --|> Entity
   FoodItem --|> Item
   SeedItem --|> Item
   ToolItem --|> Item
+  MovingEntity --|> Entity
   Plant --|> Entity
   Player --|> MovingEntity
-  Button --|> StateElement
-  Slot --|> Button
-  BorderWrapper --|> BaseWrapper
-  FlashWrapper --|> BaseWrapper
-  ImageSwapWrapper --|> BaseWrapper
-  ShadowWrapper --|> BaseWrapper
-  Tooltip --|> BaseWrapper
   GroundTile --|> Tile
   WaterTile --|> Tile
   SpriteGroup --> SpriteSheet : loaded_sheets
@@ -776,39 +779,45 @@ classDiagram
   RectPair --> SpriteRect : b
   Level --> Tile : tile_grid
   ColourGroup --* AssetLoader : colours
-  FontGroup --* AssetLoader : fonts
-  ImageGroup --* AssetLoader : images
-  TextGroup --* AssetLoader : text
   DatabaseGroup --* AssetLoader : database
   EntityGroup --* AssetLoader : entities
+  FontGroup --* AssetLoader : fonts
   FruitGroup --* AssetLoader : fruits
+  ImageGroup --* AssetLoader : images
   PlantGroup --* AssetLoader : plants
+  TextGroup --* AssetLoader : text
   TileGroup --* AssetLoader : tiles
   ToolGroup --* AssetLoader : tools
   DatabaseManager --* DatabaseGroup : db
+  Inventory --* InventoryController : data
+  Inventory --* ShopMenu : inventory_data
   HUD --* PlayingState : hud
   PlantData --* Plant : data
   AnimationController --* Player : animator
-  InteractionController --* Player : targeter
   DragController --* InventoryManager : drag_controller
+  InputController --* Player : input_controller
+  InteractionController --* Player : targeter
+  InteractionHandler --* Player : interaction_handler
+  InventoryManager --* Player : inventory_manager
   Player --* PlayingState : player
   CameraGroup --* PlayingState : all_sprites
   CameraGroup --* Player : camera_group
   PlantGroup --* PlayingState : plant_group
   UIGroup --* BaseUIState : ui_group
-  Inventory --* ShopMenu : inventory_data
   Timer --* FlashWrapper : flash_timer
-  TextBox --* Slot : info_text
+  TooltipWrapper --* ShopMenu : ui_grid
   Level --* PlayingState : level
   MapTileGroup --* Level : all_tiles
   AssetLoader --o AssetGroup : manager
   AssetGroup --o AssetLoader : groups
+  Inventory --o InventoryUI : data
   PlayerType --o Player : player_type
+  MovingEntity --o InputController : entity
   MovingEntity --o InteractionController : entity
   Player --o HUD : player
   Player --o ShopState : player
-  Player --o ShopMenu : player
+  Player --o InteractionHandler : player
   Player --o Level : player_sprite
+  CameraGroup --o InteractionHandler : camera_group
   PlantGroup --o Level : plant_group
-  Inventory --o InventoryUI : data
   Level --o Tile : level

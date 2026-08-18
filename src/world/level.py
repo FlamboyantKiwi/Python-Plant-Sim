@@ -9,7 +9,7 @@ from src.settings import BLOCK_SIZE, DETAIL_CHANCE
 from src.core.assets import ASSETS
 from src.core import Log
 from src.entities.plant import Plant 
-from src.world.tile import Tile, MapTileGroup
+from .tiles import Tile, MapTileGroup
 
 # Type-Only Imports
 if TYPE_CHECKING:

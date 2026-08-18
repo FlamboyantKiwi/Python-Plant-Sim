@@ -3,17 +3,17 @@ import pygame
 from typing import TYPE_CHECKING, cast
 
 # Runtime Imports (Needed for logic/inheritance)
-from src.core import Log, calc_pos_rect, controls
-from src.settings import WIDTH, HEIGHT, PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from src.core.types import EntityState, PlayerType, EntityCategory, ToolType
-from src.entities.entity import MovingEntity
-from src.entities.components import AnimationController, InteractionController, InteractionHandler, InputController, InventoryController, InventoryManager
-from src.world.tile import Tile
+from src.core import Log
+from src.settings import PLAYER_START_INVENTORY, INTERACTION_DISTANCE
+from src.core.types import  PlayerType, EntityCategory, ToolType
 from src.groups import CameraGroup
+
+from .moving_entity import MovingEntity
+from .components import AnimationController, InteractionController, InteractionHandler, InputController, InventoryController, InventoryManager
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
-    from src.custom_types import Direction, Item, Group, Pos, Interactables, Num
+    from src.custom_types import Group, Pos, Interactables, Num
 
 class Player(MovingEntity):
     #Inventory Variables
@@ -61,18 +61,6 @@ class Player(MovingEntity):
         for item_id, count in PLAYER_START_INVENTORY:
             self.inventory.data.add_item(create_item(item_id, count))
        
-    def handle_event(self, event: pygame.event.Event, interactables:Interactables) -> None:
-        """Handles discrete inputs (clicks). Call this from Game Loop."""
-        if event.type == pygame.KEYDOWN:
-            # Interact
-            if event.key == controls.interact:
-                self.interact(interactables)
-            elif event.key == controls.refill:  # Listen for 'R'
-                self.refill_active_watering_can()
-            
-        #  Hotbar Selection (handled by controller) (1-8 keys)
-        self.inventory.handle_event(event, controls)
-
     def refill_active_watering_can(self) -> None:
         ### WILL BE RMOVED LATER - when water / water sources are added
         """Refills the currently equipped watering can to max capacity."""
@@ -103,7 +91,7 @@ class Player(MovingEntity):
 
     def receive_item(self, item_id: str, count: int = 1) -> bool:
         """The Logic Middle Man: Instantiates an item and adds it to the inventory."""
-        from entities.items import create_item
+        from src.entities.items import create_item
         new_item = create_item(item_id, count)
         
         if self.inventory.data.add_item(new_item):

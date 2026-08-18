@@ -1,0 +1,28 @@
+flowchart TB
+    direction TB
+
+    subgraph world [World Package]
+        level
+        subgraph tiles [Tiles Package]
+            base_tile
+            ground_tile
+            map_group
+            water_tile
+        end
+    end
+    subgraph core [Core Package]
+        asset_data
+        playing
+    end
+    subgraph entities [Entities Package]
+        plant
+    end
+
+    %% Structural & Dependency Links
+    world --> level
+    world --> tiles
+    world --> tiles
+    base_tile --> asset_data
+    ground_tile --> asset_data
+    level --> plant
+    playing --> level

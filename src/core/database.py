@@ -2,14 +2,10 @@ from __future__ import annotations
 import sqlite3
 import os
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 # Runtime Imports: These are needed to instantiate the data objects
 from src.core.types import ItemData, ItemCategory, ToolType, PlantData, ShopData, SpriteRect
-
-# Type Checking Imports
-if TYPE_CHECKING:
-    from src.custom_types import Num
 
 class DatabaseManager:
 

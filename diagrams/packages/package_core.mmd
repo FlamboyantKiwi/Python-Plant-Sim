@@ -1,0 +1,74 @@
+flowchart TB
+    direction TB
+
+    subgraph core [Core Package]
+        subgraph core_files [Core Modules]
+            controls
+            database
+            debug_logger
+            inventory
+            spritesheet
+            ui_utils
+        end
+        subgraph assets [Assets Package]
+            asset_data
+            asset_loader
+            base_group
+            colour_group
+            config_group
+            database_group
+            entity_group
+            font_group
+            fruit_group
+            image_group
+            plant_group
+            sprite_group
+            text_group
+            tile_group
+            tool_group
+        end
+        subgraph states [States Package]
+            base
+            hud
+            menus
+            playing
+        end
+        subgraph types [Types Package]
+            data_models
+            enums
+            generated_enums
+            geometry
+        end
+    end
+    subgraph entities [Entities Package]
+        input_controller
+        interaction_controller
+        inventory_controller
+    end
+    subgraph world [World Package]
+        base_tile
+        ground_tile
+        level
+    end
+    subgraph ui [Ui Package]
+        inventory_ui
+        shop_menu
+    end
+
+    %% Structural & Dependency Links
+    core --> assets
+    core --> assets
+    core --> core_files
+    core --> states
+    core --> states
+    core --> types
+    core --> types
+    base_tile --> asset_data
+    ground_tile --> asset_data
+    input_controller --> controls
+    interaction_controller --> controls
+    inventory --> inventory_ui
+    inventory --> shop_menu
+    inventory_controller --> inventory
+    playing --> level
+    shop_menu --> inventory

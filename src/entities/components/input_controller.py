@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING
 from src.core import controls
-from src.core.types import EntityState, Direction
+from src.core.types import EntityState
 
 if TYPE_CHECKING:
     from src.entities import MovingEntity

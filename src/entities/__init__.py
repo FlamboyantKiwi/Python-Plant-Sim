@@ -1,5 +1,11 @@
+from .items import Item, FoodItem, SeedItem, ToolItem, create_item
 from .player import Player
 from .animal import Animal
-from .items import Item, FoodItem, SeedItem, ToolItem, create_item
 from .plant import Plant
-from .entity import Entity, MovingEntity
+from .base_entity import Entity
+from .moving_entity import MovingEntity
+
+## Componenets Files are Hidden:
+    # They're used exclusively inside entities
+    # Prevents top-level namespace clutter 
+    # Avoids circular dependencies within entity classs

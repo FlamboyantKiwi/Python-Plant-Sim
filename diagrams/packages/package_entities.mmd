@@ -1,0 +1,46 @@
+flowchart TB
+    direction TB
+
+    subgraph entities [Entities Package]
+        subgraph entities_files [Entities Modules]
+            animal
+            base_entity
+            moving_entity
+            plant
+            player
+        end
+        subgraph components [Components Package]
+            animation
+            drag_controller
+            input_controller
+            interaction_controller
+            interaction_handler
+            inventory_controller
+            inventory_manager
+        end
+        subgraph items [Items Package]
+            base_item
+            food_item
+            item_factory
+            seed_item
+            tool_item
+        end
+    end
+    subgraph core [Core Package]
+        controls
+        inventory
+    end
+    subgraph world [World Package]
+        level
+    end
+
+    %% Structural & Dependency Links
+    entities --> components
+    entities --> components
+    entities --> entities_files
+    entities --> items
+    entities --> items
+    input_controller --> controls
+    interaction_controller --> controls
+    inventory_controller --> inventory
+    level --> plant

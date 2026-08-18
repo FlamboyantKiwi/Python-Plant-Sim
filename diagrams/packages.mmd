@@ -9,21 +9,39 @@ classDiagram
   }
   class asset_loader {
   }
-  class base {
+  class base_group {
   }
-  class collections {
+  class colour_group {
   }
-  class database {
+  class config_group {
   }
-  class entities {
+  class database_group {
   }
-  class world {
+  class entity_group {
+  }
+  class font_group {
+  }
+  class fruit_group {
+  }
+  class image_group {
+  }
+  class plant_group {
+  }
+  class sprite_group {
+  }
+  class text_group {
+  }
+  class tile_group {
+  }
+  class tool_group {
   }
   class controls {
   }
   class database {
   }
   class debug_logger {
+  }
+  class inventory {
   }
   class spritesheet {
   }
@@ -55,17 +73,37 @@ classDiagram
   }
   class animal {
   }
+  class base_entity {
+  }
   class components {
   }
   class animation {
   }
-  class interaction {
+  class drag_controller {
   }
-  class inventoryComponent {
+  class input_controller {
   }
-  class entity {
+  class interaction_controller {
+  }
+  class interaction_handler {
+  }
+  class inventory_controller {
+  }
+  class inventory_manager {
   }
   class items {
+  }
+  class base_item {
+  }
+  class food_item {
+  }
+  class item_factory {
+  }
+  class seed_item {
+  }
+  class tool_item {
+  }
+  class moving_entity {
   }
   class plant {
   }
@@ -75,19 +113,35 @@ classDiagram
   }
   class camera {
   }
-  class plant_group {
+  class plant_sprites {
   }
-  class ui_group {
+  class ui_sprites {
   }
   class settings {
   }
   class ui {
   }
-  class InventoryUI {
+  class elements {
+  }
+  class base_element {
+  }
+  class button {
+  }
+  class progress_bar {
+  }
+  class slot {
+  }
+  class state_element {
+  }
+  class textbox {
+  }
+  class inventory {
+  }
+  class inventory_ui {
+  }
+  class shop_menu {
   }
   class timer {
-  }
-  class ui_elements {
   }
   class ui_factory {
   }
@@ -95,11 +149,31 @@ classDiagram
   }
   class wrappers {
   }
+  class base_wrapper {
+  }
+  class border_wrapper {
+  }
+  class flash_wrapper {
+  }
+  class image_swap_wrapper {
+  }
+  class shadow_wrapper {
+  }
+  class tooltip_wrapper {
+  }
   class world {
   }
   class level {
   }
-  class tile {
+  class tiles {
+  }
+  class base_tile {
+  }
+  class ground_tile {
+  }
+  class map_group {
+  }
+  class water_tile {
   }
   core --> controls
   core --> database
@@ -107,42 +181,72 @@ classDiagram
   core --> spritesheet
   core --> ui_utils
   assets --> asset_loader
-  assets --> base
-  assets --> collections
-  assets --> entities
-  assets --> world
-  assets --> database
+  assets --> base_group
+  assets --> colour_group
+  assets --> config_group
+  assets --> database_group
+  assets --> entity_group
+  assets --> font_group
+  assets --> fruit_group
+  assets --> image_group
+  assets --> plant_group
+  assets --> sprite_group
+  assets --> text_group
+  assets --> tile_group
+  assets --> tool_group
   asset_data --> types
-  asset_data --> settings
   asset_loader --> core
   asset_loader --> asset_data
-  asset_loader --> base
-  asset_loader --> collections
-  asset_loader --> database
-  asset_loader --> entities
-  asset_loader --> world
+  asset_loader --> base_group
+  asset_loader --> colour_group
+  asset_loader --> database_group
+  asset_loader --> entity_group
+  asset_loader --> font_group
+  asset_loader --> fruit_group
+  asset_loader --> image_group
+  asset_loader --> plant_group
+  asset_loader --> text_group
+  asset_loader --> tile_group
+  asset_loader --> tool_group
   asset_loader --> types
-  base --> core
-  collections --> core
-  collections --> asset_data
-  collections --> base
-  collections --> types
-  database --> core
-  database --> base
-  database --> types
-  entities --> core
-  entities --> asset_data
-  entities --> base
-  entities --> types
-  world --> core
-  world --> asset_data
-  world --> base
-  world --> types
-  world --> settings
+  base_group --> core
+  colour_group --> asset_data
+  colour_group --> config_group
+  config_group --> core
+  config_group --> base_group
+  database_group --> core
+  database_group --> base_group
+  database_group --> types
+  entity_group --> core
+  entity_group --> asset_data
+  entity_group --> sprite_group
+  entity_group --> types
+  font_group --> core
+  font_group --> base_group
+  font_group --> types
+  fruit_group --> core
+  fruit_group --> asset_data
+  fruit_group --> sprite_group
+  fruit_group --> types
+  image_group --> core
+  image_group --> base_group
+  plant_group --> asset_data
+  plant_group --> sprite_group
+  sprite_group --> core
+  sprite_group --> base_group
+  text_group --> asset_data
+  text_group --> config_group
+  text_group --> types
+  tile_group --> asset_data
+  tile_group --> sprite_group
+  tile_group --> settings
+  tool_group --> asset_data
+  tool_group --> sprite_group
   controls --> debug_logger
   controls --> types
   database --> types
   debug_logger --> settings
+  inventory --> items
   spritesheet --> core
   spritesheet --> assets
   states --> base
@@ -165,7 +269,9 @@ classDiagram
   menus --> types
   menus --> settings
   menus --> ui
+  playing --> core
   playing --> assets
+  playing --> controls
   playing --> base
   playing --> hud
   playing --> types
@@ -183,125 +289,225 @@ classDiagram
   geometry --> enums
   ui_utils --> core
   custom_types --> types
-  custom_types --> entity
-  custom_types --> InventoryUI
-  custom_types --> tile
+  custom_types --> base_entity
+  custom_types --> tiles
   entities --> animal
-  entities --> entity
+  entities --> base_entity
   entities --> items
+  entities --> moving_entity
   entities --> plant
   entities --> player
   components --> animation
-  components --> interaction
-  components --> inventoryComponent
+  components --> drag_controller
+  components --> input_controller
+  components --> interaction_controller
+  components --> interaction_handler
+  components --> inventory_controller
+  components --> inventory_manager
   animation --> assets
   animation --> types
-  interaction --> core
-  interaction --> controls
-  inventoryComponent --> core
-  inventoryComponent --> controls
-  inventoryComponent --> settings
-  inventoryComponent --> ui
-  inventoryComponent --> InventoryUI
-  entity --> types
-  entity --> settings
-  items --> core
-  items --> assets
-  items --> types
-  items --> tile
+  input_controller --> core
+  input_controller --> controls
+  input_controller --> types
+  interaction_controller --> core
+  interaction_controller --> controls
+  interaction_handler --> core
+  interaction_handler --> tiles
+  inventory_controller --> core
+  inventory_controller --> inventory
+  inventory_controller --> settings
+  inventory_controller --> ui
+  inventory_manager --> drag_controller
+  inventory_manager --> settings
+  items --> base_item
+  items --> food_item
+  items --> item_factory
+  items --> seed_item
+  items --> tool_item
+  base_item --> assets
+  base_item --> types
+  base_item --> item_factory
+  food_item --> core
+  food_item --> base_item
+  item_factory --> assets
+  item_factory --> types
+  item_factory --> base_item
+  item_factory --> food_item
+  item_factory --> seed_item
+  item_factory --> tool_item
+  seed_item --> core
+  seed_item --> base_item
+  seed_item --> tiles
+  tool_item --> core
+  tool_item --> types
+  tool_item --> base_item
+  tool_item --> tiles
+  moving_entity --> types
+  moving_entity --> base_entity
+  moving_entity --> settings
   plant --> core
   plant --> assets
   plant --> types
-  plant --> entity
+  plant --> base_entity
   plant --> settings
   player --> core
-  player --> controls
   player --> types
   player --> entities
   player --> components
-  player --> entity
+  player --> items
+  player --> moving_entity
   player --> groups
   player --> settings
-  player --> tile
   groups --> camera
-  groups --> plant_group
-  groups --> ui_group
+  groups --> plant_sprites
+  groups --> ui_sprites
   camera --> settings
-  plant_group --> entities
-  ui --> InventoryUI
+  plant_sprites --> entities
+  ui --> elements
+  ui --> inventory
   ui --> timer
-  ui --> ui_elements
   ui --> ui_factory
   ui --> ui_ghosts
   ui --> wrappers
-  InventoryUI --> core
-  InventoryUI --> items
-  InventoryUI --> settings
-  InventoryUI --> ui_elements
-  InventoryUI --> ui_factory
-  InventoryUI --> wrappers
-  ui_elements --> core
-  ui_elements --> assets
+  elements --> base_element
+  elements --> button
+  elements --> progress_bar
+  elements --> slot
+  elements --> state_element
+  elements --> textbox
+  button --> core
+  button --> base_element
+  button --> state_element
+  progress_bar --> base_element
+  slot --> button
+  slot --> textbox
+  state_element --> base_element
+  textbox --> core
+  textbox --> assets
+  textbox --> base_element
+  inventory --> inventory_ui
+  inventory --> shop_menu
+  inventory_ui --> elements
+  inventory_ui --> ui_factory
+  shop_menu --> inventory
+  shop_menu --> items
+  shop_menu --> settings
+  shop_menu --> elements
+  shop_menu --> ui_factory
+  shop_menu --> wrappers
   ui_factory --> core
   ui_factory --> assets
   ui_factory --> ui
-  ui_factory --> InventoryUI
-  ui_factory --> ui_elements
+  ui_factory --> elements
   ui_factory --> wrappers
-  ui_ghosts --> ui_elements
+  ui_ghosts --> elements
   ui_ghosts --> wrappers
-  wrappers --> assets
-  wrappers --> timer
+  wrappers --> base_wrapper
+  wrappers --> border_wrapper
+  wrappers --> flash_wrapper
+  wrappers --> image_swap_wrapper
+  wrappers --> shadow_wrapper
+  wrappers --> tooltip_wrapper
+  border_wrapper --> assets
+  border_wrapper --> base_wrapper
+  flash_wrapper --> timer
+  flash_wrapper --> base_wrapper
+  image_swap_wrapper --> base_wrapper
+  shadow_wrapper --> assets
+  shadow_wrapper --> base_wrapper
+  tooltip_wrapper --> base_wrapper
   world --> level
-  world --> tile
+  world --> tiles
   level --> core
   level --> assets
   level --> plant
   level --> settings
-  level --> tile
-  tile --> assets
-  tile --> asset_data
-  tile --> settings
+  level --> tiles
+  tiles --> base_tile
+  tiles --> ground_tile
+  tiles --> map_group
+  tiles --> water_tile
+  base_tile --> assets
+  base_tile --> asset_data
+  base_tile --> settings
+  base_tile --> ground_tile
+  base_tile --> water_tile
+  ground_tile --> assets
+  ground_tile --> asset_data
+  ground_tile --> settings
+  ground_tile --> base_tile
+  water_tile --> settings
+  water_tile --> base_tile
   asset_loader ..> custom_types
-  base ..> assets
-  base ..> custom_types
-  collections ..> assets
-  collections ..> custom_types
-  database ..> assets
-  entities ..> custom_types
-  world ..> assets
-  database ..> custom_types
+  base_group ..> assets
+  colour_group ..> custom_types
+  entity_group ..> custom_types
   base ..> custom_types
   hud ..> custom_types
   menus ..> custom_types
   playing ..> custom_types
   data_models ..> states
   data_models ..> custom_types
+  custom_types ..> inventory
   custom_types ..> states
   custom_types ..> entities
   custom_types ..> components
   custom_types ..> groups
   custom_types ..> ui
   custom_types ..> world
+  base_entity ..> custom_types
+  base_entity ..> entities
   animation ..> custom_types
-  interaction ..> custom_types
-  inventoryComponent ..> custom_types
-  entity ..> custom_types
-  entity ..> entities
-  items ..> custom_types
-  items ..> entities
-  items ..> groups
+  drag_controller ..> custom_types
+  drag_controller ..> inventory_controller
+  drag_controller ..> inventory_manager
+  input_controller ..> custom_types
+  input_controller ..> entities
+  interaction_controller ..> custom_types
+  interaction_handler ..> custom_types
+  interaction_handler ..> entities
+  inventory_controller ..> custom_types
+  inventory_manager ..> inventory_controller
+  base_item ..> custom_types
+  base_item ..> entities
+  base_item ..> groups
+  food_item ..> custom_types
+  food_item ..> entities
+  food_item ..> groups
+  seed_item ..> custom_types
+  seed_item ..> entities
+  seed_item ..> groups
+  tool_item ..> custom_types
+  tool_item ..> entities
+  tool_item ..> groups
+  moving_entity ..> custom_types
   plant ..> custom_types
   plant ..> items
   plant ..> player
   player ..> custom_types
   camera ..> entities
-  plant_group ..> custom_types
-  ui_group ..> custom_types
-  InventoryUI ..> custom_types
-  ui_elements ..> custom_types
+  plant_sprites ..> custom_types
+  ui_sprites ..> custom_types
+  base_element ..> custom_types
+  button ..> custom_types
+  progress_bar ..> custom_types
+  slot ..> custom_types
+  slot ..> base_element
+  state_element ..> custom_types
+  textbox ..> custom_types
+  inventory_ui ..> custom_types
+  shop_menu ..> custom_types
+  ui_factory ..> inventory
   ui_factory ..> custom_types
-  wrappers ..> custom_types
-  wrappers ..> ui
+  base_wrapper ..> custom_types
+  border_wrapper ..> elements
+  image_swap_wrapper ..> custom_types
+  image_swap_wrapper ..> elements
+  shadow_wrapper ..> custom_types
+  shadow_wrapper ..> elements
+  tooltip_wrapper ..> custom_types
+  tooltip_wrapper ..> elements
   level ..> custom_types
-  tile ..> custom_types
+  base_tile ..> custom_types
+  ground_tile ..> custom_types
+  water_tile ..> custom_types
