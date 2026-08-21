@@ -10,7 +10,7 @@ from src.core import Log
 if TYPE_CHECKING:
     from src.custom_types import Game, Player
 
-from .base import BaseUIState
+from .base_ui_state import BaseUIState
 
 class HUD(BaseUIState):
     state_id = StateID.HUD
@@ -47,7 +47,7 @@ class HUD(BaseUIState):
         Log.info("Add pause menu")
     def player_open_shop(self):
         """Helper to trigger the shop transition through the game mediator."""
-        from src.core.assets import ASSETS
+        from src.core.asset_loaders import ASSETS
         shop_data = ASSETS.shop("general_store")
         self.game.open_shop(self.player, shop_data)
     def open_settings(self): 

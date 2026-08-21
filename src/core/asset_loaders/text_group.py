@@ -1,6 +1,6 @@
 from __future__ import annotations
 from src.core.types import TextConfig
-from src.core.assets.asset_data import TEXT
+from src.core.asset_loaders.asset_data import TEXT
 from .config_group import ConfigGroup
 
 class TextGroup(ConfigGroup):

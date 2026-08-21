@@ -4,9 +4,9 @@ import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
 from src.core import controls
-from src.core.states.hud import HUD
+from src.core.states.hud_state import HUD
 from src.core.types import PlayerType, StateID
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.entities import Player
 from src.world.level import Level
 from src.settings import WIDTH, HEIGHT
@@ -16,7 +16,7 @@ from src.groups import CameraGroup, PlantGroup
 if TYPE_CHECKING:
     from src.custom_types import Game, Pos
 
-from .base import GameState
+from .base_ui_state import GameState
 
 class PlayingState(GameState):
     state_id = StateID.PLAYING

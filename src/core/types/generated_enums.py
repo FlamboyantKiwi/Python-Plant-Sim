@@ -114,7 +114,7 @@ class ShopID(str, Enum):
     GENERAL_STORE = "general_store"
 
 class PlayerType(str, Enum):
-    """Maps directly to filenames inside the asset folder 'Player'."""
+    """Maps directly to filenames inside the asset folder 'player'."""
     BLUE_BIRD = "BlueBird"
     FOX = "Fox"
     GREY_CAT = "GreyCat"
@@ -123,7 +123,7 @@ class PlayerType(str, Enum):
     WHITE_BIRD = "WhiteBird"
 
 class FarmAnimalType(str, Enum):
-    """Maps directly to filenames inside the asset folder 'Farm_Animals'."""
+    """Maps directly to filenames inside the asset folder 'farm_animals'."""
     BULL = "Bull"
     CALF = "Calf"
     CHICK = "Chick"

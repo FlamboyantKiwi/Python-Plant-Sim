@@ -1,13 +1,13 @@
 from __future__ import annotations
 import pygame
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from .elements import ProgressBar, UIElement, TextBox, Button, Slot
 from .wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, TooltipWrapper
 from src.core import get_grid_pos 
 from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from typing import Callable, Any
-    from src.custom_types import InventoryUI
+    from src.ui.inventory.inventory_ui import InventoryUI
     from src.core.inventory import Inventory
     from src.ui import BorderButton, BorderSlot, BorderTextBox, FlashButton, FlashSlot, FlashTextBox, ShadowButton, ShadowSlot, ShadowTextBox  # noqa: F401
 
@@ -242,7 +242,7 @@ class UIFactory:
         columns: int = 4, slot_size: int = 40, padding: int = 5,
         tooltip_config: str = "HUD", tooltip_offset: tuple[int, int] = (15, 12)) -> 'TooltipWrapper':
         """Builder for an InventoryUI automatically wrapped with a mouse-following tooltip."""
-        
+        from src.ui import InventoryUI
         # Create the base grid
         base_inventory_ui = InventoryUI(
             rect=rect,

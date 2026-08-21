@@ -19,7 +19,7 @@ class TextBox(UIElement):
         self._text = str(text)
         self.text_getter = text_getter
         
-        from src.core.assets import ASSETS
+        from src.core.asset_loaders import ASSETS
         self.config = ASSETS.text.get_config(config)
 
         # Initial Render

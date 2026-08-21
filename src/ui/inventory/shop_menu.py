@@ -3,23 +3,23 @@ import pygame
 from typing import TYPE_CHECKING, Callable
 from src.ui.ui_factory import UIFactory
 from src.ui.elements import UIElement
-from src.ui.wrappers import TooltipWrapper
 from src.entities.items import Item, create_item
 from src.settings import SHOP_GRID_OFFSET_Y, SHOP_MENU
 from src.core.inventory import Inventory
 
 if TYPE_CHECKING:
     from src.custom_types import Pos, ShopData
+    from src.ui.wrappers import TooltipWrapper
 
 
-class ShopMenu:
+class ShopMenu(UIElement):
     """Controller for the Shop. Decoupled from the Player via callbacks."""
     def __init__(self, buy_callback: Callable[[Item], bool], money_getter: Callable[[], int], data: ShopData | None, columns: int = 4, max_size: int = 16) -> None:
+        super().__init__(rect=SHOP_MENU)
         self.buy_callback = buy_callback
         self.money_getter = money_getter
         self.shop_data: ShopData | None = data
         self.is_open: bool = False
-        self.rect: pygame.Rect = SHOP_MENU
         
         # Background visual
         self.background = UIFactory.static_border_element(
@@ -35,21 +35,13 @@ class ShopMenu:
         grid_rect.y += SHOP_GRID_OFFSET_Y
         
         # The Visual Grid
-        base_grid = UIFactory.inventory_ui(
+        self.ui_grid = UIFactory.inventory_ui(
             rect=grid_rect, 
             inventory_data=self.inventory_data, 
             columns=columns, 
             slot_size=70, 
             padding=20
         )
-        
-        tooltip_box = UIFactory.text(
-            rect=pygame.Rect(self.rect.centerx, self.rect.top - 25, 0, 0),
-            text="", 
-            config="HUD", 
-            align="midbottom"
-        )
-        self.ui_grid: TooltipWrapper = TooltipWrapper(base_grid, tooltip_box)
         
         title_string = self.shop_data.store_name if self.shop_data else "Shop"
         self.title_box: UIElement = UIFactory.text(
@@ -101,10 +93,12 @@ class ShopMenu:
         # Draw the Grid UI
         self.ui_grid.draw(screen)
   
-    def handle_click(self, pos:Pos) -> bool:
+    def handle_click(self, pos:Pos|None = None) -> bool:
         """Handles interaction. Returns a string action code if the State needs to react."""
         if not self.is_open: 
             return False
+        if pos is None:
+            pos = pygame.mouse.get_pos()
 
         # Let the UI grid tell us the index of what was clicked
         clicked_index = self.ui_grid.click(pos)
@@ -116,3 +110,7 @@ class ShopMenu:
                 return self.try_buy_item(item)
                 
         return False
+    
+    def is_click(self, mouse_pos: Pos) -> bool:
+        """Conforms to UIElement interface to verify interaction bounds."""
+        return self.is_open and self.rect.collidepoint(mouse_pos)

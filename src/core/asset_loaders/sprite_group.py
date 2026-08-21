@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 from src.core import SpriteSheet, Log
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 
 class SpriteGroup(AssetGroup):
     """Parent for Sheet-based assets (Tiles, Tools, Plants)."""

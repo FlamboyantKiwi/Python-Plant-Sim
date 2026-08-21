@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.core.types import ItemCategory
 from typing import TYPE_CHECKING, Any
 

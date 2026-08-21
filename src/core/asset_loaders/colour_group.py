@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, Any
 
-from src.core.assets.asset_data import COLOURS
+from src.core.asset_loaders.asset_data import COLOURS
 from .config_group import ConfigGroup
 
 if TYPE_CHECKING:

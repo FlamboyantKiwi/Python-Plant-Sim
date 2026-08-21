@@ -95,7 +95,7 @@ if __name__ == "__main__":
     (EnumGenerator(db_path=DB_PATH, output_path=OUTPUT_PATH)
         .add_database_tables("items", "shops")
         .add_asset_directories(
-            os.path.join("assets", "Player"),
-            os.path.join("assets", "Farm_Animals")
+            os.path.join("assets", "player"),
+            os.path.join("assets", "farm_animals")
         )
         .run())

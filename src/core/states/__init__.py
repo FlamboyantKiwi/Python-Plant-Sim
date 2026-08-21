@@ -1,5 +1,8 @@
-
-from .base import GameState, BaseUIState, STATE_REGISTRY
-from .playing import PlayingState
-from .menus import MenuState, ShopState, CharacterSelectState, SettingsState
-from .hud import HUD
+from .game_state import GameState, STATE_REGISTRY
+from .base_ui_state import BaseUIState
+from .playing_state import PlayingState
+from .menu_state import MenuState
+from .shop_state import ShopState
+from .character_select_state import CharacterSelectState
+from .settings_state import SettingsState
+from .hud_state import HUD

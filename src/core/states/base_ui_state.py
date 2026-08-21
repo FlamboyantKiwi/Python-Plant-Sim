@@ -1,68 +1,21 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Type
+from typing import TYPE_CHECKING
 import pygame
 
 from src.groups import UIGroup
 from src.settings import WIDTH, HEIGHT
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.ui import UIFactory
-from src.core.types import StateID
-
+from src.ui.elements.base_element import UIElement
+from .game_state import GameState
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from src.custom_types import Game, Pos
 
-STATE_REGISTRY: dict[StateID, Type["GameState"]] = {}
-
-class GameState(ABC):
-    state_id: StateID | None = None
-    def __init__(self, game:Game):
-        self.game = game
-        # Flags control how the Game stack behaves
-        self.transparent: bool = False  # If True, the state below will draw first
-        self.back_button:bool = False
-        self.suppress_update: bool = True # If True, the state below freezes logic
-        # Event Mapping Dict
-        self.key_binds: dict[int, Callable] = {} # e.g. pygame.K_ESCAPE: self.func
-        self.mouse_binds: dict[int, Callable[[Pos], None]] = {
-            1: self.on_left_click,
-            2: self.on_middle_click,
-            3: self.on_right_click}
-
-    def __init_subclass__(cls, **kwargs) -> None:
-        super().__init_subclass__(**kwargs)
-        if cls.state_id is not None:
-            STATE_REGISTRY[cls.state_id] = cls
-
-    @abstractmethod
-    def update(self, dt:float, is_paused: bool = False) -> None: pass
-
-    @abstractmethod
-    def draw(self, screen: pygame.Surface) -> None: pass
-
-    def handle_event(self, event: pygame.event.Event) -> bool:
-        if event.type == pygame.KEYDOWN:
-            if action := self.key_binds.get(event.key): 
-                action()
-        
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if action := self.mouse_binds.get(event.button): 
-                action(event.pos)
-        return False
-
-    def enter_state(self) -> None: pass
-    def exit_state(self) -> None: pass
-
-    #Click actions - override in child classes
-    def on_left_click(self, pos: Pos) -> None: pass
-    def on_right_click(self, pos: Pos) -> None: pass
-    def on_middle_click(self, pos: Pos) -> None: pass
-
 class BaseUIState(GameState):
     """"Parent class managing a list of UI elements via the UIElementProtocol.
     (Menu, Shop, Inventory, Credits, etc)."""
-    def __init__(self, game: Game, bg_colour:str= "NONE", back_button=True):
+    def __init__(self, game: Game, bg_colour:str= "NONE", back_button=True, click_exit=False):
         super().__init__(game)
         self.suppress_update = False
         self.ui_group = UIGroup()
@@ -70,7 +23,9 @@ class BaseUIState(GameState):
         self.colour = ASSETS.colours.get_colour(bg_colour)
         self.draw_bg = self.colour.a > 0       # Skip completely if 0
         self.transparent = self.colour.a < 255  # Blit if translucent, Fill if solid
+        self.panel:UIElement|None = None
         self.back_button = back_button
+        self.click_exit = click_exit
         if self.back_button:
             self.add_back_button()
         # 3. Only pre-render the surface if we actually need a translucent overlay
@@ -114,3 +69,11 @@ class BaseUIState(GameState):
 
         # Always bind ESC to 'Back' for a better player experience
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
+
+    def on_left_click(self, pos: tuple[int, int]) -> None:
+        if self.click_exit and self.panel:
+            if not self.panel.rect.collidepoint(pos):
+                self.game.pop()
+                return
+            
+  

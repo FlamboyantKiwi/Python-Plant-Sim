@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any
 from src.core import DatabaseManager, Log
 from src.core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 
 class DatabaseGroup(AssetGroup):
     """Manages the SQLite connection and handles fallback logic for missing data."""

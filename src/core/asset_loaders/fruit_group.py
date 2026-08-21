@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Sequence, Any
 from src.core import SpriteSheet, Log
 from src.core.types import SpriteRect, Quality
-from src.core.assets.asset_data import CROPS_ORDER, TREES_ORDER, FRUIT_RANKS, SEED_BAGS_POS
+from src.core.asset_loaders.asset_data import CROPS_ORDER, TREES_ORDER, FRUIT_RANKS, SEED_BAGS_POS
 from .sprite_group import SpriteGroup
 
 class FruitGroup(SpriteGroup):

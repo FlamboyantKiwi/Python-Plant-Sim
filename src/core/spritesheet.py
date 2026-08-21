@@ -5,7 +5,7 @@ from src.core import Log
 class SpriteSheet:
     path="assets"
     def __init__(self, filename):
-        from src.core.assets import ASSETS
+        from src.core.asset_loaders import ASSETS
         self.name = filename
         loaded_sheet = ASSETS.load_raw_image(filename)
 
@@ -23,7 +23,7 @@ class SpriteSheet:
         if self.sheet:
             image.blit(self.sheet, (0, 0), (x, y, width, height))
         else:
-            from src.core.assets import ASSETS
+            from src.core.asset_loaders import ASSETS
             colour = ASSETS.colour(self.name.upper(), "SPRITESHEET")
             image.fill(colour)
 

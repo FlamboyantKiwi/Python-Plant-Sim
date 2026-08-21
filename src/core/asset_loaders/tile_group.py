@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.assets.asset_data import TILE_DETAILS, MarchingLayout
+from src.core.asset_loaders.asset_data import TILE_DETAILS, MarchingLayout
 from src.settings import BLOCK_SIZE, QUAD_SIZE
 from .sprite_group import SpriteGroup
 

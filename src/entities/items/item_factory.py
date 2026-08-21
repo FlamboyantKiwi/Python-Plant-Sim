@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.core.types import ItemCategory
 from .base_item import Item
 from .tool_item import ToolItem

@@ -4,7 +4,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 from src.core import SpriteSheet
 from src.core.types import EntityState, Direction, EntityCategory
-from src.core.assets.asset_data import GAME_ENTITIES
+from src.core.asset_loaders.asset_data import GAME_ENTITIES
 from .sprite_group import SpriteGroup
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ class EntityGroup(SpriteGroup):
 
     def get_sprite(self, cat: EntityCategory, name: EntityType, state: EntityState, direction: Direction, frame: int) -> pygame.Surface | None:
         try:
-            frames = self.storage[cat][name][state.value][direction.value]
+            frames = self.storage[cat.lower()][name][state.value][direction.value]
             return frames[int(frame) % len(frames)]
         except (KeyError, IndexError):
             return None

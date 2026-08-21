@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 # Runtime Imports
 from src.core.types import EntityState, EntityCategory
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 
 # Type-Only Imports
 if TYPE_CHECKING:

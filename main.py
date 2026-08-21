@@ -8,7 +8,7 @@ from src.core import Log
 from src.core.states import SettingsState
 from src.settings import WIDTH, HEIGHT, FPS
 
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.core.types import StateStack, StateID
 from src.core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
 

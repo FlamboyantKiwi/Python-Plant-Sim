@@ -62,7 +62,7 @@ TILE_DETAILS = { #Rect: x, y, width, height, tile_width, tile_height
 
 # ============ Entities (Player, Animals) ============ #
 GAME_ENTITIES = {
-    "Player": EntityConfig(
+    "player": EntityConfig(
     sheets=[p.value for p in PlayerType],
     animations={
             EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 128, 128)),
@@ -70,7 +70,7 @@ GAME_ENTITIES = {
             EntityState.RUN:    AnimationGrid(SpriteRect(0, 256, 256, 128))},
             frame_size=32
     ),
-    "Farm_Animals": EntityConfig(
+    "farm_animals": EntityConfig(
     sheets=[a.value for a in FarmAnimalType],
     animations={
             EntityState.WALK:   AnimationGrid(SpriteRect(0, 0, 384, 256)),

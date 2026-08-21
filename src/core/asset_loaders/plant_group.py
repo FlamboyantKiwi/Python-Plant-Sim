@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.assets.asset_data import CROPS_ORDER, TREES_ORDER, TREE_FRAME_SLICES
+from src.core.asset_loaders.asset_data import CROPS_ORDER, TREES_ORDER, TREE_FRAME_SLICES
 from .sprite_group import SpriteGroup
 
 class PlantGroup(SpriteGroup):

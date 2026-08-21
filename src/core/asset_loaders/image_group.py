@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any
 import pygame
 from src.core import Log
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 
 class ImageGroup(AssetGroup):
     """Manages standalone images (UI, backgrounds, icons) that aren't part of a spritesheet."""

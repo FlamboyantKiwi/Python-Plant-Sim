@@ -3,7 +3,7 @@ import os
 import inspect
 from typing import Any
 from src.core import Log
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 
 class ConfigGroup(AssetGroup):
     """Parent for Dictionary-based assets (Colours, Text). Handles: Storage, Missing Keys, Defaults, and Debugging."""

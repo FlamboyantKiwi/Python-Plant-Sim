@@ -103,7 +103,7 @@ class TextConfig:
     def render(self, text: str, custom_colour: Colour | None = None) -> pygame.Surface:
         """Asks AssetLoader for the cached font, resolves the colour, then renders."""
         # Local import avoids circular dependency errors at startup
-        from src.core.assets import ASSETS
+        from src.core.asset_loaders import ASSETS
         
         # Get the heavy Font object from the Loader (cached)
         font = ASSETS.font(self)

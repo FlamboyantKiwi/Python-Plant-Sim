@@ -26,9 +26,9 @@ STANDARD_DIRECTIONS = [DOWN, UP, LEFT, RIGHT]
 
 class EntityCategory(str, Enum):
     """Maps directly to the root asset folders for animated entities."""
-    PLAYER = "Player"
-    FARM_ANIMALS = "Farm_Animals"
-    NPC = "NPCs"
+    PLAYER = "player"
+    FARM_ANIMALS = "farm_animals"
+    NPC = "npc"
 
 class ItemType(Enum):
     # --- Tools ---

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from src.core import Log
 
 if TYPE_CHECKING:
-    from src.core.assets import AssetLoader
+    from src.core.asset_loaders import AssetLoader
 
 class AssetGroup(ABC):
     """Universal Base Class. Automatically gives every subclass its own unique STORAGE dictionary."""

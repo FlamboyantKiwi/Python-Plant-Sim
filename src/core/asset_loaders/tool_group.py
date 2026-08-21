@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum
 
 import pygame
-from src.core.assets.asset_data import MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT
+from src.core.asset_loaders.asset_data import MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT
 from .sprite_group import SpriteGroup
 
 class ToolGroup(SpriteGroup):

@@ -3,7 +3,7 @@ from typing import Any
 import pygame
 from src.core import Log
 from src.core.types import TextConfig
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 
 class FontGroup(AssetGroup):
     """Internal helper class to manage font caching."""

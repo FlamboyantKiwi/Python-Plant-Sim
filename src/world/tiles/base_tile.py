@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 # Runtime Imports
 from src.settings import BLOCK_SIZE
-from src.core.assets import ASSETS
-from src.core.assets.asset_data import LAYOUT
+from src.core.asset_loaders import ASSETS
+from src.core.asset_loaders.asset_data import LAYOUT
 
 # Type-Only Imports
 if TYPE_CHECKING:

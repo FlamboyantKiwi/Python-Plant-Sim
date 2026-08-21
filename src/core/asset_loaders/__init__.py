@@ -1,5 +1,5 @@
 from .asset_loader import AssetLoader, ASSETS
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 from .config_group import ConfigGroup
 from .sprite_group import SpriteGroup
 from .text_group import TextGroup

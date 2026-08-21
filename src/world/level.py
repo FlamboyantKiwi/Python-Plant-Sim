@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 # Runtime Imports
 from src.settings import BLOCK_SIZE, DETAIL_CHANCE
-from src.core.assets import ASSETS
+from src.core.asset_loaders import ASSETS
 from src.core import Log
 from src.entities.plant import Plant 
 from .tiles import Tile, MapTileGroup

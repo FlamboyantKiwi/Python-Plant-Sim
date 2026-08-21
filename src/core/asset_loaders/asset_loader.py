@@ -14,10 +14,10 @@ from src.core.types import (
     ItemCategory, ItemData, EntityState, Direction, PlantData, 
     ShopData, TextConfig, EntityCategory
 )
-from src.core.assets.asset_data import MarchingLayout
+from src.core.asset_loaders.asset_data import MarchingLayout
 
 # Sub-Group Relative Imports
-from .base_group import AssetGroup
+from .asset_group import AssetGroup
 from .colour_group import ColourGroup
 from .text_group import TextGroup
 from .font_group import FontGroup
