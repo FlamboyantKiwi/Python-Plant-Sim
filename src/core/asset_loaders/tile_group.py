@@ -1,7 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.asset_loaders.asset_data import TILE_DETAILS, MarchingLayout
-from src.settings import BLOCK_SIZE, QUAD_SIZE
+from src.config import BLOCK_SIZE, QUAD_SIZE, MarchingLayout
 from .sprite_group import SpriteGroup
 
 class TileGroup(SpriteGroup):
@@ -24,7 +23,7 @@ class TileGroup(SpriteGroup):
             )
         detail_sheet = self.get_sheet("details")
         if detail_sheet:
-            for key, rect_list in TILE_DETAILS.items():
+            for key, rect_list in self.raw_data.items():
                 storage_key = f"DETAIL_{key.upper()}"
                 self.storage[storage_key] = []
                 for r in rect_list:

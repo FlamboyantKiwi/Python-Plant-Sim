@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable, Type
 import pygame
 
-from src.core.types import StateID
+from ..types import StateID
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:

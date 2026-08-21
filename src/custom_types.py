@@ -4,9 +4,9 @@ import pygame
 
 # Safe Runtime Imports 
 # Base classes that don't import anything else - safe to load at runtime.
-from entities.base_entity import Entity
-from src.world.tiles import Tile
-from src.core.types import PlayerType, FarmAnimalType
+from src.entities.base_entity import Entity
+from src.world.tiles.base_tile import Tile
+from src.core.types.generated_enums import PlayerType, FarmAnimalType
 
 #  Runtime Aliases
 Num = int | float
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
         TextConfig, ShopData, PlantData, ItemData
     )
     from src.core.states import GameState, BaseUIState
-    from src.core.inventory import Inventory
+    from src.entities.inventory_data import Inventory
     # UI
     from src.ui import (
         InventoryUI, UIElement, Button, Slot, BaseWrapper, 

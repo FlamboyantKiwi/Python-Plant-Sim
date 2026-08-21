@@ -3,9 +3,8 @@ import pygame
 from typing import TYPE_CHECKING, cast
 
 # Runtime Imports (Needed for logic/inheritance)
-from src.core import Log
-from src.settings import PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from src.core.types import  PlayerType, EntityCategory, ToolType
+from src.core import PlayerType, EntityCategory, ToolType, Log
+from src.config import PLAYER_START_INVENTORY, INTERACTION_DISTANCE
 from src.groups import CameraGroup
 
 from .moving_entity import MovingEntity
@@ -13,7 +12,7 @@ from .components import AnimationController, InteractionController, InteractionH
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
-    from src.custom_types import Group, Pos, Interactables, Num
+    from src.custom_types import Group, Pos, Interactables, Num, Item
 
 class Player(MovingEntity):
     #Inventory Variables
@@ -60,7 +59,12 @@ class Player(MovingEntity):
         # Populate initial items into the data layer
         for item_id, count in PLAYER_START_INVENTORY:
             self.inventory.data.add_item(create_item(item_id, count))
-       
+    
+    @property
+    def active_item(self) -> Item | None:
+        """Convenience property to access the player's currently selected item."""
+        return self.inventory.get_active_item()
+    
     def refill_active_watering_can(self) -> None:
         ### WILL BE RMOVED LATER - when water / water sources are added
         """Refills the currently equipped watering can to max capacity."""

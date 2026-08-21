@@ -1,7 +1,6 @@
 from __future__ import annotations
 import pygame
-from src.core.asset_loaders import ASSETS
-from src.core.types import ItemCategory
+from src.core import ASSETS
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

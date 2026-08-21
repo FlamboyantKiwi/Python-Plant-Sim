@@ -153,9 +153,17 @@ def process_diagrams():
     sub_lines, sub_links = generate_subgraphs_and_links(tree, None, 1)
     overview_lines.extend(sub_lines)
     
+    # Map package-to-package relations instead of file-to-file
+    pkg_relations = set()
+    for src_mod, dst_mod in relations:
+        src_pkg = mod_to_top_pkg.get(src_mod)
+        dst_pkg = mod_to_top_pkg.get(dst_mod)
+        if src_pkg and dst_pkg and src_pkg != dst_pkg:
+            pkg_relations.add(f"    {src_pkg} --> {dst_pkg}")
+
     overview_lines.append("")
-    overview_lines.append("    %% Structural & Dependency Links")
-    for link in sorted(sub_links):
+    overview_lines.append("    %% Package Dependency Links")
+    for link in sorted(pkg_relations):
         overview_lines.append(link)
         
     for src_mod, dst_mod in sorted(list(relations)):

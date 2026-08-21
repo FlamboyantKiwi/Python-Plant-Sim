@@ -1,16 +1,17 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-from src.core import Log
+from .. import Log
 
 if TYPE_CHECKING:
     from src.core.asset_loaders import AssetLoader
 
 class AssetGroup(ABC):
     """Universal Base Class. Automatically gives every subclass its own unique STORAGE dictionary."""
-    def __init__(self, manager: AssetLoader) -> None:
+    def __init__(self, manager: AssetLoader, raw_data:Any = None) -> None:
         self.manager = manager
         self.storage: dict[Any, Any] = {}
+        self.raw_data = raw_data
 
     @abstractmethod
     def load(self) -> None:

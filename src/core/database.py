@@ -5,7 +5,7 @@ import sys
 from typing import Any
 
 # Runtime Imports: These are needed to instantiate the data objects
-from src.core.types import ItemData, ItemCategory, ToolType, PlantData, ShopData, SpriteRect
+from .types import ItemData, ItemCategory, ToolType, PlantData, ShopData, SpriteRect
 
 class DatabaseManager:
 

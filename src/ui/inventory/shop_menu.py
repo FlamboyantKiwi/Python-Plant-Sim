@@ -1,15 +1,14 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, Callable
-from src.ui.ui_factory import UIFactory
-from src.ui.elements import UIElement
-from src.entities.items import Item, create_item
-from src.settings import SHOP_GRID_OFFSET_Y, SHOP_MENU
-from src.core.inventory import Inventory
+from ..ui_factory import UIFactory
+from ..elements import UIElement
+from src.entities import Item, create_item
+from src.config import SHOP_GRID_OFFSET_Y, SHOP_MENU
+from src.entities.inventory_data import Inventory
 
 if TYPE_CHECKING:
     from src.custom_types import Pos, ShopData
-    from src.ui.wrappers import TooltipWrapper
 
 
 class ShopMenu(UIElement):

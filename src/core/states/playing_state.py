@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING
 import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
-from src.core import controls
-from src.core.states.hud_state import HUD
-from src.core.types import PlayerType, StateID
-from src.core.asset_loaders import ASSETS
+from src.config import key_binds, WIDTH, HEIGHT
 from src.entities import Player
-from src.world.level import Level
-from src.settings import WIDTH, HEIGHT
+from src.world import Level
 from src.groups import CameraGroup, PlantGroup
+
+from .hud_state import HUD
+from ..types import PlayerType, StateID
+from ..asset_loaders import ASSETS
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
@@ -43,29 +43,29 @@ class PlayingState(GameState):
 
         self.key_binds = {
             pygame.K_ESCAPE: self.game.quit,
-            pygame.K_p: lambda: self.open_shop("general_store"),
-            pygame.K_SPACE: lambda: self.plant_group.grow_all(0.1)
+            pygame.K_p: lambda: self.open_shop("general_store")
         }
 
     def update(self, dt:float, is_paused: bool = False):
         # Always update world animations (plants, water, etc.)
         self.level.update(dt)
         
-        # 3. Handle Player Logic (Only if not paused)
+        # Handle Player Logic (Only if not paused)
         if not is_paused:
+            self.plant_group.grow_all(dt)
             # Gather everything the player can bump into or use
             interactables = self.level.tile_list + self.plant_group.plants
             
             # Explicitly update the player
             self.player.update(dt, interactables)
 
-        # 4. Update the rest of the sprites (Excluding the player to avoid double-dip)
+        # Update the rest of the sprites (Excluding the player to avoid double-dip)
         for sprite in self.all_sprites:
             if sprite != self.player:
                 # We assume other sprites only need dt for simple animations
                 sprite.update(dt)
         
-        # 6. Update HUD (Money/Buttons)
+        # Update HUD (Money/Buttons)
         self.hud.update(dt, is_paused)
 
     def draw(self, screen: pygame.Surface) -> None:
@@ -85,15 +85,15 @@ class PlayingState(GameState):
         collidables = self.level.tile_list + self.plant_group.plants
 
         if event.type == pygame.KEYDOWN:
-            if event.key == controls.interact:
+            if event.key == key_binds.interact:
                 self.player.interact(collidables)
                 return True
-            elif event.key == controls.refill:
+            elif event.key == key_binds.refill:
                 self.player.refill_active_watering_can()
                 return True
                 
-        # 3. Route hotbar selection to the inventory
-        self.player.inventory.handle_event(event, controls)
+        # Route hotbar selection to the inventory
+        self.player.inventory.handle_event(event, key_binds)
         
         return super().handle_event(event)
 

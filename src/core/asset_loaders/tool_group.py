@@ -2,7 +2,6 @@ from __future__ import annotations
 from enum import Enum
 
 import pygame
-from src.core.asset_loaders.asset_data import MATERIAL_LEVELS, TOOL_SPRITE_LAYOUT
 from .sprite_group import SpriteGroup
 
 class ToolGroup(SpriteGroup):
@@ -10,12 +9,14 @@ class ToolGroup(SpriteGroup):
 
     def load(self) -> None:
         sheet = self.get_sheet("main")
-        if not sheet:
+        if not sheet or not self.raw_data:
             return
-        for r_idx, mat in enumerate(MATERIAL_LEVELS):
+        materials = self.raw_data.get("materials", [])
+        layout = self.raw_data.get("layout", [])
+        for r_idx, mat in enumerate(materials):
             mat_str = mat.value if isinstance(mat, Enum) else mat
             self.storage[mat_str] = {}
-            for c_idx, tool in enumerate(TOOL_SPRITE_LAYOUT):
+            for c_idx, tool in enumerate(layout):
                 self.storage[mat_str][tool] = sheet.get_image(
                     c_idx * self.TILE_SIZE,
                     r_idx * self.TILE_SIZE + 2,

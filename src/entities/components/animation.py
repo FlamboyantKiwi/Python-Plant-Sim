@@ -3,8 +3,8 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.core.types import EntityState, EntityCategory
-from src.core.asset_loaders import ASSETS
+from src.core import EntityState, EntityCategory
+from src.core import ASSETS
 
 # Type-Only Imports
 if TYPE_CHECKING:

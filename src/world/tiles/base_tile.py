@@ -3,13 +3,11 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.settings import BLOCK_SIZE
-from src.core.asset_loaders import ASSETS
-from src.core.asset_loaders.asset_data import LAYOUT
+from src.config import BLOCK_SIZE
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level, Entity
+    from src.custom_types import Group, Num, Level, Entity, Plant, CameraGroup, ToolItem
 
 
 class Tile(pygame.sprite.Sprite):
@@ -17,7 +15,7 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
                  group: Group, detail_image: pygame.Surface | None = None) -> None:
         super().__init__(group)
-        self.level = level
+        self.level:Level = level
         self.grid_x = int(x // BLOCK_SIZE)
         self.grid_y = int(y // BLOCK_SIZE)
         self.position = (x, y)
@@ -37,17 +35,20 @@ class Tile(pygame.sprite.Sprite):
         self.refresh_terrain(neighbors)
         self.rect = self.image.get_rect(topleft=self.position)
 
-    @classmethod
-    def create(cls, level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], 
-               group: Group, detail_image: pygame.Surface | None = None) -> Tile:
-        """THE FACTORY: Looks at the key and returns the correct subclass!"""
-        from .water_tile import WaterTile
-        from .ground_tile import GroundTile
+    def plant(self, plant_name:str, camera_group:CameraGroup) -> Plant|None:
+        pass
+    
+    def add_occupant(self, occupant:Entity) -> None:
+        self.occupant = occupant
+        self.occupant.tile = self
         
-        if tile_type_key == "WATER":
-            return WaterTile(level, x, y, tile_type_key, neighbors, group, detail_image)
-        else:
-            return GroundTile(level, x, y, tile_type_key, neighbors, group, detail_image)
+    def till(self) -> bool:
+        """Default behavior for non-tillable tiles."""
+        return False
+    
+    def water(self, item:ToolItem) -> bool:
+        """Default behaviour when watering tiles"""
+        return False
 
     def refresh_terrain(self, new_neighbors: list[bool]) -> None:
         """Generates the base visual. Subclasses will extend this."""

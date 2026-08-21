@@ -42,24 +42,27 @@ A custom, modular UI generation system built from the ground up (`ui.ui_factory`
 * **Decoupled Physics:** Custom collision detection uses axis-separated resolution and dedicated hitboxes that are independent of the sprite's visual bounds.
 * **Custom Terminal Logger:** A globally accessible, color-coded debug logger dynamically generates formatted tags (e.g., `[Info]`, `[Success]`, `[Error]`) to provide immediate, highly scannable visual feedback during playtesting. Codebase-wide implementation strongly follows Pythonic EAFP (Easier to Ask for Forgiveness than Permission) principles using safe `getattr` fallbacks.
 
-## 📂 Project Structure
+
+## Project Structure
+
 ```text
-Python-Plant-Sim/
-├── main.py                 # Main entry point and game loop
-├── settings.py             # Global configurations and constants
-├── Assets/                 # Spritesheets, fonts, and SQLite database
-├── core/                   # Engine internals
-│   ├── assets/             # Asset loading, caching, and fallback logic
-│   ├── states/             # State Machine (Menu, Playing, HUD, Shop)
-│   ├── database.py         # SQLite connection and query manager
-│   ├── debug_logger.py     # Color-coded terminal diagnostics
-│   └── controls.py         # Dynamic keybindings
-├── entities/               # Game objects (Player, Plants, Animals, Items)
-│   └── components/         # Modular logic (Animation, Interaction, Inventory)
-├── groups/                 # Pygame sprite groups (Y-Sorting Camera, UI routing)
-├── ui/                     # Component-based UI framework and wrappers
-├── world/                  # Procedural level generation and tile logic
-└── tools/                  # Developer scripts for auto-generating code
+src/
+├── config/                 # Game settings, input key bindings and game configs
+├── core/                   # Engine core, asset loaders, database & game states
+│   ├── asset_loaders/      # Modular asset groups (sprites, fonts, database, audio)
+│   ├── states/             # Game state machine stack (Menu, Playing, Shop, etc.)
+│   └── types/              # Dataclasses, enums, geometries, and type hubs
+├── entities/               # Living world actors, items, and inventory logic
+│   ├── components/         # Reusable behaviors (animation, input, interaction, movement)
+│   └── items/              # Item system and strategy pattern execution
+├── groups/                 # Specialized Pygame sprite groups (Camera, UI, Plants)
+├── ui/                     # User interface elements, builders, and decorators
+│   ├── elements/           # Atomic UI visual components (Buttons, Slots, Textboxes)
+│   ├── inventory/          # Inventory grid and shop menu controllers
+│   └── wrappers/           # Decorator wrappers (Borders, Shadows, Tooltips)
+├── world/                  # Map generation, level management, and tile subclasses
+│   └── tiles/              # Tile hierarchy and marching squares terrain rendering
+└── custom_types.py         # Centralized type hubs and forward-reference aliases
 ```
 
 ### ⌨️ Controls
@@ -101,8 +104,6 @@ python main.py
 **Systems & Architecture**
 * *Introduce save-state functionality via SQLite serialization.*
 * *Settings & Customization Menu:* Implement a fully interactive settings UI to manage master volume, audio sliders, and custom keybinding/rebind options.
-* *Entity Component Refactoring:* Finalize decoupling the main Player class into smaller, highly reusable ECS-style components.
-* *Asset Pipeline & Growth Overhaul:* Restructure plant sprites into individual images or a unified grid layout to resolve growth stage ordering bugs and streamline rendering logic.
 * *Crafting Architecture:* Build a data-driven crafting and recipe system utilizing the existing SQLite database structure.
 * *Audio Engine:* Integrate a centralized audio manager for background music fading and spatial sound effects.
 * *Gamepad Support:* Expand the `controls.py` module to dynamically map and support controllers alongside keyboard inputs.
@@ -110,8 +111,8 @@ python main.py
 **Gameplay & Entities**
 * *Resource Generation & Harvesting:* Spawn interactable trees, boulders, and ore veins (copper, iron, gold) that players can break down for raw materials.
 * *Shipping & Monetization:* Introduce a shipping bin or direct-sell merchant mechanic to convert harvested crops and crafted goods into currency.
-* *Implement A\* Pathfinding for NPC and Farm Animal behavior.*
 * *Livestock Integration:* Activate the existing farm animal framework and assets (Bull, Calf, Chick, Lamb, Piglet, Rooster, Sheep, Turkey) with dedicated AI state machines.
+* *Implement A\* Pathfinding for NPC and Farm Animal behavior.*
 * *Expanded Tool Interactions:* Implement distinct mechanics and targeted hitboxes for gathering and combat tools (Sword, Bow & Arrow, Dagger, Fishing Rod, Hammer, Pickaxe, Scythe, Shovel, Staff, Watering Can).
 * *Dynamic Economy:* Update the general store to feature all seed types and implement a rotating daily stock system.
 * *Skill Progression:* Implement an RPG-style leveling system for activities like Farming, Mining, and Combat to unlock new crafting recipes and increase efficiency.

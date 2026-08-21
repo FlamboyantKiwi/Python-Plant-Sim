@@ -4,9 +4,9 @@ import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
 from src.ui import UIFactory
-from src.settings import SETTINGS_MENU
-from src.core.types import StateID
-from src.core import Log
+from src.config import SETTINGS_MENU
+from ..types import StateID
+#from src.core import Log
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:

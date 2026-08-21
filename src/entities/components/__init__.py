@@ -5,3 +5,13 @@ from .drag_controller import DragController
 from .inventory_manager import InventoryManager
 from .input_controller import InputController
 from .interaction_handler import InteractionHandler
+
+__all__ = [  
+    "AnimationController",
+    "InteractionController",
+    "InventoryController",
+    "DragController",
+    "InventoryManager",
+    "InputController",
+    "InteractionHandler",
+]

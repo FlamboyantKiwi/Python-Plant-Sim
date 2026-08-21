@@ -3,11 +3,12 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.settings import BLOCK_SIZE
+from src.config import BLOCK_SIZE
+from src.core import Log
 from .base_tile import Tile
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level
+    from src.custom_types import Group, Num, Level, ToolItem
 
 class WaterTile(Tile):
     """Tile representing water. Blocks movement."""
@@ -23,3 +24,7 @@ class WaterTile(Tile):
         self.base_image.fill((56, 220, 245)) # Cyan Water
         self.image = self.base_image.copy()
 
+    def water(self, item:ToolItem) -> bool:
+        item.refill()
+        Log.success("Refilled watering can!")
+        return True

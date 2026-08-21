@@ -14,11 +14,10 @@ class SeedItem(Item):
     def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
         if self.count <= 0 or not isinstance(target, Tile): 
             return False                  
-        if not target.is_tilled or target.occupant:
-            Log.error("Ground not ready or occupied.")
-            return False                      
+              
         plant_id = self.item_id.replace("_seeds", "")
-        Log.info(f"Planting {plant_id}...")                  
-        target.level.spawn_plant(plant_id, target.grid_x, target.grid_y, group)
-        self.count -= 1
-        return True
+        if target.plant(plant_id, group):
+            Log.info(f"Planting {plant_id}...")
+            self.count -= 1
+            return True
+        return False

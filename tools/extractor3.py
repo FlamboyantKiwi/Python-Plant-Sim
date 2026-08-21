@@ -168,7 +168,7 @@ class SpriteSheetBuilder:
             f_offset_x = (max_f_w - data.fruit.w) // 2
             sheet.blit(f_surf, (max_c_w + f_offset_x, current_y + (max_row_h - data.fruit.h)))
 
-    def _draw_world_art(self, sheet: pygame.Surface, data: CropVisualData, max_c_w: int, max_f_w: int, max_w_w: int, max_row_h: int, current_y: int, is_tree: bool) -> None:
+    def _draw_world_art(self, sheet: pygame.Surface, crop_name: str, data: CropVisualData, max_c_w: int, max_f_w: int, max_w_w: int, max_row_h: int, current_y: int, is_tree: bool) -> None:
         """Slices and maps the growing animation frames for world art."""
         if data.world_art.w <= 0:
             return
@@ -182,6 +182,10 @@ class SpriteSheetBuilder:
         else:
             orig_frame_w = data.world_art.w // num_frames
             orig_slices = [(j * orig_frame_w, orig_frame_w) for j in range(num_frames)]
+            
+            # --- NEW: Swap 3rd and 4th states for specific re-growable crops ---
+            if crop_name in ["Green Bean", "Cucumber", "Red Pepper", "Grape"]:
+                orig_slices[2], orig_slices[3] = orig_slices[3], orig_slices[2]
             
         for frame_idx, (offset_x, orig_f_w) in enumerate(orig_slices):
             if orig_f_w <= 0: 
@@ -204,16 +208,18 @@ class SpriteSheetBuilder:
         dims = self._calculate_dimensions(items_dict)
         new_sheet = pygame.Surface((dims["sheet_w"], dims["sheet_h"]), pygame.SRCALPHA)
         
-        for i, (_, data) in enumerate(items_dict.items()):
+        # Unpack the crop_name from the items_dict
+        for i, (crop_name, data) in enumerate(items_dict.items()):
             current_y = i * dims["max_row_h"]
             
             # Compose each section of the row using focused helper methods
             self._draw_container(new_sheet, data, dims["max_c_w"], dims["max_row_h"], current_y)
             self._draw_fruit(new_sheet, data, dims["max_c_w"], dims["max_f_w"], dims["max_row_h"], current_y)
-            self._draw_world_art(new_sheet, data, dims["max_c_w"], dims["max_f_w"], dims["max_w_w"], dims["max_row_h"], current_y, is_tree_group)
+            
+            # Pass 'crop_name' down to allow specific filtering!
+            self._draw_world_art(new_sheet, crop_name, data, dims["max_c_w"], dims["max_f_w"], dims["max_w_w"], dims["max_row_h"], current_y, is_tree_group)
             
         return new_sheet
-
     def save_sheet(self, sheet: pygame.Surface | None, filename: str) -> None:
         """Saves a generated sheet surface directly to the assets directory."""
         if sheet is None: 

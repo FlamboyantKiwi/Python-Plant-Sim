@@ -1,8 +1,8 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, Any
-from src.settings import WIDTH, HEIGHT
-from src.core.types import Direction, EntityState
+from src.config import WIDTH, HEIGHT
+from src.core.types import Direction, EntityState ### check
 from .base_entity import Entity
 
 if TYPE_CHECKING:

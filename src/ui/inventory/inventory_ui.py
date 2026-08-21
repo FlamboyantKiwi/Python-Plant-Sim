@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import pygame
-from src.ui.ui_factory import UIFactory
-from src.ui.elements import UIElement
+from ..ui_factory import UIFactory
+from ..elements import UIElement
 
 if TYPE_CHECKING:
     from src.custom_types import Slot, Pos, Inventory

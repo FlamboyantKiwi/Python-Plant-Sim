@@ -16,6 +16,7 @@ classDiagram
   }
   class AssetGroup {
     manager
+    raw_data : Optional[Any]
     storage : dict[Any, Any]
     clean_up()* None
     debug_print() None
@@ -54,14 +55,17 @@ classDiagram
   class BaseUIState {
     back_button : bool
     background : NoneType
+    click_exit : bool
     colour
     draw_bg
+    panel : UIElement | None
     suppress_update : bool
     transparent
     ui_group
     add_back_button(x: int, y: int, width: int, height: int, text: str)
     draw(screen: pygame.Surface) None
     handle_event(event: pygame.event.Event) bool
+    on_left_click(pos: tuple[int, int]) None
     update(dt: float, is_paused: bool) None
   }
   class BaseWrapper {
@@ -150,9 +154,11 @@ classDiagram
     hitbox_offset : int
     image : pygame.Surface | None
     rect
+    tile : Tile | None
     draw(surface: pygame.Surface, offset_x: Num, offset_y: Num) None
     on_interact(player: 'Player') bool
     sync_rect_to_hitbox() None
+    till() bool
   }
   class EntityCategory {
     name
@@ -232,7 +238,10 @@ classDiagram
     is_tilled : bool
     tillable
     watered : bool
+    plant(plant_name: str, camera_group: CameraGroup) Plant | None
     refresh_terrain(new_neighbors: list[bool]) None
+    till() bool
+    water(item: ToolItem) bool
   }
   class HUD {
     player
@@ -391,7 +400,7 @@ classDiagram
     draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int) None
     generate_level() None
     get_tile(grid_x: int, grid_y: int) Tile | None
-    spawn_plant(plant_name: str, grid_x: int, grid_y: int, camera_group: CameraGroup) Plant
+    spawn_plant(plant_name: str, grid_x: int, grid_y: int, camera_group: CameraGroup) Plant | None
     till_map_node(grid_x: int, grid_y: int) None
     update(dt) None
   }
@@ -443,6 +452,7 @@ classDiagram
     hitbox
     hitbox_scale : float
     image : NoneType
+    is_dead : bool
     is_harvested : bool
     obstructed : bool
     plant_id : str
@@ -450,6 +460,7 @@ classDiagram
     grow(amount: float) None
     harvest() str | None
     on_interact(player: Player) bool
+    till() bool
     update_visuals() None
   }
   class PlantData {
@@ -475,6 +486,7 @@ classDiagram
     INV_PADDING : int
     INV_SIZE : int
     SLOT_SIZE : int
+    active_item : Item | None
     animator
     camera_group
     image
@@ -537,6 +549,7 @@ classDiagram
     use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
   }
   class SettingsState {
+    panel : UIElement
     state_id : SETTINGS
     suppress_update : bool
   }
@@ -567,24 +580,22 @@ classDiagram
     inventory_data
     is_open : bool
     money_getter : Callable[[], int]
-    rect
     shop_data : ShopData | None
     title_box : UIElement
     ui_grid
     draw(screen: pygame.Surface) None
-    handle_click(pos: Pos) bool
+    handle_click(pos: Pos | None) bool
+    is_click(mouse_pos: Pos) bool
     populate_shop() None
     try_buy_item(item: Item) bool
     update(mouse_pos: Pos | None) None
   }
   class ShopState {
+    panel : ShopMenu
     player
     shop_menu : ShopMenu
     state_id : SHOP
-    draw(screen: pygame.Surface) None
-    on_left_click(pos: Pos) None
     on_right_click(pos: Pos) None
-    update(dt, is_paused: bool) None
   }
   class Slot {
     index : int
@@ -673,8 +684,12 @@ classDiagram
     tile_type_key : str
     tillable : bool
     watered : bool
+    add_occupant(occupant: Entity) None
     create(level: Level, x: Num, y: Num, tile_type_key: str, neighbors: list[bool], group: Group, detail_image: pygame.Surface | None) Tile
+    plant(plant_name: str, camera_group: CameraGroup)* Plant | None
     refresh_terrain(new_neighbors: list[bool])* None
+    till() bool
+    water(item: ToolItem) bool
   }
   class TileGroup {
     build_marching_tile(tileset_key: str, layout: MarchingLayout, neighbors: list[bool], sheet_width) pygame.Surface
@@ -699,9 +714,10 @@ classDiagram
   class ToolItem {
     STRATEGIES : dict
     max_water : int
-    water_level : int
+    water_level : NoneType, int
     consume_water() None
     has_water() bool
+    refill()
     use(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) bool
   }
   class ToolType {
@@ -752,19 +768,18 @@ classDiagram
     base_image : NoneType
     image
     refresh_terrain(new_neighbors: list[bool]) None
+    water(item: ToolItem) bool
   }
   ConfigGroup --|> AssetGroup
   DatabaseGroup --|> AssetGroup
   FontGroup --|> AssetGroup
   ImageGroup --|> AssetGroup
   SpriteGroup --|> AssetGroup
-  BaseUIState --|> GameState
-  HUD --|> BaseUIState
   CharacterSelectState --|> BaseUIState
+  HUD --|> BaseUIState
   MenuState --|> BaseUIState
   SettingsState --|> BaseUIState
   ShopState --|> BaseUIState
-  PlayingState --|> GameState
   ScaleRect --|> SpriteRect
   FoodItem --|> Item
   SeedItem --|> Item
@@ -789,8 +804,6 @@ classDiagram
   TileGroup --* AssetLoader : tiles
   ToolGroup --* AssetLoader : tools
   DatabaseManager --* DatabaseGroup : db
-  Inventory --* InventoryController : data
-  Inventory --* ShopMenu : inventory_data
   HUD --* PlayingState : hud
   PlantData --* Plant : data
   AnimationController --* Player : animator
@@ -799,19 +812,22 @@ classDiagram
   InteractionController --* Player : targeter
   InteractionHandler --* Player : interaction_handler
   InventoryManager --* Player : inventory_manager
+  Inventory --* InventoryController : data
+  Inventory --* ShopMenu : inventory_data
   Player --* PlayingState : player
   CameraGroup --* PlayingState : all_sprites
   CameraGroup --* Player : camera_group
   PlantGroup --* PlayingState : plant_group
   UIGroup --* BaseUIState : ui_group
+  InventoryUI --* ShopMenu : ui_grid
   Timer --* FlashWrapper : flash_timer
-  TooltipWrapper --* ShopMenu : ui_grid
   Level --* PlayingState : level
   MapTileGroup --* Level : all_tiles
-  AssetLoader --o AssetGroup : manager
   AssetGroup --o AssetLoader : groups
-  Inventory --o InventoryUI : data
+  AssetLoader --o AssetGroup : manager
   PlayerType --o Player : player_type
+  Entity --o Tile : occupant
+  Inventory --o InventoryUI : data
   MovingEntity --o InputController : entity
   MovingEntity --o InteractionController : entity
   Player --o HUD : player

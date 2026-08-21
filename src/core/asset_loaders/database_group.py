@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import Any
-from src.core import DatabaseManager, Log
-from src.core.types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
+from .. import DatabaseManager, Log
+from ..types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
 from .asset_group import AssetGroup
 
 class DatabaseGroup(AssetGroup):
     """Manages the SQLite connection and handles fallback logic for missing data."""
-    def __init__(self, manager: Any) -> None:
-        super().__init__(manager)
+    def __init__(self, manager: Any, raw_data:Any = None) -> None:
+        super().__init__(manager, raw_data=raw_data)
         self.db = DatabaseManager()
         self.missing_ids = set()
 

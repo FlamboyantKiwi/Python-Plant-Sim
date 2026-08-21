@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING
 import pygame
 
 from src.groups import UIGroup
-from src.settings import WIDTH, HEIGHT
-from src.core.asset_loaders import ASSETS
-from src.ui import UIFactory
-from src.ui.elements.base_element import UIElement
+from src.config import WIDTH, HEIGHT
+from src.core.asset_loaders import ASSETS ###rework
+from src.ui import UIFactory, UIElement
 from .game_state import GameState
+
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
-    from src.custom_types import Game, Pos
+    from src.custom_types import Game
 
 class BaseUIState(GameState):
     """"Parent class managing a list of UI elements via the UIElementProtocol.

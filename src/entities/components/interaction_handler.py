@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from src.core import Log
-from src.world.tiles import Tile
+from src.world import Tile
 
 if TYPE_CHECKING:
     from src.entities import Player

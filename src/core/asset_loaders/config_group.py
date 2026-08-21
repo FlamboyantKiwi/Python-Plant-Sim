@@ -2,13 +2,13 @@ from __future__ import annotations
 import os
 import inspect
 from typing import Any
-from src.core import Log
+from .. import Log
 from .asset_group import AssetGroup
 
 class ConfigGroup(AssetGroup):
     """Parent for Dictionary-based assets (Colours, Text). Handles: Storage, Missing Keys, Defaults, and Debugging."""
-    def __init__(self, manager: Any) -> None:
-        super().__init__(manager)
+    def __init__(self, manager: Any, raw_data:Any = None) -> None:
+        super().__init__(manager, raw_data=raw_data)
         self.missing = set()
         self.default = None
 

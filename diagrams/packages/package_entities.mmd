@@ -5,6 +5,7 @@ flowchart TB
         subgraph entities_files [Entities Modules]
             animal
             base_entity
+            inventory_data
             moving_entity
             plant
             player
@@ -26,12 +27,12 @@ flowchart TB
             tool_item
         end
     end
-    subgraph core [Core Package]
-        controls
-        inventory
-    end
     subgraph world [World Package]
+        ground_tile
         level
+    end
+    subgraph ui [Ui Package]
+        shop_menu
     end
 
     %% Structural & Dependency Links
@@ -40,7 +41,6 @@ flowchart TB
     entities --> entities_files
     entities --> items
     entities --> items
-    input_controller --> controls
-    interaction_controller --> controls
-    inventory_controller --> inventory
+    ground_tile --> plant
     level --> plant
+    shop_menu --> inventory_data

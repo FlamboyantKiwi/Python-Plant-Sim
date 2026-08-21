@@ -3,7 +3,7 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.core import controls
+from src.config import key_binds
 
 # Type-Only Imports
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ class InteractionController:
 
     def _generate_offsets(self) -> None:
         """Creates directional vectors for the interaction raycast."""
-        for (dx, dy), direction in controls.facing_map.items():
+        for (dx, dy), direction in key_binds.facing_map.items():
             # Only use Pure Cardinals (ignore diagonal keys for the math)
             if dx == 0 or dy == 0:
                 self.offsets[direction] = pygame.math.Vector2(dx * self.distance, dy * self.distance)

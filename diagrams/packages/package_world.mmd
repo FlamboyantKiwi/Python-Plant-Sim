@@ -10,10 +10,6 @@ flowchart TB
             water_tile
         end
     end
-    subgraph core [Core Package]
-        asset_data
-        playing
-    end
     subgraph entities [Entities Package]
         plant
     end
@@ -22,7 +18,5 @@ flowchart TB
     world --> level
     world --> tiles
     world --> tiles
-    base_tile --> asset_data
-    ground_tile --> asset_data
+    ground_tile --> plant
     level --> plant
-    playing --> level

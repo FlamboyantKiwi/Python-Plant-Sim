@@ -1,12 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Any
 import pygame
-from src.core import align_rect
+#from ..utils import align_rect
 from .state_element import StateElement
 from .base_element import UIElement
 
 if TYPE_CHECKING:
-    from typing import Callable, Any
     from src.custom_types import Pos
 
 class Button(StateElement):

@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import Any
 import pygame
-from src.core import Log
+from .. import Log
 from .asset_group import AssetGroup
 
 class ImageGroup(AssetGroup):
     """Manages standalone images (UI, backgrounds, icons) that aren't part of a spritesheet."""
-    def __init__(self, manager: Any) -> None:
-        super().__init__(manager)
+    def __init__(self, manager: Any, raw_data:Any = None) -> None:
+        super().__init__(manager, raw_data=raw_data)
         self.failures = set()
 
     def load(self) -> None:

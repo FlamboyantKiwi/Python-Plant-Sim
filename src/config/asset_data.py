@@ -1,6 +1,4 @@
-from src.core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, TextConfig, Material, Quality, PlayerType, FarmAnimalType
-from dataclasses import dataclass, field
-import random
+from src.core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, TextConfig, Material, Quality, PlayerType, FarmAnimalType, MarchingLayout
 
 CROPS_ORDER = [
     "Beet", "Onion", "Cabbage", "Squash", "Cauliflower", "Melon",
@@ -140,38 +138,23 @@ COLOURS: dict[str, str] = {
     "NONE": "#00000000", # fully transparent
 }
 
+TOOL_GROUP_DATA = {
+    "materials": MATERIAL_LEVELS,
+    "layout": TOOL_SPRITE_LAYOUT
+}
 
-@dataclass
-class MarchingLayout:
-    """Blueprint for mapping bitmasks to spritesheet coordinates."""
-    raw_mapping: dict
-    
-    # We will automatically build this in __post_init__
-    mapping: dict = field(init=False)
-    
-    def __post_init__(self):
-        self.mapping = {}
-        for mask, data in self.raw_mapping.items():
-            # 1. Convert everything to a list (even single tuples)
-            if not isinstance(data, list):
-                data = [data]
-                
-            # 2. Ensure every tuple has exactly 3 values: (row, col, rotation)
-            cleaned_variants = []
-            for item in data:
-                if len(item) == 3:
-                    cleaned_variants.append(item)
-                else:
-                    # Add a default rotation of 0
-                    cleaned_variants.append((item[0], item[1], 0))
-                    
-            self.mapping[mask] = cleaned_variants
+PLANT_GROUP_DATA = {
+    "crops": CROPS_ORDER,
+    "trees": TREES_ORDER,
+    "tree_slices": TREE_FRAME_SLICES
+}
 
-    def get_variant(self, mask: int, fallback_mask: int = 0) -> tuple[int, int, int]:
-        """Returns a random (row, col, rotation) for the given mask."""
-        # Try the requested mask. If missing, try the fallback mask (usually 0).
-        variants = self.mapping.get(mask, self.mapping.get(fallback_mask, [(0, 0, 0)]))
-        return random.choice(variants)
+FRUIT_GROUP_DATA = {
+    "crops": CROPS_ORDER,
+    "trees": TREES_ORDER,
+    "ranks": FRUIT_RANKS,
+    "bags_pos": SEED_BAGS_POS
+}
 
 LAYOUT = MarchingLayout({
     # 1-Sided Corners
@@ -228,3 +211,4 @@ COBBLE_LAYOUT = MarchingLayout({
     # 4. Negative Mappings (L-Shapes)
     14: (1, 4), 13: (1, 3), 11: (0, 4), 7: (0, 3),
 })
+

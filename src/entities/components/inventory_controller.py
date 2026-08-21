@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 import pygame
 
 from src.core import Log
-from src.ui import UIFactory
-from src.core import calc_pos_rect
-from src.core.inventory import Inventory
-from src.settings import WIDTH, HEIGHT
+from src.ui import UIFactory, calc_pos_rect
+from ..inventory_data import Inventory
+from src.config import WIDTH, HEIGHT
 
 if TYPE_CHECKING:
     from src.custom_types import Pos, Item

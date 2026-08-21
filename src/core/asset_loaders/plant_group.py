@@ -1,31 +1,35 @@
 from __future__ import annotations
 import pygame
-from src.core.asset_loaders.asset_data import CROPS_ORDER, TREES_ORDER, TREE_FRAME_SLICES
 from .sprite_group import SpriteGroup
 
 class PlantGroup(SpriteGroup):
     def load(self) -> None:
-        def extract_plants(sheet_key: str, order_list: list, world_x: int, world_w: int, is_tree: bool):
-            sheet = self.get_sheet(sheet_key)
-            if not sheet or not order_list:
-                return
-            row_h = sheet.sheet.get_height() // len(order_list)
-            for i, name in enumerate(order_list):
-                current_y = i * row_h
-                padded_strip = sheet.get_image(world_x, current_y, world_w, row_h)
-                bounds = padded_strip.get_bounding_rect()
-                if bounds.h <= 0:
-                    continue
-                tight_strip = padded_strip.subsurface((0, bounds.y, world_w, bounds.h))
-                if is_tree:
-                    slices = TREE_FRAME_SLICES
-                else:
-                    frame_w = world_w // 4
-                    slices = [(idx * frame_w, frame_w) for idx in range(4)]
-                for frame_idx, (offset, width) in enumerate(slices):
-                    frame_img = tight_strip.subsurface((offset, 0, width, bounds.h))
-                    scaled_size = (width * self.SCALE_FACTOR, bounds.h * self.SCALE_FACTOR)
-                    self.storage[f"{name}_{frame_idx}"] = pygame.transform.scale(frame_img, scaled_size)
-
-        extract_plants("crops", CROPS_ORDER, world_x=80, world_w=128, is_tree=False)
-        extract_plants("trees", TREES_ORDER, world_x=80, world_w=255, is_tree=True)
+        crops_order = self.raw_data.get("crops", [])
+        trees_order = self.raw_data.get("trees", [])
+        
+        self._extract_plants("crops", crops_order, world_x=80, world_w=128, is_tree=False)
+        self._extract_plants("trees", trees_order, world_x=80, world_w=255, is_tree=True)
+        
+    def _extract_plants(self, sheet_key: str, order_list: list, world_x: int, world_w: int, is_tree: bool) -> None:
+        """Processes a plant spritesheet using the shared row iterator."""
+        tree_slices = self.raw_data.get("tree_slices", [])
+        
+        # Use the parent class's row generator
+        for name, current_y, row_h, sheet in self._iter_rows(sheet_key, order_list):
+            
+            # Use the parent class's cropping math
+            tight_strip, bounds = self._get_tight_strip(sheet, world_x, current_y, world_w, row_h)
+            if not tight_strip or not bounds:
+                continue
+                
+            # Handle slicing logic
+            if is_tree:
+                slices = tree_slices
+            else:
+                frame_w = world_w // 4
+                slices = [(idx * frame_w, frame_w) for idx in range(4)]
+                
+            for frame_idx, (offset, width) in enumerate(slices):
+                frame_img = tight_strip.subsurface((offset, 0, width, bounds.h))
+                scaled_size = (width * self.SCALE_FACTOR, bounds.h * self.SCALE_FACTOR)
+                self.storage[f"{name}_{frame_idx}"] = pygame.transform.scale(frame_img, scaled_size)

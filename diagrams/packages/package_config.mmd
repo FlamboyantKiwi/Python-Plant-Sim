@@ -1,0 +1,15 @@
+flowchart TB
+    direction TB
+
+    subgraph config [Config Package]
+        asset_data
+        controls
+        settings
+    end
+    subgraph core [Core Package]
+        debug_logger
+    end
+
+    %% Structural & Dependency Links
+    controls --> debug_logger
+    debug_logger --> settings

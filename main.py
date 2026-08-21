@@ -4,16 +4,12 @@ import traceback
 import pygame
 from typing import TYPE_CHECKING
 
-from src.core import Log
-from src.core.states import SettingsState
-from src.settings import WIDTH, HEIGHT, FPS
-
-from src.core.asset_loaders import ASSETS
-from src.core.types import StateStack, StateID
-from src.core.states import (GameState, PlayingState, ShopState, STATE_REGISTRY)
+from src.core import  StateStack, StateID, Log, ASSETS
+from src.config import WIDTH, HEIGHT, FPS
+from src.core.states import GameState, PlayingState, ShopState, SettingsState, STATE_REGISTRY
 
 if TYPE_CHECKING:
-    from src.core.types import ShopData     
+    from src.custom_types import ShopData     
 
 class Game:
     def __init__(self) -> None:
@@ -106,11 +102,15 @@ if __name__ == "__main__":
     try:
         game = Game()
         game.run()
-    except Exception as e:
+    except Exception:
         print("\n" + "="*60)
         print(" [FATAL ERROR] The game crashed with the following error:")
         print("="*60)
         traceback.print_exc()
         print("="*60)
         input("\nPress Enter to close this window...")
+    
+    
+    
+    
     

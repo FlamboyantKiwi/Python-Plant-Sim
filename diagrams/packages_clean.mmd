@@ -1,19 +1,19 @@
 flowchart TB
     direction TB
 
+    subgraph config [Config Package]
+        asset_data
+        controls
+        settings
+    end
     subgraph core [Core Package]
         subgraph core_files [Core Modules]
-            controls
             database
             debug_logger
-            inventory
-            spritesheet
-            ui_utils
         end
-        subgraph assets [Assets Package]
-            asset_data
+        subgraph asset_loaders [Asset_loaders Package]
+            asset_group
             asset_loader
-            base_group
             colour_group
             config_group
             database_group
@@ -23,15 +23,20 @@ flowchart TB
             image_group
             plant_group
             sprite_group
+            spritesheet
             text_group
             tile_group
             tool_group
         end
         subgraph states [States Package]
-            base
-            hud
-            menus
-            playing
+            base_ui_state
+            character_select_state
+            game_state
+            hud_state
+            menu_state
+            playing_state
+            settings_state
+            shop_state
         end
         subgraph types [Types Package]
             data_models
@@ -44,6 +49,7 @@ flowchart TB
         subgraph entities_files [Entities Modules]
             animal
             base_entity
+            inventory_data
             moving_entity
             plant
             player
@@ -75,6 +81,7 @@ flowchart TB
             timer
             ui_factory
             ui_ghosts
+            utils
         end
         subgraph elements [Elements Package]
             base_element
@@ -107,31 +114,12 @@ flowchart TB
         end
     end
 
-    %% Structural & Dependency Links
-    core --> assets
-    core --> assets
-    core --> core_files
-    core --> states
-    core --> states
-    core --> types
-    core --> types
-    entities --> components
-    entities --> components
-    entities --> entities_files
-    entities --> items
-    entities --> items
-    ui --> elements
-    ui --> elements
-    ui --> inventory
-    ui --> inventory
-    ui --> ui_files
-    ui --> wrappers
-    ui --> wrappers
-    world --> level
-    world --> tiles
-    world --> tiles
-    asset_loader --> asset_data
-    asset_loader --> base_group
+    %% Package Dependency Links
+    config --> core
+    core --> config
+    ui --> entities
+    world --> entities
+    asset_loader --> asset_group
     asset_loader --> colour_group
     asset_loader --> database_group
     asset_loader --> entity_group
@@ -143,71 +131,64 @@ flowchart TB
     asset_loader --> tile_group
     asset_loader --> tool_group
     base_item --> item_factory
-    base_tile --> asset_data
     base_tile --> ground_tile
     base_tile --> water_tile
+    base_ui_state --> game_state
     border_wrapper --> base_wrapper
     button --> base_element
     button --> state_element
-    colour_group --> asset_data
+    character_select_state --> base_ui_state
     colour_group --> config_group
-    config_group --> base_group
+    config_group --> asset_group
     controls --> debug_logger
     data_models --> enums
     data_models --> geometry
-    database_group --> base_group
-    entity_group --> asset_data
+    database_group --> asset_group
+    debug_logger --> settings
     entity_group --> sprite_group
+    entity_group --> spritesheet
     flash_wrapper --> base_wrapper
     flash_wrapper --> timer
-    font_group --> base_group
+    font_group --> asset_group
     food_item --> base_item
-    fruit_group --> asset_data
     fruit_group --> sprite_group
+    fruit_group --> spritesheet
     geometry --> enums
-    ground_tile --> asset_data
     ground_tile --> base_tile
-    hud --> base
-    image_group --> base_group
+    ground_tile --> plant
+    hud_state --> base_ui_state
+    image_group --> asset_group
     image_swap_wrapper --> base_wrapper
-    input_controller --> controls
-    interaction_controller --> controls
-    inventory --> inventory_ui
-    inventory --> shop_menu
-    inventory_controller --> inventory
     inventory_manager --> drag_controller
-    inventory_ui --> ui_factory
     item_factory --> base_item
     item_factory --> food_item
     item_factory --> seed_item
     item_factory --> tool_item
     level --> plant
-    menus --> base
+    menu_state --> base_ui_state
+    menu_state --> settings_state
     moving_entity --> base_entity
     plant --> base_entity
-    plant_group --> asset_data
     plant_group --> sprite_group
     player --> moving_entity
-    playing --> base
-    playing --> controls
-    playing --> hud
-    playing --> level
+    playing_state --> base_ui_state
+    playing_state --> hud_state
     progress_bar --> base_element
     seed_item --> base_item
+    settings_state --> base_ui_state
     shadow_wrapper --> base_wrapper
-    shop_menu --> inventory
-    shop_menu --> ui_factory
+    shop_menu --> inventory_data
+    shop_state --> base_ui_state
     slot --> button
     slot --> textbox
-    sprite_group --> base_group
+    sprite_group --> asset_group
+    sprite_group --> spritesheet
     state_element --> base_element
-    text_group --> asset_data
     text_group --> config_group
     textbox --> base_element
-    tile_group --> asset_data
     tile_group --> sprite_group
-    tool_group --> asset_data
     tool_group --> sprite_group
     tool_item --> base_item
     tooltip_wrapper --> base_wrapper
+    ui_factory --> utils
     water_tile --> base_tile

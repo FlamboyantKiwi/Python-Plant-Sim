@@ -3,14 +3,15 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.settings import BLOCK_SIZE
+from src.config import BLOCK_SIZE, LAYOUT
 from src.core.asset_loaders import ASSETS
-from src.core.asset_loaders.asset_data import LAYOUT
+from src.core import Log
+from src.groups import CameraGroup
 from .base_tile import Tile
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level
+    from src.custom_types import Group, Num, Level, Plant, ToolItem
     
 class GroundTile(Tile):
     """Tile containing all farming logic."""
@@ -30,7 +31,7 @@ class GroundTile(Tile):
             self.base_image.fill((139, 69, 19)) # Fallback brown
         
         # LAYER 2: Draw farming overlays (Tilled soil) BEFORE the grass!
-        # This allows the grass to curve perfectly over the edges of your tilled dirt.
+        # This allows the grass to curve perfectly over the edges of the tilled dirt.
         if self.is_tilled:
             tilled_img = ASSETS.get_image("tilled_soil")
             if tilled_img:
@@ -49,3 +50,42 @@ class GroundTile(Tile):
         if self.detail_image and not self.is_tilled:
             detail_rect = self.detail_image.get_rect(center=(BLOCK_SIZE // 2, BLOCK_SIZE // 2))
             self.image.blit(self.detail_image, detail_rect)
+
+    def till(self) -> bool:
+        """Tills this ground tile if valid and updates the level map nodes."""
+        if self.occupant and self.occupant.till():
+            pass
+            
+        if not self.tillable or self.is_tilled:
+            return False
+            
+        self.is_tilled = True
+            
+        self.level.till_map_node(self.grid_x, self.grid_y)
+        Log.success(f"Tilled the soil at {self.grid_x}, {self.grid_y}!")
+        return True
+    
+    def water(self, item:ToolItem) -> bool:
+        """Waters this ground tile if it is tilled and not already watered."""
+        if not self.is_tilled or self.watered:
+            return False
+        item.consume_water()
+        self.watered = True
+        Log.success(f"Watered! {self.grid_x}, {self.grid_y}! (Water left: {item.water_level}/{item.max_water})")
+        return True
+    
+    def plant(self, plant_name:str, camera_group:CameraGroup) -> Plant|None:
+        """Validates the tile state, instantiates the plant, and links it."""
+        from src.entities.plant import Plant
+        
+        if not self.is_tilled or self.occupant:
+            return None # Must be tilled and unoccupied
+        
+        # Create plant using level's plant group
+        new_plant = Plant(
+            plant_name, self.grid_x, self.grid_y, 
+            camera_group,   # Pass camera group
+            self.level.plant_group) # Pass level's plant group
+        
+        self.add_occupant(new_plant)
+        return new_plant

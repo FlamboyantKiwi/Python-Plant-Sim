@@ -1,5 +1,6 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import random
 from .enums import Direction, STANDARD_DIRECTIONS
 
 @dataclass(frozen=True)
@@ -93,3 +94,35 @@ def get_direction(dx: int, dy: int, tick: int = 0) -> Direction | None:
     else: 
         return get_axis(dy, Direction.UP, Direction.DOWN)
     
+
+@dataclass
+class MarchingLayout:
+    """Blueprint for mapping bitmasks to spritesheet coordinates."""
+    raw_mapping: dict
+    
+    # We will automatically build this in __post_init__
+    mapping: dict = field(init=False)
+    
+    def __post_init__(self):
+        self.mapping = {}
+        for mask, data in self.raw_mapping.items():
+            # 1. Convert everything to a list (even single tuples)
+            if not isinstance(data, list):
+                data = [data]
+                
+            # 2. Ensure every tuple has exactly 3 values: (row, col, rotation)
+            cleaned_variants = []
+            for item in data:
+                if len(item) == 3:
+                    cleaned_variants.append(item)
+                else:
+                    # Add a default rotation of 0
+                    cleaned_variants.append((item[0], item[1], 0))
+                    
+            self.mapping[mask] = cleaned_variants
+
+    def get_variant(self, mask: int, fallback_mask: int = 0) -> tuple[int, int, int]:
+        """Returns a random (row, col, rotation) for the given mask."""
+        # Try the requested mask. If missing, try the fallback mask (usually 0).
+        variants = self.mapping.get(mask, self.mapping.get(fallback_mask, [(0, 0, 0)]))
+        return random.choice(variants)

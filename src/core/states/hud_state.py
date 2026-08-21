@@ -2,15 +2,15 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING
 
-from src.settings import HUD_BUTTON_SIZE, MONEY_RECT
+from src.config import HUD_BUTTON_SIZE, MONEY_RECT
 from src.ui import UIFactory
-from src.core.types import StateID
-from src.core import Log
 
 if TYPE_CHECKING:
     from src.custom_types import Game, Player
 
 from .base_ui_state import BaseUIState
+from ..types import StateID
+from .. import Log
 
 class HUD(BaseUIState):
     state_id = StateID.HUD

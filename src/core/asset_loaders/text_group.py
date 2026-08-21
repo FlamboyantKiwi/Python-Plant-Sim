@@ -1,12 +1,11 @@
 from __future__ import annotations
-from src.core.types import TextConfig
-from src.core.asset_loaders.asset_data import TEXT
+from ..types import TextConfig
 from .config_group import ConfigGroup
 
 class TextGroup(ConfigGroup):
     """Manages TextConfig styles (presets like 'TITLE', 'HUD')."""
     def load(self) -> None:
-        self.storage.update(TEXT)
+        self.storage.update(self.raw_data)
         self.default = self.storage.get("default", TextConfig())
 
     def get_config(self, key: str) -> TextConfig:

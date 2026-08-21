@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from src.custom_types import Num, Group
+    from src.custom_types import Num, Group, Tile
     from src.entities import Player
 
 class Entity(pygame.sprite.Sprite):
@@ -15,6 +15,7 @@ class Entity(pygame.sprite.Sprite):
         self.rect = initial_rect
         self.hitbox = initial_hitbox
         self.hitbox_offset = hitbox_offset
+        self.tile: Tile | None = None
         
         # Snap the visual rect to the hitbox exactly once on creation
         self.sync_rect_to_hitbox()
@@ -44,4 +45,7 @@ class Entity(pygame.sprite.Sprite):
 
     def on_interact(self, player: 'Player') -> bool:
         """Default behavior when the player interacts with this object empty-handed."""
+        return False
+
+    def till(self) -> bool:
         return False

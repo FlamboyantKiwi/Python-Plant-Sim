@@ -5,25 +5,20 @@ import pygame
 from typing import TYPE_CHECKING, cast
 
 # Runtime Imports
-from src.settings import BLOCK_SIZE, DETAIL_CHANCE
-from src.core.asset_loaders import ASSETS
-from src.core import Log
+from src.config import BLOCK_SIZE, DETAIL_CHANCE
+from src.core import Log, ASSETS
 from src.entities.plant import Plant 
-from .tiles import Tile, MapTileGroup
+from .tiles import Tile, MapTileGroup, create_tile
+from .map_generator import MapGenerator
 
 # Type-Only Imports
 if TYPE_CHECKING:
     from src.custom_types import Player, PlantGroup, CameraGroup, NodeMap
 
 class Level:
-    DIRT_NODE = 0
-    GRASS_NODE = 1
-    WATER_NODE = 2
-    """ Handles level initialization by processing a node map (corner statuses)
-    and generating high-resolution Marching Squares tiles. """
+    """Manages the active game world by translating the integer node map into physical, renderable tiles."""
 
     def __init__(self, plant_group: PlantGroup, player_sprite: Player, map_data: NodeMap | None = None) -> None:
-        self.tilesets = ASSETS.tiles.storage
         self.all_tiles = MapTileGroup()
         
         self.plant_group = plant_group
@@ -35,8 +30,8 @@ class Level:
             Log.info("loading existing map data")
             self.node_map = map_data
         else:
-            Log.info("Generating new procdural Map")
-            self.node_map = self.create_node_map(map_size=32)
+            Log.info("Generating new procedural Map")
+            self.node_map = MapGenerator.generate(map_size=32)
 
         # The tile map dimensions are 2 less than the node map dimensions
         self.MAP_HEIGHT = len(self.node_map) - 2
@@ -57,110 +52,97 @@ class Level:
         self.all_tiles.custom_draw(camera_offset)
 
     def generate_level(self) -> None:
-        """ Iterates over the node map to calculate the 9-node status for each 
-        64x64 tile and creates the Tile object. """
+        """Converts the integer node map into physical Pygame tile sprites using the TileFactory."""
         self.all_tiles.empty() # Clear existing tiles
         self.tile_grid.clear()
         
         # Initialize the screen tile counters
         map_tile_x = 0
         map_tile_y = 0
-
-        # We iterate over the tile coordinates (which range from 0 to MAP_SIZE-1)
         for node_y in range(0, self.MAP_HEIGHT, 2):
-            map_tile_x = 0 # Reset tile X index for each new row
+            map_tile_x = 0
             for node_x in range(0, self.MAP_WIDTH, 2):
                 
-                # --- 1. Extract the 9-Node Status ---
-                # The current tile at (tile_x, tile_y) is influenced by a 3x3 node grid 
-                # starting at node (tile_x, tile_y) and ending at (tile_x + 2, tile_y + 2).
-                nine_nodes_status: list[bool] = []
-                same_type_count = 0
-                # The primary material is based on the center node of the 3x3 grid
-                center_node_material = self.node_map[node_y + 1][node_x + 1]
-                for y_offset in range(3):
-                    for x_offset in range(3):
-                        # Accesses node_map[node_y + y_offset][node_x + x_offset]
-                        node_value = self.node_map[node_y + y_offset][node_x + x_offset]
-                        nine_nodes_status.append(node_value == Level.GRASS_NODE)
-
-                        if node_value == center_node_material:
-                            same_type_count += 1
-
-                # --- 2. Calculate Screen Position (CORRECTED) ---
-                # Use the simple map tile index (0, 1, 2, 3...) for screen position
-                x = map_tile_x * BLOCK_SIZE
-                y = map_tile_y * BLOCK_SIZE
-
-                detail_key: str | None = None
-                random_detail_image: pygame.Surface | None = None
+                # Determine Coordinates and Material
+                x, y = map_tile_x * BLOCK_SIZE, map_tile_y * BLOCK_SIZE
+                center_mat = self.node_map[node_y + 1][node_x + 1]
                 
-                # If dirt, use the DIRT tileset and Dirt details
-                if center_node_material == Level.DIRT_NODE:
-                    tile_type_key = "DIRT"
-                    detail_key = "DETAIL_DIRT" 
-
-                # If grass, randomly choose between GRASS_A and GRASS_B tilesets
-                elif center_node_material == Level.GRASS_NODE:
-                    tile_type_key = "GRASS_A"
-                    detail_key = "DETAIL_GRASS"
+                # Process Math and Assets via Helpers
+                nine_nodes, match_count = self._get_node_status(node_x, node_y, center_mat)
+                tile_key, detail_img = self._get_tile_assets(center_mat, match_count)
                 
-                # Handle other types like WATER or fallback
-                else: 
-                    tile_type_key = "WATER" 
-                
-                # Check if we have a detail key and the random chance succeeds
-                if detail_key and same_type_count >= 6 and random.random() < DETAIL_CHANCE:
-                    detail_list = self.tilesets.get(detail_key)
-                    
-                    if detail_list:
-                        # Select a random image from the list of details for this ground type
-                        random_detail_image = random.choice(detail_list)
-
-                # --- 3. Create the Marching Tile ---
-                new_tile = Tile.create(self, x, y, tile_type_key, nine_nodes_status, self.all_tiles, random_detail_image)
-                
+                # Create Tile via Factory
+                new_tile = create_tile(self, x, y, tile_key, nine_nodes, self.all_tiles, detail_img)
                 self.tile_grid[(map_tile_x, map_tile_y)] = new_tile
                 
-                # --- 4. Place Player (using the map_tile_x/y indices) ---
+                # Place Player (Spawn point)
                 if map_tile_x == 1 and map_tile_y == 1:
                     self.player_sprite.rect.topleft = (x, y)
                     
-                # --- 5. Increment Map Tile Index ---
-                map_tile_x += 1 # Advance the screen position counter by 1
-            map_tile_y += 1 # Advance the screen position counter to the next row
-            
-        # --- Final Dimension Calculation ---
-        # Recalculate dimensions based on the tiles actually generated
-        self.MAP_WIDTH = map_tile_x 
+                map_tile_x += 1
+            map_tile_y += 1
+
+        self.MAP_WIDTH = map_tile_x
         self.MAP_HEIGHT = map_tile_y
         Log.success(f"Level generated: {self.MAP_WIDTH}x{self.MAP_HEIGHT} tiles.")
-
+        
+    def _get_node_status(self, node_x: int, node_y: int, center_mat: int) -> tuple[list[bool], int]:
+        """Checks a tile's 8 neighbors to calculate its marching squares bitmask for seamless blending."""
+        nine_nodes_status = []
+        same_type_count = 0
+        
+        for y_offset in range(3):
+            for x_offset in range(3):
+                node_value = self.node_map[node_y + y_offset][node_x + x_offset]
+                nine_nodes_status.append(node_value == MapGenerator.GRASS_NODE)
+                if node_value == center_mat:
+                    same_type_count += 1
+                    
+        return nine_nodes_status, same_type_count
+        
+    def _get_tile_assets(self, center_mat: int, same_type_count: int) -> tuple[str, pygame.Surface | None]:
+        """Selects the tile's base texture key and randomly applies visual details like pebbles."""
+        detail_key = None
+        random_detail_image = None
+        
+        if center_mat == MapGenerator.DIRT_NODE:
+            tile_key, detail_key = "DIRT", "DETAIL_DIRT"
+        elif center_mat == MapGenerator.GRASS_NODE:
+            tile_key, detail_key = "GRASS_A", "DETAIL_GRASS"
+        else:
+            return "WATER", None
+            
+        # Apply random details only if the tile isn't heavily masked (same_type_count >= 6)
+        if detail_key and same_type_count >= 6 and random.random() < DETAIL_CHANCE:
+            detail_list = ASSETS.tiles.storage.get(detail_key)
+            if detail_list:
+                random_detail_image = random.choice(detail_list)
+                
+        return tile_key, random_detail_image 
+        
     def till_map_node(self, grid_x: int, grid_y: int) -> None:
-        """Converts a grass grid tile into dirt and updates the surrounding visuals."""
+        """Updates the map data when soil is tilled and forces nearby tiles to redraw so the dirt connects seamlessly."""
         node_cx = (grid_x * 2) + 1
         node_cy = (grid_y * 2) + 1
         
         if node_cx >= len(self.node_map[0]) or node_cy >= len(self.node_map):
             return
 
-        # 1. Turn the center node to dirt
-        self.node_map[node_cy][node_cx] = Level.DIRT_NODE
-        
-        # Keep track of which tiles need their images redrawn
+        # Turn the center node to dirt
+        self.node_map[node_cy][node_cx] = MapGenerator.DIRT_NODE
         tiles_to_refresh: set[tuple[int, int]] = {(grid_x, grid_y)}
         
-        # 2. Check Cardinals (North, South, East, West)
+        # Check Cardinals (North, South, East, West)
         # Format: (grid_offset_x, grid_offset_y, node_offset_x, node_offset_y)
         cardinals = [(0, -1, 0, -1), (0, 1, 0, 1), (-1, 0, -1, 0), (1, 0, 1, 0)]
         for dx, dy, ndx, ndy in cardinals:
             adj_tile = self.get_tile(grid_x + dx, grid_y + dy)
             if getattr(adj_tile, 'is_tilled', False):
                 # If the neighbor is also tilled, turn the shared edge into dirt!
-                self.node_map[node_cy + ndy][node_cx + ndx] = Level.DIRT_NODE
+                self.node_map[node_cy + ndy][node_cx + ndx] = MapGenerator.DIRT_NODE
                 tiles_to_refresh.add((grid_x + dx, grid_y + dy))
 
-        # 3. Check Diagonals (Fills in the inner corners so you get perfect squares)
+        # Check Diagonals
         diagonals = [(1, -1, 1, -1), (1, 1, 1, 1), (-1, 1, -1, 1), (-1, -1, -1, -1)]
         for dx, dy, ndx, ndy in diagonals:
             adj_tile = self.get_tile(grid_x + dx, grid_y + dy)
@@ -168,10 +150,10 @@ class Level:
             if getattr(adj_tile, 'is_tilled', False) and \
                getattr(self.get_tile(grid_x + dx, grid_y), 'is_tilled', False) and \
                getattr(self.get_tile(grid_x, grid_y + dy), 'is_tilled', False):
-                self.node_map[node_cy + ndy][node_cx + ndx] = Level.DIRT_NODE
+                self.node_map[node_cy + ndy][node_cx + ndx] = MapGenerator.DIRT_NODE
                 tiles_to_refresh.add((grid_x + dx, grid_y + dy))
 
-        # 4. Tell the affected tiles to redraw themselves!
+        # Tell the affected tiles to redraw
         for tx, ty in tiles_to_refresh:
             tile = self.get_tile(tx, ty)
             if tile and getattr(tile, 'tile_type_key', None) != "WATER":
@@ -181,7 +163,7 @@ class Level:
                     for nx in range(3):
                         try:
                             val = self.node_map[tcy - 1 + ny][tcx - 1 + nx]
-                            new_nodes.append(val == Level.GRASS_NODE)
+                            new_nodes.append(val == MapGenerator.GRASS_NODE)
                         except IndexError:
                             new_nodes.append(False) 
                 
@@ -190,86 +172,9 @@ class Level:
     def get_tile(self, grid_x:int, grid_y:int) -> Tile|None:
         return self.tile_grid.get((grid_x, grid_y))
     
-    def spawn_plant(self, plant_name: str, grid_x: int, grid_y: int, camera_group: CameraGroup) -> Plant:
-        # Create new plant, with groups
-        new_plant = Plant(plant_name, grid_x, grid_y, camera_group, self.plant_group)
-        
-        # Link to the tile
+    def spawn_plant(self, plant_name: str, grid_x: int, grid_y: int, camera_group: CameraGroup) -> Plant|None:
         tile = self.get_tile(grid_x, grid_y)
         if tile: 
-            tile.occupant = new_plant
-        
-        return new_plant
-    @staticmethod
-    def draw_blob(node_map: list[list[int]], radius: int, passive_material: int, padding: int = 4) -> None:
-        """Randomly selects a center point, calculates a noise-distorted boundary, 
-        and sets nodes within that boundary to the passive_material."""
-        map_size = len(node_map)
-
-        # Calculate Safe Boundaries for the Center
-        min_coord = radius + padding
-        max_coord = map_size - 1 - radius - padding
-
-        # Select Random Center Point (Safety check added for impossible boundaries)
-        if min_coord > max_coord:
-            return 
-            
-        center_x = random.randint(min_coord, max_coord)
-        center_y = random.randint(min_coord, max_coord)
-        
-        # Iterate over a bounding box
-        for y in range(max(0, center_y - radius - 2), min(map_size, center_y + radius + 3)):
-            for x in range(max(0, center_x - radius - 2), min(map_size, center_x + radius + 3)):
-                
-                # 1. Calculate the distance squared from the center
-                distance_sq = (x - center_x)**2 + (y - center_y)**2
-                
-                # 2. Calculate the Noise Value (The key to distortion)
-                angle = math.atan2(y - center_y, x - center_x)
-                
-                # Base Distortion: A smooth wave based on the angle (3 cycles around the circle)
-                distortion = math.cos(angle * 3) * 0.5 
-                
-                # Add subtle high-frequency randomness for texture
-                noise_factor = (distortion + random.random() * 0.5) * 2
-                
-                # Determine the effective radius for this point
-                effective_radius = radius + noise_factor
-                
-                # Check against the effective radius squared
-                if distance_sq < effective_radius**2:
-                    node_map[y][x] = passive_material
-    @staticmethod
-    def create_node_map(map_size: int = 32, active: int = 1, passive: int = 0) -> NodeMap:
-        """Generates the initial node map with grass, dirt patches, and a pond."""
-        # Initialize the entire map grid to the active material (Grass = 1)
-        node_map = [[active for _ in range(map_size)] for _ in range(map_size)]
-        
-        # Carve out Dirt Patches (Setting nodes to 0)
-        Level.draw_blob(node_map, radius=8, passive_material=passive)
-        Level.draw_blob(node_map, radius=4, passive_material=passive, padding=1)
-        Level.draw_blob(node_map, radius=4, passive_material=passive, padding=0)
-
-        # Add a Random Pond (WATER_NODE = 2)
-        #Level.draw_pond(node_map, min_radius=6, max_radius=10)
-        Log.success("Node map created.")
-        return node_map
-    
-    
-    
-    
-""" @staticmethod # REMOVED (for now)
-    def draw_pond(node_map: list[list[int]], min_radius: int = 1, max_radius: int = 2):
-        # Carves a randomly sized, organically shaped pond (Water Node = 2) 
-        #into the node map.
-        
-        # 1. Randomly select the radius
-        radius = random.randint(min_radius, max_radius)
-        
-        # 2. Call draw_blob with the Water Node value
-        Level.draw_blob( # Need to call the static method via the class name
-            node_map,
-            radius=radius,
-            passive_material=Level.WATER_NODE,
-            padding=0
-        )"""
+            tile.till()
+            return tile.plant(plant_name, camera_group)
+      

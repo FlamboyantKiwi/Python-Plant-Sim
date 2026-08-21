@@ -3,18 +3,17 @@ import sys
 import pygame
 import os
 from typing import TYPE_CHECKING, Callable
-from src.core import Log
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Num, EntityType, Colour
+    from src.custom_types import EntityType, Colour
 
 # Runtime Imports
-from src.core.types import (
+from .. import Log
+from ..types import (
     ItemCategory, ItemData, EntityState, Direction, PlantData, 
     ShopData, TextConfig, EntityCategory
 )
-from src.core.asset_loaders.asset_data import MarchingLayout
 
 # Sub-Group Relative Imports
 from .asset_group import AssetGroup
@@ -29,22 +28,34 @@ from .tool_group import ToolGroup
 from .plant_group import PlantGroup
 from .fruit_group import FruitGroup
 
+from src.config import (
+    COLOURS, TEXT, GAME_ENTITIES, TILE_DETAILS, 
+    TOOL_GROUP_DATA, PLANT_GROUP_DATA, FRUIT_GROUP_DATA, MarchingLayout
+)
+
 class AssetLoader:
     def __init__(self):
         # Create all sub-groups
-        self.colours = ColourGroup(self)
-        self.text = TextGroup(self)
+        self.colours = ColourGroup(self, raw_data=COLOURS)
+        self.text = TextGroup(self, raw_data=TEXT)
+        self.entities = EntityGroup(self, raw_data=GAME_ENTITIES)
         self.tiles = TileGroup(
-            self, 
-            grass_a="tiles/grass_a", 
-            grass_b="tiles/grass_b", 
-            dirt="tiles/dirt",
-            details="ground_grass_details"
+            self, raw_data=TILE_DETAILS, 
+            grass_a="tiles/grass_a", grass_b="tiles/grass_b",
+            dirt="tiles/dirt", details="ground_grass_details"
         )
-        self.tools = ToolGroup(self, main="Tools_All")
-        self.plants = PlantGroup(self, crops="plants/crops", trees="plants/trees")
-        self.fruits = FruitGroup(self, crops="plants/crops", trees="plants/trees", supplies="Supplies")
-        self.entities = EntityGroup(self)
+        self.tools = ToolGroup(self, raw_data=TOOL_GROUP_DATA, main="Tools_All")
+        
+        self.plants = PlantGroup(
+            self, raw_data=PLANT_GROUP_DATA, 
+            crops="plants/crops", trees="plants/trees"
+        )
+        
+        self.fruits = FruitGroup(
+            self, raw_data=FRUIT_GROUP_DATA, 
+            crops="plants/crops", trees="plants/trees", supplies="Supplies"
+        )
+        
         self.images = ImageGroup(self)
         self.fonts = FontGroup(self)
         self.database = DatabaseGroup(self)

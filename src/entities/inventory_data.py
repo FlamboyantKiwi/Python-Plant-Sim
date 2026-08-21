@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.entities.items import Item
+from .items import Item
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
@@ -66,16 +66,16 @@ class Inventory:
         """Programmatically moves an item from this inventory to another."""
         if self.get_amount(item_name) < amount:
             return False # We don't have enough to give
-
+        item_to_give = None
         # Create a detached copy of the item to transfer
         for item in self.items:
             if item and item.name == item_name:
                 item_to_give = item.copy_one()
                 item_to_give.count = amount
                 break
-                
+
         # Try to put it in the target's inventory
-        if target_inventory.add_item(item_to_give):
+        if item_to_give and target_inventory.add_item(item_to_give):
             # If successful, remove it from our own inventory
             self.remove_item(item_name, amount)
             return True

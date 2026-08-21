@@ -1,5 +1,5 @@
 #from enum import Enum
-#from core.assets import ASSETS
+#from core.assets import ASSETS ### rework
 
 class Animal:
     def __init__(self, x: int, y: int, type: str):

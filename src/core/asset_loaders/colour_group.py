@@ -2,7 +2,6 @@ from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING, Any
 
-from src.core.asset_loaders.asset_data import COLOURS
 from .config_group import ConfigGroup
 
 if TYPE_CHECKING:
@@ -10,12 +9,12 @@ if TYPE_CHECKING:
 
 class ColourGroup(ConfigGroup):
     """Manages game palette and provides debug printing."""
-    def __init__(self, manager: Any) -> None:
-        super().__init__(manager)
+    def __init__(self, manager: Any, raw_data) -> None:
+        super().__init__(manager, raw_data=raw_data)
         self.default = pygame.Color(255, 0, 255)
 
     def load(self) -> None:
-        for name, hex_str in COLOURS.items():
+        for name, hex_str in self.raw_data.items():
             self.storage[name] = pygame.Color(hex_str)
         self.default = self.storage.get("DEFAULT", pygame.Color(255, 0, 255))
 

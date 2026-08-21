@@ -1,5 +1,4 @@
 from __future__ import annotations
-from src.settings import DEBUG_TEXT
 
 class Log:
     COLORS = {
@@ -10,11 +9,19 @@ class Log:
         "WHISPER": "\u001b[90m",  # Bright Black / Dark Grey (For muted or debug logs)
         "RESET": "\u001b[0m"      # Reset Terminal Style
     }
-
+    _debug_enabled: bool | None = None
+    @classmethod
+    def _is_debug(cls) -> bool:
+        """Imports and caches the debug text setting."""
+        if cls._debug_enabled is None:
+            from src.config.settings import DEBUG_TEXT
+            cls._debug_enabled = DEBUG_TEXT
+        return cls._debug_enabled
+    
     @staticmethod
     def _print(color_key: str, message: str, label: str | None = None) -> None:
         """Internal helper to check DEBUG_TEXT and handle formatting once."""
-        if not DEBUG_TEXT:
+        if not Log._is_debug():
             return
         color = Log.COLORS.get(color_key, Log.COLORS["INFO"])
         label = color_key.replace("_", " ").title()
@@ -52,6 +59,6 @@ class Log:
     @staticmethod
     def divider(length: int = 30, char = "-") -> None:
         """Prints a customizable dash or symbol divider line."""
-        if not DEBUG_TEXT:
+        if not Log._is_debug():
             return
         print(f"{Log.COLORS['INFO']} {char * length} {Log.COLORS['RESET']}")

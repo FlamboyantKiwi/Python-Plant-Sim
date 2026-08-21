@@ -1,14 +1,16 @@
 from __future__ import annotations
 import pygame
-from src.core.asset_loaders import ASSETS
+from typing import TYPE_CHECKING, cast
+
+from src.core import ASSETS
 from .elements import ProgressBar, UIElement, TextBox, Button, Slot
 from .wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, TooltipWrapper
-from src.core import get_grid_pos 
-from typing import TYPE_CHECKING, cast
+from .utils import get_grid_pos #calc_pos_rect, align_rect, 
+
 if TYPE_CHECKING:
     from typing import Callable, Any
     from src.ui.inventory.inventory_ui import InventoryUI
-    from src.core.inventory import Inventory
+    from src.entities.inventory_data import Inventory
     from src.ui import BorderButton, BorderSlot, BorderTextBox, FlashButton, FlashSlot, FlashTextBox, ShadowButton, ShadowSlot, ShadowTextBox  # noqa: F401
 
 class UIFactory:

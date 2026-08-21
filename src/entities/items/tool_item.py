@@ -1,9 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
-from enum import Enum
 from src.core import Log
-from src.core.types import ToolType
-from src.world.tiles import Tile
+from src.core import ToolType
+from src.world import Tile
 from .base_item import Item
 
 if TYPE_CHECKING:
@@ -11,60 +10,45 @@ if TYPE_CHECKING:
     from src.groups import CameraGroup
     from src.custom_types import Interactables
 
-def _use_hoe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+def _use_hoe_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
     """Tills the soil if it is a valid ground tile."""
-    # Ensure we are targeting a Tile, not an Entity
-    if not isinstance(target, Tile):
-        Log.error("You can't use a hoe on this!")
+    # Normalise target to the tile 
+    tile = target if isinstance(target, Tile) else target.tile
+
+    if not tile:
+        Log.error("You can't use a hoe here!")
         return False
-
-    if not target.tillable or target.is_tilled:
-        Log.error("You can't till this ground!")
-        return False                  
-
-    Log.success(f"Tilled the soil at {target.grid_x}, {target.grid_y}!")
-    target.is_tilled = True
-
-    if not target.level:
-        Log.error("Warning: Tile doesn't have a reference to the Level!")
-        return False
-        
-    target.level.till_map_node(target.grid_x, target.grid_y)
+    if not tile.till():
+        Log.error(f"You can't use a Hoe at {tile.grid_x}, {tile.grid_y}")
+    # Success
     return True
-
-def _use_water_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
-    if not isinstance(target, Tile):
-        Log.error("You can only water soil tiles!")
-        return False
-
-    if not target.is_tilled:
-        Log.error("You can only water tilled soil!")
-        return False
-        
-    if target.watered:
-        Log.error("This tile is already watered!")
-        return False
-
-    active_item = player.inventory.get_active_item()
+  
+def _use_water_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
+    """Waters the target tile using the player's active watering can."""
+    active_item = player.active_item
     if not isinstance(active_item, ToolItem) or not active_item.has_water():
-        Log.error("Watering can is empty or invalid! Press 'R' to refill.")
+        Log.error("Watering can is empty or invalid!")
         return False
-        
-    target.watered = True
-    active_item.consume_water()
     
-    Log.success(f"Watered tile at {target.grid_x}, {target.grid_y}! (Water left: {active_item.water_level}/{active_item.max_water})")
-    return True
+    tile = target if isinstance(target, Tile) else target.tile
+    if not tile:
+        Log.error("Can't water here")
+        return False
+    if not tile.water(active_item):
+        Log.error(f"Can't water {type(tile).__name__} at {tile.grid_x}, {tile.grid_y}")
+        return False
+    # Success
+    return True    
 
-def _use_axe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+def _use_axe_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
     Log.info("Chop chop")
     return True
 
-def _use_pickaxe_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+def _use_pickaxe_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
     Log.info("Breaking stone...")
     return True
 
-def _use_generic_strategy(player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:
+def _use_generic_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
     """Fallback for tools with no specific logic yet."""
     return False
 
@@ -105,3 +89,7 @@ class ToolItem(Item):
         """Safely decrements the water level."""
         if self.water_level is not None and self.water_level > 0:
             self.water_level -= 1
+            
+    def refill(self):
+        if self.water_level is not None:
+            self.water_level = self.max_water

@@ -2,7 +2,7 @@
 from __future__ import annotations
 import pygame
 from typing import TYPE_CHECKING
-from src.settings import DRAG_DROP_THRESHOLD
+from src.config import DRAG_DROP_THRESHOLD
 from .drag_controller import DragController
 
 if TYPE_CHECKING:

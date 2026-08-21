@@ -3,17 +3,14 @@ import pygame
 from typing import TYPE_CHECKING
 
 # Runtime Imports
-from src.core.types import PlantData
-from src.core.asset_loaders import ASSETS
-from src.settings import BLOCK_SIZE
-from src.core import Log
+from src.core import PlantData, Log, ASSETS
+from src.config import BLOCK_SIZE
 
 from .base_entity import Entity
 
 # Type-Only Imports
 if TYPE_CHECKING:
     from src.custom_types import Group
-    from src.entities.items import Item
     from src.entities.player import Player
 
 class Plant(Entity):
@@ -51,6 +48,11 @@ class Plant(Entity):
         
         # Initialize Entity
         super().__init__(initial_image, self.rect, start_hitbox, *groups)
+        
+    @property
+    def is_dead(self) -> bool:
+        """Returns True if the crop has been harvested and will not regrow."""
+        return self.is_harvested and not self.data.regrows and not self.data.is_tree
     
     def _get_current_image(self) -> pygame.Surface:
         """Helper to generate the current stage key and fetch the image."""
@@ -116,4 +118,12 @@ class Plant(Entity):
         
         # Snap the newly sized visual rect back to the correctly placed hitbox
         self.sync_rect_to_hitbox()
-            
+
+    def till(self) -> bool:
+        if self.is_dead:
+            if self.tile:
+                self.tile.occupant = None
+            self.kill()
+            Log.success("Cleared dead plant!")
+            return True
+        return False

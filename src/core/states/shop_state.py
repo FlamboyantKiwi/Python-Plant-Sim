@@ -4,7 +4,7 @@ import pygame
 
 # Runtime Imports (Essential for logic/inheritance)
 from src.ui import ShopMenu
-from src.core.types import StateID
+from ..types import StateID
 from src.core import Log
 
 # Type-Only Imports (Breaks circular loops)

@@ -6,6 +6,7 @@ flowchart TB
             timer
             ui_factory
             ui_ghosts
+            utils
         end
         subgraph elements [Elements Package]
             base_element
@@ -28,8 +29,8 @@ flowchart TB
             tooltip_wrapper
         end
     end
-    subgraph core [Core Package]
-        inventory
+    subgraph entities [Entities Package]
+        inventory_data
     end
 
     %% Structural & Dependency Links
@@ -40,6 +41,4 @@ flowchart TB
     ui --> ui_files
     ui --> wrappers
     ui --> wrappers
-    inventory --> inventory_ui
-    inventory --> shop_menu
-    shop_menu --> inventory
+    shop_menu --> inventory_data

@@ -3,17 +3,12 @@ flowchart TB
 
     subgraph core [Core Package]
         subgraph core_files [Core Modules]
-            controls
             database
             debug_logger
-            inventory
-            spritesheet
-            ui_utils
         end
-        subgraph assets [Assets Package]
-            asset_data
+        subgraph asset_loaders [Asset_loaders Package]
+            asset_group
             asset_loader
-            base_group
             colour_group
             config_group
             database_group
@@ -23,15 +18,20 @@ flowchart TB
             image_group
             plant_group
             sprite_group
+            spritesheet
             text_group
             tile_group
             tool_group
         end
         subgraph states [States Package]
-            base
-            hud
-            menus
-            playing
+            base_ui_state
+            character_select_state
+            game_state
+            hud_state
+            menu_state
+            playing_state
+            settings_state
+            shop_state
         end
         subgraph types [Types Package]
             data_models
@@ -40,35 +40,18 @@ flowchart TB
             geometry
         end
     end
-    subgraph entities [Entities Package]
-        input_controller
-        interaction_controller
-        inventory_controller
-    end
-    subgraph world [World Package]
-        base_tile
-        ground_tile
-        level
-    end
-    subgraph ui [Ui Package]
-        inventory_ui
-        shop_menu
+    subgraph config [Config Package]
+        controls
+        settings
     end
 
     %% Structural & Dependency Links
-    core --> assets
-    core --> assets
+    core --> asset_loaders
+    core --> asset_loaders
     core --> core_files
     core --> states
     core --> states
     core --> types
     core --> types
-    base_tile --> asset_data
-    ground_tile --> asset_data
-    input_controller --> controls
-    interaction_controller --> controls
-    inventory --> inventory_ui
-    inventory --> shop_menu
-    inventory_controller --> inventory
-    playing --> level
-    shop_menu --> inventory
+    controls --> debug_logger
+    debug_logger --> settings

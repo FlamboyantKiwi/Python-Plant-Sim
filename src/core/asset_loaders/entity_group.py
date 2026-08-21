@@ -2,17 +2,16 @@ from __future__ import annotations
 import pygame
 from enum import Enum
 from typing import TYPE_CHECKING
-from src.core import SpriteSheet
-from src.core.types import EntityState, Direction, EntityCategory
-from src.core.asset_loaders.asset_data import GAME_ENTITIES
+from ..types import EntityState, Direction, EntityCategory
 from .sprite_group import SpriteGroup
+from .spritesheet import SpriteSheet
 
 if TYPE_CHECKING:
     from src.custom_types import EntityType
 
 class EntityGroup(SpriteGroup):
     def load(self) -> None:
-        for category, config in GAME_ENTITIES.items():
+        for category, config in self.raw_data.items():
             self.storage[category] = {}
             for name in config.sheets:
                 self.storage[category][name] = {}

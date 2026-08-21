@@ -42,8 +42,8 @@ class GhostGenerator(BaseScriptGenerator):
         # Compile data into unified string buffer
         body_buffer = (
             "from __future__ import annotations\n"
-            f"from ui.ui_elements import {', '.join(self.elements)}\n"
-            f"from ui.wrappers import {', '.join(self.wrappers)}\n\n"
+            f"from .elements import {', '.join(self.elements)}\n"
+            f"from .wrappers import {', '.join(self.wrappers)}\n\n"
             "# --- Matrix Combinations ---\n" + "\n".join(matrix_classes) + "\n\n"
             "# --- Explicit Exports for Wildcard Import Support ---\n"
             f"__all__ = {str(ghost_names).replace("'", '"')}\n"
