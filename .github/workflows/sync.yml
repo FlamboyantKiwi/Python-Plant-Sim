@@ -22,8 +22,10 @@ jobs:
           path: wiki_repo
 
       - name: Run Python Injector
+        env:
+          PYTHONPATH: main_repo
         run: |
-          python main_repo/tools/update_wiki.py wiki_repo main_repo/uml
+          python main_repo/tools/update_wiki.py wiki_repo
 
       - name: Commit and Push to Wiki
         run: |
