@@ -5,22 +5,36 @@ on:
     paths:
       - 'uml/**'
       - 'tools/update_wiki.py'
+  workflow_dispatch: 
 
 jobs:
   update-wiki:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Main Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: main_repo
 
       - name: Checkout Wiki Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository }}.wiki
           path: wiki_repo
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pygame
+          if [ -f main_repo/requirements.txt ]; then pip install -r main_repo/requirements.txt; fi
+          
       - name: Run Python Injector
         env:
           PYTHONPATH: main_repo
