@@ -4,7 +4,7 @@ import pygame
 
 from src.groups import UIGroup
 from src.config import WIDTH, HEIGHT
-from src.core.asset_loaders import ASSETS ###rework
+from src.core.asset_loaders import ASSETS
 from src.ui import UIFactory, UIElement
 from .game_state import GameState
 

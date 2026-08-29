@@ -105,11 +105,15 @@ flowchart TB
         end
     end
     subgraph world [World Package]
-        level
+        subgraph world_files [World Modules]
+            level
+            map_generator
+        end
         subgraph tiles [Tiles Package]
             base_tile
             ground_tile
             map_group
+            tile_factory
             water_tile
         end
     end
@@ -131,8 +135,6 @@ flowchart TB
     asset_loader --> tile_group
     asset_loader --> tool_group
     base_item --> item_factory
-    base_tile --> ground_tile
-    base_tile --> water_tile
     base_ui_state --> game_state
     border_wrapper --> base_wrapper
     button --> base_element
@@ -164,6 +166,7 @@ flowchart TB
     item_factory --> food_item
     item_factory --> seed_item
     item_factory --> tool_item
+    level --> map_generator
     level --> plant
     menu_state --> base_ui_state
     menu_state --> settings_state
@@ -186,6 +189,9 @@ flowchart TB
     state_element --> base_element
     text_group --> config_group
     textbox --> base_element
+    tile_factory --> base_tile
+    tile_factory --> ground_tile
+    tile_factory --> water_tile
     tile_group --> sprite_group
     tool_group --> sprite_group
     tool_item --> base_item

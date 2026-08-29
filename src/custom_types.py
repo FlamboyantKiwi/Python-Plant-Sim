@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Sequence, Protocol
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, Protocol
+
 import pygame
 
 # Safe Runtime Imports 

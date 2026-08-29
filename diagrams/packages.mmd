@@ -175,6 +175,8 @@ classDiagram
   }
   class level {
   }
+  class map_generator {
+  }
   class tiles {
   }
   class base_tile {
@@ -182,6 +184,8 @@ classDiagram
   class ground_tile {
   }
   class map_group {
+  }
+  class tile_factory {
   }
   class water_tile {
   }
@@ -286,9 +290,9 @@ classDiagram
   data_models --> enums
   data_models --> geometry
   geometry --> enums
-  custom_types --> core
+  custom_types --> generated_enums
   custom_types --> base_entity
-  custom_types --> world
+  custom_types --> base_tile
   entities --> animal
   entities --> base_entity
   entities --> inventory_data
@@ -336,7 +340,7 @@ classDiagram
   tool_item --> base_item
   tool_item --> world
   moving_entity --> config
-  moving_entity --> types
+  moving_entity --> core
   moving_entity --> base_entity
   plant --> config
   plant --> core
@@ -405,22 +409,26 @@ classDiagram
   world --> tiles
   level --> config
   level --> core
-  level --> asset_loaders
   level --> plant
+  level --> map_generator
   level --> tiles
+  map_generator --> core
+  map_generator --> custom_types
   tiles --> base_tile
   tiles --> ground_tile
   tiles --> map_group
+  tiles --> tile_factory
   tiles --> water_tile
   base_tile --> config
-  base_tile --> ground_tile
-  base_tile --> water_tile
   ground_tile --> config
   ground_tile --> core
   ground_tile --> asset_loaders
   ground_tile --> plant
   ground_tile --> groups
   ground_tile --> base_tile
+  tile_factory --> base_tile
+  tile_factory --> ground_tile
+  tile_factory --> water_tile
   water_tile --> config
   water_tile --> core
   water_tile --> base_tile
@@ -444,6 +452,7 @@ classDiagram
   custom_types ..> inventory_data
   custom_types ..> groups
   custom_types ..> ui
+  custom_types ..> world
   base_entity ..> custom_types
   base_entity ..> entities
   animation ..> custom_types
@@ -498,4 +507,5 @@ classDiagram
   level ..> custom_types
   base_tile ..> custom_types
   ground_tile ..> custom_types
+  tile_factory ..> custom_types
   water_tile ..> custom_types

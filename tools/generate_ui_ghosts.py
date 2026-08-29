@@ -1,7 +1,10 @@
 # tools/generate_ghosts.py
 import os
+
 from base_generator import BaseScriptGenerator  # Import our shared logic!
+
 from src.core import Log
+
 
 class GhostGenerator(BaseScriptGenerator):
     """An extensible engine that cross-multiplies UI targets into type-safe ghost classes."""

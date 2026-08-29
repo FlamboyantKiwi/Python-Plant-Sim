@@ -1,20 +1,19 @@
+import datetime
 import os
 import subprocess
-import datetime
+
+from base_generator import ProjectEnv
+
 
 def run_pyreverse():
     print("========================================")
     print("Running Pyreverse to generate diagrams...")
     print("========================================")
     
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    diagrams_dir = os.path.join(root_dir, "diagrams")
-    src_dir = os.path.join(root_dir, "src")
+    ProjectEnv.DIAGRAMS_DIR.mkdir(exist_ok=True)
     
-    os.makedirs(diagrams_dir, exist_ok=True)
-    
-    cmd = ["pyreverse", "-o", "mmd", "-d", diagrams_dir, src_dir]
-    result = subprocess.run(cmd, cwd=root_dir, capture_output=True, text=True)
+    cmd = ["pyreverse", "-o", "mmd", "-d", str(ProjectEnv.DIAGRAMS_DIR), str(ProjectEnv.SRC_DIR)]
+    result = subprocess.run(cmd, check=False, cwd=ProjectEnv.ROOT_DIR, capture_output=True, text=True)
     
     if result.returncode != 0:
         print(f"Error running pyreverse: {result.stderr}")
@@ -60,7 +59,8 @@ def generate_subgraphs_and_links(tree, parent_name=None, indent_level=1):
     indent = "    " * indent_level
     
     for key, value in sorted(tree.items()):
-        if key == "__files__": continue
+        if key == "__files__": 
+            continue
         
         # STANDARDIZED: All directories are labeled as 'Package'
         display_name = f"{key.capitalize()} Package"
@@ -69,7 +69,7 @@ def generate_subgraphs_and_links(tree, parent_name=None, indent_level=1):
         lines.append(f"{indent}subgraph {sub_id} [{display_name}]")
         
         files = sorted(value.get("__files__", []))
-        has_subdirs = len([k for k in value.keys() if k != "__files__"]) > 0
+        has_subdirs = len([k for k in value if k != "__files__"]) > 0
         
         # Format top-level packages cleanly
         if indent_level == 1 and files and has_subdirs:
@@ -135,7 +135,7 @@ def process_diagrams():
     relations = set()
     for line in lines:
         line_stripped = line.strip()
-        if not line_stripped or line_stripped.startswith("classDiagram") or line_stripped.startswith("class "):
+        if not line_stripped or line_stripped.startswith(("classDiagram", "class ")):
             continue
         if "custom_types" in line_stripped or line_stripped.startswith("..>"):
             continue
@@ -175,7 +175,8 @@ def process_diagrams():
 
     # --- PART B: Generate Individual Package Focus Diagrams ---
     for target_pkg, sub_tree in tree.items():
-        if target_pkg == "__files__": continue
+        if target_pkg == "__files__": 
+            continue
         
         focus_lines = ["flowchart TB", "    direction TB", ""]
         
@@ -219,7 +220,7 @@ def process_diagrams():
         for link in sorted(t_sub_links):
             focus_lines.append(link)
             
-        for r in sorted(list(pkg_relations_filtered)):
+        for r in sorted(pkg_relations_filtered):
             focus_lines.append(r)
 
         # Save individual mmd file

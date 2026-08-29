@@ -2,11 +2,15 @@ flowchart TB
     direction TB
 
     subgraph world [World Package]
-        level
+        subgraph world_files [World Modules]
+            level
+            map_generator
+        end
         subgraph tiles [Tiles Package]
             base_tile
             ground_tile
             map_group
+            tile_factory
             water_tile
         end
     end
@@ -15,8 +19,8 @@ flowchart TB
     end
 
     %% Structural & Dependency Links
-    world --> level
     world --> tiles
     world --> tiles
+    world --> world_files
     ground_tile --> plant
     level --> plant

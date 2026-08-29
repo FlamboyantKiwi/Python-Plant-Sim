@@ -2,6 +2,8 @@ import os
 import pygame
 from dataclasses import dataclass
 
+from tools.project_environment import ProjectEnv
+
 # --- 1. Define the structures needed for the script ---
 @dataclass
 class SpriteRect:
@@ -237,11 +239,9 @@ def main():
     pygame.init()
     pygame.display.set_mode((1, 1), pygame.HIDDEN)
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    assets_dir = os.path.abspath(os.path.join(script_dir, "..", "Assets", "images"))
-
+    assets_dir = ProjectEnv.ASSETS_DIR / "images"
     try:
-        builder = SpriteSheetBuilder(assets_dir, 
+        builder = SpriteSheetBuilder(str(assets_dir), 
             main_file="Plants.png", alt_file = "Supplies.png")
         
         # Declarative list of targets to build using our loop
