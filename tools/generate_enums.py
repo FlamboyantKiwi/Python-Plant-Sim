@@ -1,9 +1,12 @@
-import sqlite3
 import os
 import re
+import sqlite3
 from dataclasses import dataclass
+
 from base_generator import BaseScriptGenerator
+
 from src.core import Log
+
 
 @dataclass
 class EnumDefinition:
@@ -56,7 +59,7 @@ class EnumGenerator(BaseScriptGenerator):
                 folder_name = os.path.basename(os.path.normpath(path))
                 self._definitions.append(EnumDefinition(
                     class_name=self._normalize_class_name(folder_name, suffix),
-                    keys=sorted(list(names)),
+                    keys=sorted(names),
                     docstring=f"Maps directly to filenames inside the asset folder '{folder_name}'."
                 ))
         return self

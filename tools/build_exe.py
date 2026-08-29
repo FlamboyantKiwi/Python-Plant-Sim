@@ -1,6 +1,8 @@
 import os
 import shutil
+
 import PyInstaller.__main__
+
 
 def build_game():
     print("Building Python Plant Sim...")

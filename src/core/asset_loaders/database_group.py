@@ -1,8 +1,12 @@
 from __future__ import annotations
+
+import sqlite3
 from typing import Any
+
 from .. import DatabaseManager, Log
-from ..types import ItemData, ItemCategory, PlantData, SpriteRect, ShopData
+from ..types import ItemCategory, ItemData, PlantData, ShopData, SpriteRect
 from .asset_group import AssetGroup
+
 
 class DatabaseGroup(AssetGroup):
     """Manages the SQLite connection and handles fallback logic for missing data."""
@@ -67,7 +71,7 @@ class DatabaseGroup(AssetGroup):
             plants_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM plants").fetchone()[0]
             shops_cnt = self.db.cursor.execute("SELECT COUNT(*) FROM shops").fetchone()[0]
             Log.info(f" Loaded: {items_cnt} Items, {plants_cnt} Plants, {shops_cnt} Shops")
-        except Exception:
+        except sqlite3.Error:
             Log.error(" Database connection unavailable.")
         if self.missing_ids:
             Log.error(f"MISSING IDs ({len(self.missing_ids)}):")

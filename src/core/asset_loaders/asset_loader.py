@@ -1,37 +1,53 @@
 from __future__ import annotations
-import sys
-import pygame
+
 import os
-from typing import TYPE_CHECKING, Callable
+import sys
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+import pygame
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import EntityType, Colour
+    from src.custom_types import Colour, EntityType
 
 # Runtime Imports
+from src.config import (
+    COLOURS,
+    FRUIT_GROUP_DATA,
+    GAME_ENTITIES,
+    PLANT_GROUP_DATA,
+    TEXT,
+    TILE_DETAILS,
+    TOOL_GROUP_DATA,
+    MarchingLayout,
+)
+
 from .. import Log
 from ..types import (
-    ItemCategory, ItemData, EntityState, Direction, PlantData, 
-    ShopData, TextConfig, EntityCategory
+    Direction,
+    EntityCategory,
+    EntityState,
+    ItemCategory,
+    ItemData,
+    PlantData,
+    ShopData,
+    TextConfig,
 )
 
 # Sub-Group Relative Imports
 from .asset_group import AssetGroup
 from .colour_group import ColourGroup
-from .text_group import TextGroup
-from .font_group import FontGroup
-from .image_group import ImageGroup
 from .database_group import DatabaseGroup
 from .entity_group import EntityGroup
+from .font_group import FontGroup
+from .fruit_group import FruitGroup
+from .image_group import ImageGroup
+from .plant_group import PlantGroup
+from .text_group import TextGroup
 from .tile_group import TileGroup
 from .tool_group import ToolGroup
-from .plant_group import PlantGroup
-from .fruit_group import FruitGroup
 
-from src.config import (
-    COLOURS, TEXT, GAME_ENTITIES, TILE_DETAILS, 
-    TOOL_GROUP_DATA, PLANT_GROUP_DATA, FRUIT_GROUP_DATA, MarchingLayout
-)
 
 class AssetLoader:
     def __init__(self):
@@ -130,8 +146,7 @@ class AssetLoader:
         
     def item_image(self, data: ItemData) -> pygame.Surface:
         """Determines which group to query based on the item category."""
-        if router_func := self._image_routers.get(data.category):
-            if img := router_func(data.image_key): 
+        if (router_func := self._image_routers.get(data.category)) and (img := router_func(data.image_key)):
                 return img
         
         return self._get_fallback_image(data.image_key)
@@ -169,7 +184,7 @@ class AssetLoader:
         Log.divider(40, "=")
         Log.info(f"{'ASSET LOADER DEBUG REPORT':^40}")
         
-        for name, group in self.groups.items():
+        for group in self.groups.values():
             group.debug_print()
                 
         Log.divider(40, "=")

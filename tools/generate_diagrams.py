@@ -1,6 +1,6 @@
-import datetime
 import os
 import subprocess
+from datetime import datetime, timezone
 
 from base_generator import ProjectEnv
 
@@ -150,7 +150,7 @@ def process_diagrams():
 
     # --- PART A: Generate High-Level Package Map ---
     overview_lines = ["flowchart TB", "    direction TB", ""]
-    sub_lines, sub_links = generate_subgraphs_and_links(tree, None, 1)
+    sub_lines, _ = generate_subgraphs_and_links(tree, None, 1)
     overview_lines.extend(sub_lines)
     
     # Map package-to-package relations instead of file-to-file
@@ -163,13 +163,10 @@ def process_diagrams():
 
     overview_lines.append("")
     overview_lines.append("    %% Package Dependency Links")
-    for link in sorted(pkg_relations):
-        overview_lines.append(link)
-        
-    for src_mod, dst_mod in sorted(list(relations)):
-        # Append cross-module dependencies
-        overview_lines.append(f"    {src_mod} --> {dst_mod}")
-
+    overview_lines.extend(sorted(pkg_relations))
+     # Append cross-module dependencies
+    overview_lines.extend(f"    {src} --> {dst}" for src, dst in sorted(relations))
+   
     with open(os.path.join(diagrams_dir, "packages_clean.mmd"), "w", encoding="utf-8") as f:
         f.write("\n".join(overview_lines))
 
@@ -188,13 +185,12 @@ def process_diagrams():
             src_pkg = mod_to_top_pkg.get(src_mod)
             dst_pkg = mod_to_top_pkg.get(dst_mod)
             
-            if src_pkg == target_pkg or dst_pkg == target_pkg:
-                if src_pkg != dst_pkg: # Inter-package only for focus view external links
-                    pkg_relations_filtered.add(f"    {src_mod} --> {dst_mod}")
-                    if src_pkg == target_pkg:
-                        external_modules_involved.add(dst_mod)
-                    else:
-                        external_modules_involved.add(src_mod)
+            if (src_pkg == target_pkg or dst_pkg == target_pkg) and src_pkg != dst_pkg:  # Inter-package only for focus view external links
+                pkg_relations_filtered.add(f"    {src_mod} --> {dst_mod}")
+                if src_pkg == target_pkg:
+                    external_modules_involved.add(dst_mod)
+                else:
+                    external_modules_involved.add(src_mod)
 
         # Draw the target package fully expanded
         target_tree = {target_pkg: sub_tree}
@@ -217,18 +213,15 @@ def process_diagrams():
 
         focus_lines.append("")
         focus_lines.append("    %% Structural & Dependency Links")
-        for link in sorted(t_sub_links):
-            focus_lines.append(link)
-            
-        for r in sorted(pkg_relations_filtered):
-            focus_lines.append(r)
+        focus_lines.extend(sorted(t_sub_links))
+        focus_lines.extend(sorted(pkg_relations_filtered))
 
         # Save individual mmd file
         out_file = os.path.join(pkg_dir, f"package_{target_pkg}.mmd")
         with open(out_file, "w", encoding="utf-8") as f:
             f.write("\n".join(focus_lines))
 
-    now = datetime.datetime.now().strftime("%Y-%m-%d at %H:%M:%S")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d at %H:%M:%S")
     with open(log_path, "w", encoding="utf-8") as f:
         f.write(f"Diagrams last updated on: {now}\n")
 

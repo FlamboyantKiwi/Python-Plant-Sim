@@ -1,5 +1,10 @@
+import sys
 from pathlib import Path
 
+# Automatically resolve root and add to sys.path on import
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 class ProjectEnv:
     """Single source of truth for project directories and file hunting."""

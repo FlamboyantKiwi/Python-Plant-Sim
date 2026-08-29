@@ -12,8 +12,8 @@ classDiagram
     ConfigGroup <|-- TextGroup
     SpriteGroup <|-- TileGroup
     SpriteGroup <|-- ToolGroup
-    AssetLoader *-- ItemCategory : contains
     SpriteGroup *-- SpriteSheet : contains
+    AssetLoader *-- ItemCategory : contains
     AssetLoader *-- AssetGroup : contains
     class AssetGroup {
         +manager
