@@ -5,6 +5,7 @@ on:
     paths:
       - 'uml/**'
       - 'tools/update_wiki.py'
+  workflow_dispatch: 
 
 jobs:
   update-wiki:
