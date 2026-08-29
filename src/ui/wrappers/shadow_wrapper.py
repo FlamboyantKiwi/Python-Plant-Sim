@@ -1,12 +1,16 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 import pygame
+
 from src.core.asset_loaders import ASSETS
+
 from .base_wrapper import BaseWrapper
 
 if TYPE_CHECKING:
-    from src.ui.elements import TextBox
     from src.custom_types import Pos
+    from src.ui.elements import TextBox
 
 class ShadowWrapper(BaseWrapper):
     def __init__(self, target: TextBox, offset: tuple[int, int] = (2, 2), shadow_config: str = "shadow_default"):

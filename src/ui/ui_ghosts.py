@@ -5,8 +5,10 @@
 # ==========================================
 
 from __future__ import annotations
+
 from .elements import Button, Slot, TextBox
 from .wrappers import BorderWrapper, FlashWrapper, ShadowWrapper
+
 
 # --- Matrix Combinations ---
 class BorderButton(BorderWrapper, Button): pass

@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
+
 from .button import Button
 from .textbox import TextBox
 
 if TYPE_CHECKING:
-    from src.custom_types import Pos, Item
+    from src.custom_types import Item, Pos
+
     from .base_element import UIElement
 
 class Slot(Button):

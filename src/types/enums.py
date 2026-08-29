@@ -2,6 +2,7 @@
 
 from enum import Enum, auto
 
+
 class StateID(Enum):
     MENU = auto()
     PLAYING = auto()

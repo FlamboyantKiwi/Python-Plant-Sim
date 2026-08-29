@@ -1,5 +1,8 @@
 import pygame
-from src.core.types import  DOWN, RIGHT, LEFT, UP
+
+from src.types import DOWN, LEFT, RIGHT, UP
+from src.utils import Log
+
 
 class KeyBindings:
     def __init__(self):
@@ -48,7 +51,6 @@ class KeyBindings:
 
     def rebind(self, action: str, new_key: int):
         """Helper method we can use later for a Settings menu."""
-        from src.core.debug_logger import Log
         try:
             # Attempt to get it just to prove it exists, then set it
             getattr(self, action)

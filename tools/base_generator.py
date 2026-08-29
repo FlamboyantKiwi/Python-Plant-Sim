@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from src.core import Log
+from src.utils import Log
 
 from .project_environment import ProjectEnv
 

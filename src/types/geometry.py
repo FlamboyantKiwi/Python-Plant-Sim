@@ -1,7 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+
 import random
-from .enums import Direction, STANDARD_DIRECTIONS
+from dataclasses import dataclass, field
+
+from .enums import STANDARD_DIRECTIONS, Direction
+
 
 @dataclass(frozen=True)
 class SpriteRect:

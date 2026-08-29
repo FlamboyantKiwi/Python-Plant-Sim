@@ -1,14 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
-from src.core import Log
+
 from src.core import ToolType
+from src.utils import Log
 from src.world import Tile
+
 from .base_item import Item
 
 if TYPE_CHECKING:
-    from src.entities import Player, Entity
-    from src.groups import CameraGroup
     from src.custom_types import Interactables
+    from src.entities import Entity, Player
+    from src.groups import CameraGroup
 
 def _use_hoe_strategy(player: Player, target: Tile | Entity, interactables: Interactables, group: CameraGroup) -> bool:
     """Tills the soil if it is a valid ground tile."""
@@ -52,17 +55,17 @@ def _use_generic_strategy(player: Player, target: Tile | Entity, interactables: 
     """Fallback for tools with no specific logic yet."""
     return False
 
+# Strategy registry mapping ToolTypes directly to decoupled functions
+STRATEGIES = {
+    ToolType.HOE: _use_hoe_strategy,
+    ToolType.WATER: _use_water_strategy,
+    ToolType.AXE: _use_axe_strategy,
+    ToolType.PICKAXE: _use_pickaxe_strategy,
+}
+    
 class ToolItem(Item):
     """Handles logic for persistent, non-consumable tools using the Strategy Pattern."""
     
-    # Strategy registry mapping ToolTypes directly to decoupled functions
-    STRATEGIES = {
-        ToolType.HOE: _use_hoe_strategy,
-        ToolType.WATER: _use_water_strategy,
-        ToolType.AXE: _use_axe_strategy,
-        ToolType.PICKAXE: _use_pickaxe_strategy,
-    }
-
     def __init__(self, item_id: str, count: int = 1, preloaded_data: Any = None):
         super().__init__(item_id, count, preloaded_data)
         self.max_water = 10
@@ -78,7 +81,7 @@ class ToolItem(Item):
         if not t_type:
             return _use_generic_strategy(player, target, interactables, group)
 
-        strategy_func = self.STRATEGIES.get(t_type, _use_generic_strategy)
+        strategy_func = STRATEGIES.get(t_type, _use_generic_strategy)
         return strategy_func(player, target, interactables, group)
     
     def has_water(self) -> bool:

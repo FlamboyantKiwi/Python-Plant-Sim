@@ -1,10 +1,13 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING, cast
-from src.config import WIDTH, HEIGHT, DEBUG
+
+import pygame
+
+from src.config import DEBUG, HEIGHT, WIDTH
 
 if TYPE_CHECKING:
-    from src.entities import Player, Entity
+    from src.entities import Entity, Player
 
 class CameraGroup(pygame.sprite.Group):
     def __init__(self)-> None:
@@ -13,7 +16,7 @@ class CameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
 
     @property
-    def entities(self) -> list['Entity']:
+    def entities(self) -> list[Entity]:
         """Returns a strictly-typed list of Entities for Pylance."""
         # By casting to Entity, Pylance knows everything in this list has a .hitbox
         return cast(list['Entity'], self.sprites())

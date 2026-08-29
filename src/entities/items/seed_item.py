@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
-from src.core import Log
+
+from src.utils import Log
 from src.world.tiles import Tile
+
 from .base_item import Item
 
 if TYPE_CHECKING:
-    from src.entities import Player, Entity
-    from src.groups import CameraGroup
-    from src.custom_types import Interactables
+    from src.custom_types import CameraGroup, Entity, Interactables, Player
 
 class SeedItem(Item):
     """Handles planting logic and consumes 1 stack count upon success."""

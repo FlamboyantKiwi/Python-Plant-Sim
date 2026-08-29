@@ -6,6 +6,7 @@
 
 from enum import Enum
 
+
 class ItemID(str, Enum):
     """Maps directly to the 'items' table in the database."""
     APPLE = "apple"

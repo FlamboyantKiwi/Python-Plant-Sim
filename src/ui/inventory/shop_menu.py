@@ -1,11 +1,16 @@
 from __future__ import annotations
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
 import pygame
-from typing import TYPE_CHECKING, Callable
-from ..ui_factory import UIFactory
-from ..elements import UIElement
-from src.entities import Item, create_item
+
 from src.config import SHOP_GRID_OFFSET_Y, SHOP_MENU
+from src.entities import Item, create_item
 from src.entities.inventory_data import Inventory
+
+from ..elements import UIElement
+from ..ui_factory import UIFactory
 
 if TYPE_CHECKING:
     from src.custom_types import Pos, ShopData

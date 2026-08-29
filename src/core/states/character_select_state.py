@@ -1,18 +1,16 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 import pygame
+
+from src.config import HEIGHT, WIDTH
+from src.types import PlayerType, StateID
 
 # Runtime Imports (Essential for logic/inheritance)
 from src.ui import UIFactory
-from src.config import WIDTH, HEIGHT
-from ..types import StateID, PlayerType
-from .. import Log
-
-# Type-Only Imports (Breaks circular loops)
-if TYPE_CHECKING:
-    from src.custom_types import PlayerType
+from src.utils import Log
 
 from .base_ui_state import BaseUIState
+
 
 class CharacterSelectState(BaseUIState):
     state_id = StateID.CHAR_SELECT

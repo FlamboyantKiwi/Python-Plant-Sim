@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
+
 from .base_element import UIElement
 
 if TYPE_CHECKING:

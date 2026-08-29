@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-class Log:
-    COLORS = {
+COLORS = {
         "INFO": "\u001b[97m",     # Bright White
         "SUCCESS": "\u001b[92m",  # Bright Green
         "ERROR": "\u001b[91m",    # Bright Red
@@ -9,6 +8,8 @@ class Log:
         "WHISPER": "\u001b[90m",  # Bright Black / Dark Grey (For muted or debug logs)
         "RESET": "\u001b[0m"      # Reset Terminal Style
     }
+
+class Log: 
     _debug_enabled: bool | None = None
     @classmethod
     def _is_debug(cls) -> bool:
@@ -23,9 +24,9 @@ class Log:
         """Internal helper to check DEBUG_TEXT and handle formatting once."""
         if not Log._is_debug():
             return
-        color = Log.COLORS.get(color_key, Log.COLORS["INFO"])
+        color = COLORS.get(color_key, COLORS["INFO"])
         label = color_key.replace("_", " ").title()
-        print(f"{color}[{label}] {message} {Log.COLORS['RESET']}")
+        print(f"{color}[{label}] {message} {COLORS['RESET']}")
     @staticmethod
     def info(message: str) -> None:
         """Prints a general informational message."""
@@ -61,4 +62,4 @@ class Log:
         """Prints a customizable dash or symbol divider line."""
         if not Log._is_debug():
             return
-        print(f"{Log.COLORS['INFO']} {char * length} {Log.COLORS['RESET']}")
+        print(f"{COLORS['INFO']} {char * length} {COLORS['RESET']}")

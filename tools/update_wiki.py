@@ -4,7 +4,7 @@ from pathlib import Path
 
 from project_environment import ProjectEnv
 
-from src.core import Log
+from src.utils import Log
 
 
 def inject_diagrams(wiki_dir: Path):

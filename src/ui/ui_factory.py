@@ -1,17 +1,35 @@
 from __future__ import annotations
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, cast
+
 import pygame
-from typing import TYPE_CHECKING, cast
 
 from src.core import ASSETS
-from .elements import ProgressBar, UIElement, TextBox, Button, Slot
-from .wrappers import BorderWrapper, ImageSwapWrapper, ShadowWrapper, FlashWrapper, TooltipWrapper
-from .utils import get_grid_pos #calc_pos_rect, align_rect, 
+
+from .elements import Button, ProgressBar, Slot, TextBox, UIElement
+from .ui_utils import get_grid_pos  #calc_pos_rect, align_rect, 
+from .wrappers import (
+    BorderWrapper,
+    FlashWrapper,
+    ImageSwapWrapper,
+    ShadowWrapper,
+    TooltipWrapper,
+)
 
 if TYPE_CHECKING:
-    from typing import Callable, Any
-    from src.ui.inventory.inventory_ui import InventoryUI
-    from src.entities.inventory_data import Inventory
-    from src.ui import BorderButton, BorderSlot, BorderTextBox, FlashButton, FlashSlot, FlashTextBox, ShadowButton, ShadowSlot, ShadowTextBox  # noqa: F401
+    from custom_types import Inventory, InventoryUI
+    from src.ui import (  # noqa: F401
+        BorderButton,
+        BorderSlot,
+        BorderTextBox,
+        FlashButton,
+        FlashSlot,
+        FlashTextBox,
+        ShadowButton,
+        ShadowSlot,
+        ShadowTextBox,
+    )
 
 class UIFactory:
     """A collection of static methods to build and arrange UI assemblies."""
@@ -240,9 +258,9 @@ class UIFactory:
         )
     
     @staticmethod
-    def inventory_with_tooltip(rect: pygame.Rect, inventory_data: 'Inventory',
+    def inventory_with_tooltip(rect: pygame.Rect, inventory_data: Inventory,
         columns: int = 4, slot_size: int = 40, padding: int = 5,
-        tooltip_config: str = "HUD", tooltip_offset: tuple[int, int] = (15, 12)) -> 'TooltipWrapper':
+        tooltip_config: str = "HUD", tooltip_offset: tuple[int, int] = (15, 12)) -> TooltipWrapper:
         """Builder for an InventoryUI automatically wrapped with a mouse-following tooltip."""
         from src.ui import InventoryUI
         # Create the base grid

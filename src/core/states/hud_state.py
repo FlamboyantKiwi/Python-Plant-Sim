@@ -1,16 +1,24 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
 
+import pygame
+
 from src.config import HUD_BUTTON_SIZE, MONEY_RECT
+from src.types import StateID
 from src.ui import UIFactory
+from src.utils import Log
+
+from .base_ui_state import BaseUIState
 
 if TYPE_CHECKING:
     from src.custom_types import Game, Player
 
-from .base_ui_state import BaseUIState
-from ..types import StateID
-from .. import Log
+mouse_events = (
+    pygame.MOUSEBUTTONDOWN, 
+    pygame.MOUSEMOTION, 
+    pygame.MOUSEBUTTONUP
+)
 
 class HUD(BaseUIState):
     state_id = StateID.HUD
@@ -75,9 +83,7 @@ class HUD(BaseUIState):
             return True
         
         # Pass mouse press, motion, and release events to the inventory drag/drop manager
-        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
-            if getattr(event, 'button', 1) == 1:
-                if self.player.inventory_manager.handle_event(event):
-                    return True
-                
-        return False
+        return (event.type in mouse_events
+            and getattr(event, "button", 1) == 1
+            and self.player.inventory_manager.handle_event(event)
+        )

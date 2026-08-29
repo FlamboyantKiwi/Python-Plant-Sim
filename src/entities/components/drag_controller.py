@@ -1,20 +1,20 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
 
+import pygame
+
 if TYPE_CHECKING:
-    from .inventory_controller import InventoryController
-    from .inventory_manager import InventoryManager
-    from src.custom_types import Item
+    from src.custom_types import InventoryController, InventoryManager, Item
     
 class DragController:
     """Handles mouse tracking, drag thresholds, and visual state for dragging items."""
-    def __init__(self, manager: 'InventoryManager') -> None:
+    def __init__(self, manager: InventoryManager) -> None:
         self.manager = manager
         self.cursor_item: Item | None = None
         
         # Bundled drag state
-        self.drag_origin: tuple['InventoryController', int] | None = None
+        self.drag_origin: tuple[InventoryController, int] | None = None
         self.drag_start_pos: tuple[int, int] | None = None
         self.is_dragging: bool = False
 

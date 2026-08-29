@@ -1,13 +1,13 @@
 from __future__ import annotations
-import pygame
-from src.core import ASSETS
+
 from typing import TYPE_CHECKING, Any
 
+import pygame
+
+from src.core import ASSETS
+
 if TYPE_CHECKING:
-    from src.entities import Player, Entity
-    from src.groups import CameraGroup
-    from src.custom_types import Interactables
-    from world.tiles import Tile
+    from src.custom_types import CameraGroup, Entity, Interactables, Player, Tile
 
 class Item:
     """ Base class for an inventory item. 

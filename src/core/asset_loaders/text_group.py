@@ -1,6 +1,9 @@
 from __future__ import annotations
-from ..types import TextConfig
+
+from src.types import TextConfig
+
 from .config_group import ConfigGroup
+
 
 class TextGroup(ConfigGroup):
     """Manages TextConfig styles (presets like 'TITLE', 'HUD')."""

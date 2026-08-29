@@ -1,7 +1,9 @@
-import random
 import math
-from src.core import Log
+import random
+
 from src.custom_types import NodeMap
+from src.utils import Log
+
 
 class MapGenerator:
     DIRT_NODE = 0

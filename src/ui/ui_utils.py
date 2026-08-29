@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import pygame
-from src.core import Log
+
+from src.utils import Log
+
 
 #Helper Functions
 def calc_pos_rect(desired_width: int, desired_height: int, screen_width: int, screen_height: int, x_offset: int = 0, y_offset: int = 0) -> pygame.Rect:

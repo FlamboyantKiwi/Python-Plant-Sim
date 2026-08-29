@@ -1,4 +1,16 @@
-from src.core.types import SpriteRect, ScaleRect, EntityConfig, EntityState, AnimationGrid, TextConfig, Material, Quality, PlayerType, FarmAnimalType, MarchingLayout
+from src.types import (
+    AnimationGrid,
+    EntityConfig,
+    EntityState,
+    FarmAnimalType,
+    MarchingLayout,
+    Material,
+    PlayerType,
+    Quality,
+    ScaleRect,
+    SpriteRect,
+    TextConfig,
+)
 
 CROPS_ORDER = [
     "Beet", "Onion", "Cabbage", "Squash", "Cauliflower", "Melon",
@@ -188,7 +200,6 @@ COBBLE_LAYOUT = MarchingLayout({
     2:  (2, 0), # Bottom-Left Corner
     4:  (0, 2), # Top-Right Corner
     8:  (0, 0), # Top-Left Corner
-    15: (1, 1), # Solid Center
     0:  (2, 3), # Empty
     
     # 2. Edges with Variations
@@ -204,11 +215,11 @@ COBBLE_LAYOUT = MarchingLayout({
     # Mask 3 (Bottom Edge) + Variations from Col 10 (Index 9, Row 3)
     3:  [(2, 1), (2, 9)],
 
-    # 3. Special "Full" Variations (Mask 15) from Col 9 (Index 8)
+    # Special "Full" Variations (Mask 15) from Col 9 (Index 8)
     # This adds variety to your solid inner tiles
     15: [(1, 1), (0, 8), (1, 8), (2, 8)],
 
-    # 4. Negative Mappings (L-Shapes)
+    # Negative Mappings (L-Shapes)
     14: (1, 4), 13: (1, 3), 11: (0, 4), 7: (0, 3),
 })
 

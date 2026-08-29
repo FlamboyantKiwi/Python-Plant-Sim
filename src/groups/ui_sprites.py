@@ -1,9 +1,11 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING, cast
 
+import pygame
+
 if TYPE_CHECKING:
-    from src.custom_types import UIElement, Pos
+    from src.custom_types import Pos, UIElement
 
 class UIGroup(pygame.sprite.Group):
     """A custom Pygame Group specifically designed to handle dynamic and wrapped UI elements."""

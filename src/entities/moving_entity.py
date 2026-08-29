@@ -1,12 +1,16 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING, Any
-from src.config import WIDTH, HEIGHT
-from src.core import Direction, EntityState ### check
+
+import pygame
+
+from src.config import HEIGHT, WIDTH
+from src.core import Direction, EntityState  ### check
+
 from .base_entity import Entity
 
 if TYPE_CHECKING:
-    from src.custom_types import Num, Group, Interactables
+    from src.custom_types import Group, Interactables, Num
 
 class MovingEntity(Entity):
     """Base class for entities that can move and collide dynamically."""

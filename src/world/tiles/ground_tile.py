@@ -1,17 +1,20 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
 
 # Runtime Imports
 from src.config import BLOCK_SIZE, LAYOUT
 from src.core.asset_loaders import ASSETS
-from src.core import Log
 from src.groups import CameraGroup
+from src.utils import Log
+
 from .base_tile import Tile
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level, Plant, ToolItem
+    from src.custom_types import Group, Level, Num, Plant, ToolItem
     
 class GroundTile(Tile):
     """Tile containing all farming logic."""

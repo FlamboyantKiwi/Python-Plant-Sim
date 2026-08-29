@@ -1,17 +1,20 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
 
-# Runtime Imports
-from src.core import PlantData, Log, ASSETS
+import pygame
+
 from src.config import BLOCK_SIZE
+
+# Runtime Imports
+from src.core import ASSETS, PlantData
+from src.utils import Log
 
 from .base_entity import Entity
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group
-    from src.entities.player import Player
+    from src.custom_types import Group, Player
 
 class Plant(Entity):
     def __init__(self, plant_id: str, grid_x: int, grid_y: int, *groups:Group) -> None:
@@ -62,8 +65,7 @@ class Plant(Entity):
     def grow(self, amount: float) -> None:
         """ Call this to test the animation stages """
         self.age += amount
-        if self.age > self.data.grow_time:
-            self.age = self.data.grow_time
+        self.age = min(self.age, self.data.grow_time)
         
         self.update_visuals()
 

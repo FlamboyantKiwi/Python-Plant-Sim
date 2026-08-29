@@ -1,13 +1,15 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
 
 # Runtime Imports
 from src.config import key_binds
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Interactables, Tile, MovingEntity, Entity, Direction
+    from src.custom_types import Direction, Entity, Interactables, MovingEntity, Tile
 
 class InteractionController:
     """A component attached to a player or NPC that handles targeting."""

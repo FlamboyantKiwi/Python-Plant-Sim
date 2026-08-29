@@ -1,12 +1,14 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
+
 from src.config import key_binds
 from src.core import EntityState
 
 if TYPE_CHECKING:
-    from src.entities import MovingEntity
-    from src.custom_types import Num
+    from src.custom_types import MovingEntity, Num
 
 class InputController:
     """Handles keyboard polling, movement vectors, run multipliers, and facing directions."""

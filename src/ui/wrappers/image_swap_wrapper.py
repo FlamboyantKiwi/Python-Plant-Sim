@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
+
 from .base_wrapper import BaseWrapper
 
 if TYPE_CHECKING:
-    from src.ui.elements import StateElement
     from src.custom_types import Pos
+    from src.ui.elements import StateElement
 
 class ImageSwapWrapper(BaseWrapper):
     """Dynamically swaps the underlying image of a StateElement based on state."""

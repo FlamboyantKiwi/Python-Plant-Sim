@@ -1,8 +1,11 @@
 from __future__ import annotations
-import pygame
-from typing import TYPE_CHECKING, cast
-from src.entities import Plant
+
 from collections.abc import Iterable
+from typing import TYPE_CHECKING, cast
+
+import pygame
+
+from src.entities import Plant
 
 if TYPE_CHECKING:
     from src.custom_types import Any, Num

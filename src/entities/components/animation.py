@@ -1,14 +1,15 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
 
+import pygame
+
 # Runtime Imports
-from src.core import EntityState, EntityCategory
-from src.core import ASSETS
+from src.core import ASSETS, EntityCategory, EntityState
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Num, Direction, EntityType
+    from src.custom_types import Direction, EntityType, Num
 
 class AnimationController:
     def __init__(self, category: EntityCategory, entity_name: EntityType, speed:float = 0.15) -> None:

@@ -1,9 +1,14 @@
 from __future__ import annotations
+
 from typing import Any
+
 import pygame
-from .. import Log
-from ..types import TextConfig
+
+from src.types import TextConfig
+from src.utils import Log
+
 from .asset_group import AssetGroup
+
 
 class FontGroup(AssetGroup):
     """Internal helper class to manage font caching."""

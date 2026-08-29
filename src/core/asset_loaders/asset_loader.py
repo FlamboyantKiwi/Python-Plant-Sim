@@ -22,9 +22,9 @@ from src.config import (
     TOOL_GROUP_DATA,
     MarchingLayout,
 )
+from src.utils import Log
 
-from .. import Log
-from ..types import (
+from ...types import (
     Direction,
     EntityCategory,
     EntityState,

@@ -1,15 +1,16 @@
 from __future__ import annotations
-import pygame
+
 from dataclasses import dataclass
-from typing import NamedTuple, TYPE_CHECKING, TypeVar, Generic
+from typing import TYPE_CHECKING, Generic, NamedTuple, TypeVar
+
+import pygame
+
+from .enums import Direction, EntityState, ItemCategory, ToolType
+from .geometry import AnimationGrid, SpriteRect
 
 if TYPE_CHECKING:
-    from src.custom_types import Colour
     from src.core.states import GameState
-
-from .enums import ItemCategory, ToolType, EntityState, Direction
-from .geometry import SpriteRect, AnimationGrid
-
+    from src.custom_types import Colour
 
 class EntityConfig(NamedTuple):
     """Blueprint for registering a new entity type."""

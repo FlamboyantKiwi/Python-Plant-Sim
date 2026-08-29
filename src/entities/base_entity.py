@@ -1,9 +1,11 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
+
 if TYPE_CHECKING:
-    from src.custom_types import Num, Group, Tile
-    from src.entities import Player
+    from src.custom_types import Group, Num, Player, Tile
 
 class Entity(pygame.sprite.Sprite):
     """Absolute base class for anything that exists in the game world."""
@@ -43,7 +45,7 @@ class Entity(pygame.sprite.Sprite):
         draw_rect.y -= int(offset_x)
         surface.blit(self.image, draw_rect)
 
-    def on_interact(self, player: 'Player') -> bool:
+    def on_interact(self, player: Player) -> bool:
         """Default behavior when the player interacts with this object empty-handed."""
         return False
 

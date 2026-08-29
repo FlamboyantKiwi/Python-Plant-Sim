@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from enum import Enum
 from typing import TYPE_CHECKING
-from ..types import EntityState, Direction, EntityCategory
+from ...types import EntityState, Direction, EntityCategory
 from .sprite_group import SpriteGroup
 from .spritesheet import SpriteSheet
 

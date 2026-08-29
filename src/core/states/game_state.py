@@ -1,15 +1,18 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Callable, Type
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
 import pygame
 
-from ..types import StateID
+from src.types import StateID
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from src.custom_types import Game, Pos
 
-STATE_REGISTRY: dict[StateID, Type["GameState"]] = {}
+STATE_REGISTRY: dict[StateID, type[GameState]] = {}
 
 class GameState(ABC):
     state_id: StateID | None = None
@@ -42,9 +45,8 @@ class GameState(ABC):
             if action := self.key_binds.get(event.key): 
                 action()
         
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if action := self.mouse_binds.get(event.button): 
-                action(event.pos)
+        elif event.type == pygame.MOUSEBUTTONDOWN and (action := self.mouse_binds.get(event.button)): 
+            action(event.pos)
         return False
 
     def enter_state(self) -> None: pass

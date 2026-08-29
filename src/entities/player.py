@@ -1,18 +1,29 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING, cast
 
-# Runtime Imports (Needed for logic/inheritance)
-from src.core import PlayerType, EntityCategory, ToolType, Log
-from src.config import PLAYER_START_INVENTORY, INTERACTION_DISTANCE
-from src.groups import CameraGroup
+import pygame
 
+from src.config import INTERACTION_DISTANCE, PLAYER_START_INVENTORY
+
+# Runtime Imports (Needed for logic/inheritance)
+from src.core import EntityCategory, PlayerType, ToolType
+from src.groups import CameraGroup
+from src.utils import Log
+
+from .components import (
+    AnimationController,
+    InputController,
+    InteractionController,
+    InteractionHandler,
+    InventoryController,
+    InventoryManager,
+)
 from .moving_entity import MovingEntity
-from .components import AnimationController, InteractionController, InteractionHandler, InputController, InventoryController, InventoryManager
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
-    from src.custom_types import Group, Pos, Interactables, Num, Item
+    from src.custom_types import Group, Interactables, Item, Num, Pos
 
 class Player(MovingEntity):
     #Inventory Variables

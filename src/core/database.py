@@ -1,43 +1,43 @@
 from __future__ import annotations
-import sqlite3
+
 import os
+import sqlite3
 import sys
 from typing import Any
 
 # Runtime Imports: These are needed to instantiate the data objects
-from .types import ItemData, ItemCategory, ToolType, PlantData, ShopData, SpriteRect
+from ..types import ItemCategory, ItemData, PlantData, ShopData, SpriteRect, ToolType
+
+TABLES = {
+    "items": [
+        "id TEXT PRIMARY KEY", "name TEXT NOT NULL", "description TEXT",
+        "category TEXT NOT NULL", "image_key TEXT NOT NULL",
+        "buy_price INTEGER DEFAULT 0", "sell_price INTEGER",
+        "stackable BOOLEAN DEFAULT 1", "max_stack INTEGER DEFAULT 99",
+        "energy_gain INTEGER DEFAULT 0", "grow_time INTEGER DEFAULT 0", "tool_type TEXT"
+    ],
+    "plants": [
+        "id TEXT PRIMARY KEY", "name TEXT NOT NULL", "grow_time INTEGER",
+        "harvest_item TEXT NOT NULL", "image_stages INTEGER",
+        "is_tree BOOLEAN", "regrows BOOLEAN",
+        "rect_x INTEGER", "rect_y INTEGER", "rect_w INTEGER", "rect_h INTEGER"
+    ],
+    "shops": [
+        "id TEXT PRIMARY KEY", "store_name TEXT NOT NULL"
+    ],
+    "shop_items": [
+        "shop_id TEXT", "item_id TEXT",
+        "FOREIGN KEY(shop_id) REFERENCES shops(id)"
+    ]
+}
+
+VIEWS = {
+    "view_seeds": "SELECT id, name, description, buy_price, grow_time FROM items WHERE category = 'seed'",
+    "view_tools": "SELECT id, name, description, buy_price, tool_type FROM items WHERE category = 'tool'",
+    "view_produce": "SELECT id, name, sell_price, energy_gain FROM items WHERE category IN ('crop', 'fruit')"
+}
 
 class DatabaseManager:
-
-    TABLES = {
-        "items": [
-            "id TEXT PRIMARY KEY", "name TEXT NOT NULL", "description TEXT",
-            "category TEXT NOT NULL", "image_key TEXT NOT NULL",
-            "buy_price INTEGER DEFAULT 0", "sell_price INTEGER",
-            "stackable BOOLEAN DEFAULT 1", "max_stack INTEGER DEFAULT 99",
-            "energy_gain INTEGER DEFAULT 0", "grow_time INTEGER DEFAULT 0", "tool_type TEXT"
-        ],
-        "plants": [
-            "id TEXT PRIMARY KEY", "name TEXT NOT NULL", "grow_time INTEGER",
-            "harvest_item TEXT NOT NULL", "image_stages INTEGER",
-            "is_tree BOOLEAN", "regrows BOOLEAN",
-            "rect_x INTEGER", "rect_y INTEGER", "rect_w INTEGER", "rect_h INTEGER"
-        ],
-        "shops": [
-            "id TEXT PRIMARY KEY", "store_name TEXT NOT NULL"
-        ],
-        "shop_items": [
-            "shop_id TEXT", "item_id TEXT",
-            "FOREIGN KEY(shop_id) REFERENCES shops(id)"
-        ]
-    }
-
-    VIEWS = {
-        "view_seeds": "SELECT id, name, description, buy_price, grow_time FROM items WHERE category = 'seed'",
-        "view_tools": "SELECT id, name, description, buy_price, tool_type FROM items WHERE category = 'tool'",
-        "view_produce": "SELECT id, name, sell_price, energy_gain FROM items WHERE category IN ('crop', 'fruit')"
-    }
-
     def __init__(self, database: str = "gamedata.db"):
         base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
         db_path = os.path.join(base_path, "assets", "data", database)
@@ -68,13 +68,13 @@ class DatabaseManager:
         """Dynamically generates and executes all SQL schema queries."""
         
         # Build and run Table queries
-        for table_name, columns in self.TABLES.items():
+        for table_name, columns in TABLES.items():
             column_str = ", ".join(columns)
             query = f"CREATE TABLE IF NOT EXISTS {table_name} ({column_str})"
             self.cursor.execute(query)
 
         # Build and run View queries
-        for view_name, select_stmt in self.VIEWS.items():
+        for view_name, select_stmt in VIEWS.items():
             query = f"CREATE VIEW IF NOT EXISTS {view_name} AS {select_stmt}"
             self.cursor.execute(query)
 

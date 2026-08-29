@@ -1,17 +1,22 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
+
+from src.types import StateID
 
 # Runtime Imports (Essential for logic/inheritance)
 from src.ui import ShopMenu
-from ..types import StateID
-from src.core import Log
+from src.utils import Log
+
+from .base_ui_state import BaseUIState
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
-    from src.custom_types import Game, Pos,  Player, ShopData, Item
+    from src.custom_types import Game, Item, Player, Pos, ShopData
 
-from .base_ui_state import BaseUIState
+
 
 class ShopState(BaseUIState):
     state_id = StateID.SHOP

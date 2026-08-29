@@ -1,18 +1,19 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
 
-# Runtime Imports (Essential for logic/inheritance)
+from src.config import HEIGHT, WIDTH
+from src.types import StateID
 from src.ui import UIFactory
-from src.config import WIDTH, HEIGHT
-#from src.core import Log
+
+from .base_ui_state import BaseUIState
+from .settings_state import SettingsState
 
 # Type-Only Imports (Breaks circular loops)
 if TYPE_CHECKING:
     from src.custom_types import Game
-from ..types import StateID
-from .base_ui_state import BaseUIState
-from .settings_state import SettingsState
 
 class MenuState(BaseUIState):
     state_id = StateID.MENU

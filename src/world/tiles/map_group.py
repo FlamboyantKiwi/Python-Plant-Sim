@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pygame
+
 
 class MapTileGroup(pygame.sprite.Group):
     def __init__(self) -> None:

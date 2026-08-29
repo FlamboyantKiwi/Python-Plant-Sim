@@ -1,13 +1,15 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
 
 # Runtime Imports
 from src.config import BLOCK_SIZE
 
 # Type-Only Imports
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level, Entity, Plant, CameraGroup, ToolItem
+    from src.custom_types import CameraGroup, Entity, Group, Level, Num, Plant, ToolItem
 
 
 class Tile(pygame.sprite.Sprite):
@@ -52,5 +54,4 @@ class Tile(pygame.sprite.Sprite):
 
     def refresh_terrain(self, new_neighbors: list[bool]) -> None:
         """Generates the base visual. Subclasses will extend this."""
-        pass
     

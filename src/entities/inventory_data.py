@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from .items import Item
+
 
 class Inventory:
     """Pure data structure. No Pygame/UI logic here."""
@@ -62,7 +64,7 @@ class Inventory:
                     
         return False # Didn't have enough of the item to remove the full amount
 
-    def transfer_to(self, target_inventory: 'Inventory', item_name: str, amount: int) -> bool:
+    def transfer_to(self, target_inventory: Inventory, item_name: str, amount: int) -> bool:
         """Programmatically moves an item from this inventory to another."""
         if self.get_amount(item_name) < amount:
             return False # We don't have enough to give

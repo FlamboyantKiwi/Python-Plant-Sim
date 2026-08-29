@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-from .. import Log
+
+from src.utils import Log
 
 if TYPE_CHECKING:
     from src.core.asset_loaders import AssetLoader

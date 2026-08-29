@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
-from src.core import Log
+
+from src.utils import Log
+
 from .base_item import Item
 
 if TYPE_CHECKING:
-    from src.entities import Player, Entity
-    from src.groups import CameraGroup
-    from src.custom_types import Interactables, Tile
+    from src.custom_types import CameraGroup, Entity, Interactables, Player, Tile
 
 class FoodItem(Item):
     def use(self, player: Player, target: Tile | Entity | None, interactables: Interactables, group: CameraGroup) -> bool:

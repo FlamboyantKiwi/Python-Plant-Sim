@@ -3,7 +3,7 @@ from pathlib import Path
 
 from project_environment import ProjectEnv
 
-from src.core import Log
+from src.utils import Log
 
 IGNORE_TYPES: set[str] = {
     'int', 'float', 'str', 'bool', 'list', 'dict', 'set', 'tuple', 'bytes', 'type',

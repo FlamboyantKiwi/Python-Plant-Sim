@@ -1,15 +1,18 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 import pygame
+
 from .base_wrapper import BaseWrapper
 
 if TYPE_CHECKING:
-    from src.ui.elements import TextBox
     from src.custom_types import Pos
+    from src.ui.elements import TextBox
     
 class TooltipWrapper(BaseWrapper):
     """Wraps an InventoryUI to display a tooltip that follows the mouse for hovered items."""
-    def __init__(self, target: Any, tooltip_box: 'TextBox', offset: tuple[int, int] = (15, 15)) -> None:
+    def __init__(self, target: Any, tooltip_box: TextBox, offset: tuple[int, int] = (15, 15)) -> None:
         super().__init__(target)
         self.tooltip = tooltip_box
         self.offset = offset  # Distance from the cursor to draw the tooltip

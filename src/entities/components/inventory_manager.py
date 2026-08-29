@@ -1,8 +1,12 @@
 
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
+
 from src.config import DRAG_DROP_THRESHOLD
+
 from .drag_controller import DragController
 
 if TYPE_CHECKING:
@@ -11,7 +15,7 @@ if TYPE_CHECKING:
 class InventoryManager:
     """Manages open inventories and executes item data manipulation (stacking/swapping)."""
     def __init__(self) -> None:
-        self.open_controllers: list['InventoryController'] = []
+        self.open_controllers: list[InventoryController] = []
         self.drag_controller = DragController(self)
 
     # --- EXPOSED API FOR HUD/PLAYER ---
@@ -22,23 +26,23 @@ class InventoryManager:
     def draw_cursor_item(self, screen: pygame.Surface, mouse_pos: tuple[int, int]) -> None:
         self.drag_controller.draw(screen, mouse_pos)
 
-    def open_inventory(self, controller: 'InventoryController') -> None:
+    def open_inventory(self, controller: InventoryController) -> None:
         if controller not in self.open_controllers:
             self.open_controllers.append(controller)
 
-    def close_inventory(self, controller: 'InventoryController') -> None:
+    def close_inventory(self, controller: InventoryController) -> None:
         if controller in self.open_controllers:
             self.open_controllers.remove(controller)
 
     # --- LOOKUP UTILITIES FOR THE DRAG CONTROLLER ---
-    def get_slot_at(self, pos: tuple[int, int]) -> tuple['InventoryController', int] | None:
+    def get_slot_at(self, pos: tuple[int, int]) -> tuple[InventoryController, int] | None:
         for controller in reversed(self.open_controllers):
             idx = controller.get_clicked_index(pos)
             if idx is not None:
                 return controller, idx
         return None
 
-    def find_closest_slot(self, drop_pos: tuple[int, int]) -> tuple['InventoryController', int] | None:
+    def find_closest_slot(self, drop_pos: tuple[int, int]) -> tuple[InventoryController, int] | None:
         best_target = None
         min_dist = DRAG_DROP_THRESHOLD
 
@@ -53,7 +57,7 @@ class InventoryManager:
         return best_target
 
     # --- DATA MANIPULATION FOR THE DRAG CONTROLLER ---
-    def drop_item(self, drag_ctrl: 'DragController', target_ctrl: 'InventoryController', target_idx: int) -> None:
+    def drop_item(self, drag_ctrl: DragController, target_ctrl: InventoryController, target_idx: int) -> None:
         """Executes placing, stacking, or swapping data logic."""
         if not drag_ctrl.cursor_item:
             return
@@ -78,7 +82,7 @@ class InventoryManager:
         else:
             drag_ctrl.cursor_item = None
 
-    def return_to_origin(self, drag_ctrl: 'DragController') -> None:
+    def return_to_origin(self, drag_ctrl: DragController) -> None:
         """Safely snaps the cursor item data back to its starting slot."""
         if not drag_ctrl.cursor_item or not drag_ctrl.drag_origin:
             return

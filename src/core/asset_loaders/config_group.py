@@ -1,9 +1,13 @@
 from __future__ import annotations
-import os
+
 import inspect
+import os
 from typing import Any
-from .. import Log
+
+from src.utils import Log
+
 from .asset_group import AssetGroup
+
 
 class ConfigGroup(AssetGroup):
     """Parent for Dictionary-based assets (Colours, Text). Handles: Storage, Missing Keys, Defaults, and Debugging."""
@@ -25,7 +29,7 @@ class ConfigGroup(AssetGroup):
                     if filename not in ignore_files:
                         caller_info = f"{filename}:{frame.lineno}"
                         break
-            except Exception:
+            except (ValueError, TypeError, AttributeError):
                 pass
             Log.error(f"[{self.__class__.__name__}] Warning: Missing Key '{key}' (Requested by: {caller_info})")
             self.missing.add(key)

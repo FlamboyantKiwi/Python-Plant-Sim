@@ -1,14 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
 
-from src.core import Log
+from src.config import HEIGHT, WIDTH
 from src.ui import UIFactory, calc_pos_rect
+from src.utils import Log
+
 from ..inventory_data import Inventory
-from src.config import WIDTH, HEIGHT
 
 if TYPE_CHECKING:
-    from src.custom_types import Pos, Item
+    from src.custom_types import Item, Pos
 
 class InventoryController:
     """Manages data, UI, and interactions for an entity's inventory."""
@@ -83,7 +86,7 @@ class InventoryController:
                 return True
         return False
     
-    def get_clicked_index(self, pos: 'Pos') -> int | None:
+    def get_clicked_index(self, pos: Pos) -> int | None:
         """Returns the index of the slot clicked, or None."""
         if not self.rect.collidepoint(pos):
             return None

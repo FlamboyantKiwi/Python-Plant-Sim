@@ -1,13 +1,15 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING
+
+import pygame
 
 from .base_tile import Tile
 from .ground_tile import GroundTile
 from .water_tile import WaterTile
 
 if TYPE_CHECKING:
-    from src.custom_types import Group, Num, Level
+    from src.custom_types import Group, Level, Num
 
 # Route tile keys to their specific behavior classes
 _TILE_MAP = {

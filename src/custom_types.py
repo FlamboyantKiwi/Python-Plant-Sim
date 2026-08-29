@@ -1,4 +1,6 @@
+# ruff: noqa: F401 # Disables "Imported but unused" error
 from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -7,8 +9,8 @@ import pygame
 # Safe Runtime Imports 
 # Base classes that don't import anything else - safe to load at runtime.
 from src.entities.base_entity import Entity
+from src.types.generated_enums import FarmAnimalType, PlayerType
 from src.world.tiles.base_tile import Tile
-from src.core.types.generated_enums import PlayerType, FarmAnimalType
 
 #  Runtime Aliases
 Num = int | float
@@ -23,29 +25,54 @@ Colour = str | tuple[int, int, int] | pygame.Color
 # Everything here is ONLY loaded by the IDE/Linter, preventing circular crashes.
 if TYPE_CHECKING:
     from main import Game
-    
-    # Core
-    from src.core.types import (
-        EntityState, Direction, ItemCategory, ToolType, Quality, 
-        TextConfig, ShopData, PlantData, ItemData
+    from src.core.states import BaseUIState, GameState
+
+    # Entities & Components
+    from src.entities import (
+        Animal,
+        Item,
+        MovingEntity,
+        Plant,
+        Player,
+        SeedItem,
+        ToolItem,
     )
-    from src.core.states import GameState, BaseUIState
+    from src.entities.components import (
+        AnimationController,
+        DragController,
+        InteractionController,
+        InventoryController,
+        InventoryManager,
+    )
     from src.entities.inventory_data import Inventory
+
+    # Groups
+    from src.groups import CameraGroup, PlantGroup, UIGroup
+
+    # Core
+    from src.types import (
+        Direction,
+        EntityState,
+        ItemCategory,
+        ItemData,
+        PlantData,
+        Quality,
+        ShopData,
+        TextConfig,
+        ToolType,
+    )
+
     # UI
     from src.ui import (
-        InventoryUI, UIElement, Button, Slot, BaseWrapper, 
-        ShopMenu, TooltipWrapper, ProgressBar
+        BaseWrapper,
+        Button,
+        InventoryUI,
+        ProgressBar,
+        ShopMenu,
+        Slot,
+        TooltipWrapper,
+        UIElement,
     )
-    
-    # Entities & Components
-    from src.entities import Item, ToolItem, SeedItem, MovingEntity, Player, Plant, Animal
-    from src.entities.components import (
-        AnimationController, InteractionController, 
-        InventoryController, DragController, InventoryManager
-    )
-    
-    # Groups
-    from src.groups import PlantGroup, CameraGroup, UIGroup
-    
+
     # World
-    from src.world import Level, GroundTile, WaterTile
+    from src.world import GroundTile, Level, WaterTile

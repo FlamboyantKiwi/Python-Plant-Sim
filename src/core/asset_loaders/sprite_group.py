@@ -1,9 +1,15 @@
 from __future__ import annotations
-from typing import Any, Generator
+
+from collections.abc import Generator
+from typing import Any
+
 import pygame
-from .spritesheet import SpriteSheet
-from .. import Log
+
+from src.utils import Log
+
 from .asset_group import AssetGroup
+from .spritesheet import SpriteSheet
+
 
 class SpriteGroup(AssetGroup):
     """Parent for Sheet-based assets (Tiles, Tools, Plants)."""
@@ -27,7 +33,7 @@ class SpriteGroup(AssetGroup):
             self.loaded_sheets[key] = sheet
             Log.success(f"[{self.__class__.__name__}] Successfully loaded sheet: {filename}.png")
             return sheet
-        except Exception as e:
+        except (FileNotFoundError, pygame.error, OSError) as e:
             Log.error(f"Failed to load sheet '{filename}' for {self.__class__.__name__}: {e}")
             return None
 

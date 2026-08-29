@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from base_generator import BaseScriptGenerator
 
-from src.core import Log
+from src.utils import Log
 
 
 @dataclass

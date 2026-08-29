@@ -1,11 +1,16 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
+
 import pygame
-from ..utils import align_rect
+
+from ..ui_utils import align_rect
 from .base_element import UIElement
 
 if TYPE_CHECKING:
-    from typing import Callable, Any
+    from typing import Any
+
     from src.custom_types import Pos
 
 class TextBox(UIElement):

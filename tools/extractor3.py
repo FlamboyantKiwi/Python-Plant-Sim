@@ -1,8 +1,10 @@
 import os
-import pygame
 from dataclasses import dataclass
 
+import pygame
+
 from tools.project_environment import ProjectEnv
+
 
 # --- 1. Define the structures needed for the script ---
 @dataclass
@@ -255,7 +257,7 @@ def main():
             sheet = builder.build_group_sheet(filtered_data, is_tree)
             builder.save_sheet(sheet, filename)
 
-    except Exception as e:
+    except (OSError, pygame.error) as e:
         print(f"Execution failed:\n{e}")
     finally:
         pygame.quit()

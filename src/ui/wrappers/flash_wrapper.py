@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from typing import Any
+
 from src.ui.timer import Timer
+
 from .base_wrapper import BaseWrapper
+
 
 class FlashWrapper(BaseWrapper):
     """ Wraps any object that has an update() and draw() method 
@@ -31,11 +35,9 @@ class FlashWrapper(BaseWrapper):
         self.target.update(*args, **kwargs)
 
         # Handle the flash timer logic
-        if self.is_flashing:
-            # If the timer hits 0 (update returns False)
-            if not self.flash_timer.update():
-                self.is_blank = not self.is_blank  # Toggle visibility
-                self.flash_timer.start()        # Reset the timer for the next blink
+        if self.is_flashing and not self.flash_timer.update():
+            self.is_blank = not self.is_blank  # Toggle visibility
+            self.flash_timer.start()        # Reset the timer for the next blink
 
     def draw(self, screen: Any) -> None:
         """Draws the underlying target only if it isn't in a blank flash frame."""

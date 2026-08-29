@@ -1,11 +1,17 @@
 from __future__ import annotations
-import pygame
+
+from collections.abc import Sequence
 from enum import Enum
-from typing import Sequence, Any
-from .. import Log
-from ..types import SpriteRect, Quality
+from typing import Any
+
+import pygame
+
+from src.types import Quality, SpriteRect
+from src.utils import Log
+
 from .sprite_group import SpriteGroup
 from .spritesheet import SpriteSheet
+
 
 class FruitGroup(SpriteGroup):
     def __init__(self, manager: Any, raw_data:Any = None, **sheet_files: str) -> None:

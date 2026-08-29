@@ -3,7 +3,7 @@ import os
 
 from base_generator import BaseScriptGenerator  # Import our shared logic!
 
-from src.core import Log
+from src.utils import Log
 
 
 class GhostGenerator(BaseScriptGenerator):

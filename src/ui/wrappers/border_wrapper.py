@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
+
 from src.core.asset_loaders import ASSETS
+
 from .base_wrapper import BaseWrapper
 
 if TYPE_CHECKING:
