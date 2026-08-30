@@ -10,7 +10,7 @@ from src.config import BLOCK_SIZE
 from src.core import ASSETS, PlantData
 from src.utils import Log
 
-from .base_entity import Entity
+from ..base.base_entity import Entity
 
 # Type-Only Imports
 if TYPE_CHECKING:

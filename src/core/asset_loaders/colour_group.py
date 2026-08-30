@@ -1,6 +1,8 @@
 from __future__ import annotations
-import pygame
+
 from typing import TYPE_CHECKING, Any
+
+import pygame
 
 from .config_group import ConfigGroup
 

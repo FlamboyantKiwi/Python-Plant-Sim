@@ -20,8 +20,14 @@ def inject_diagrams(wiki_dir: Path):
         
         if uml_path.exists():
             mermaid_content = uml_path.read_text(encoding="utf-8").strip()
+            # Strip existing code fences if the source file already wraps them
+            if mermaid_content.startswith("```mermaid"):
+                mermaid_content = re.sub(r"^```mermaid\s*", "", mermaid_content)
+            if mermaid_content.endswith("```"):
+                mermaid_content = re.sub(r"\s*```$", "", mermaid_content)
+                
             Log.success(f"Injected diagram: {uml_name}.md")
-            return f"{start_tag}\n```mermaid\n{mermaid_content}\n```\n{end_tag}"
+            return f"{start_tag}\n```mermaid\n{mermaid_content.strip()}\n```\n{end_tag}"
             
         Log.error(f"Missing diagram asset: {uml_path.name}")
         return match.group(0)

@@ -1,32 +1,94 @@
+```mermaid
 classDiagram
-    ABC <|-- AssetGroup
+    ConfigGroup <|-- TextGroup
     ConfigGroup <|-- ColourGroup
+    AssetGroup <|-- ImageGroup
     AssetGroup <|-- ConfigGroup
+    AssetGroup <|-- SpriteGroup
+    SpriteGroup <|-- ToolGroup
     AssetGroup <|-- DatabaseGroup
     SpriteGroup <|-- EntityGroup
-    AssetGroup <|-- FontGroup
-    SpriteGroup <|-- FruitGroup
-    AssetGroup <|-- ImageGroup
-    SpriteGroup <|-- PlantGroup
-    AssetGroup <|-- SpriteGroup
-    ConfigGroup <|-- TextGroup
     SpriteGroup <|-- TileGroup
-    SpriteGroup <|-- ToolGroup
+    SpriteGroup <|-- FruitGroup
+    AssetGroup <|-- FontGroup
+    SpriteGroup <|-- PlantGroup
+    EntityGroup *-- SpriteSheet : contains
     SpriteGroup *-- SpriteSheet : contains
-    AssetLoader *-- ItemCategory : contains
     AssetLoader *-- AssetGroup : contains
+    AssetLoader *-- DatabaseGroup : contains
+    AssetLoader *-- EntityGroup : contains
+    AssetLoader *-- ColourGroup : contains
+    AssetLoader *-- ImageGroup : contains
+    AssetLoader *-- TileGroup : contains
+    AssetLoader *-- PlantGroup : contains
+    AssetLoader *-- TextGroup : contains
+    AssetLoader *-- ToolGroup : contains
+    DatabaseGroup *-- DatabaseManager : component
+    AssetLoader *-- ItemCategory : contains
+    AssetLoader *-- FruitGroup : contains
+    AssetLoader *-- FontGroup : contains
+    class DatabaseManager {
+        <<EXTERNAL>>
+    }
+    class ItemCategory {
+        <<TYPE>>
+        +CROP
+        +FRUIT
+        +MISC
+        +SEED
+        +TOOL
+    }
+    class TextGroup {
+        +default
+        +get_config()
+        +load()
+    }
     class AssetGroup {
+        <<ABSTRACT>>
         +manager
         +raw_data
         +storage
-        +__init__()
+        -__init__()
         +clean_up()
         +debug_print()
         +load()
         +print_line_break()
     }
+    class ColourGroup {
+        +col
+        +default
+        -__init__()
+        +get_colour()
+        +load()
+    }
+    class ImageGroup {
+        +col
+        +failures
+        +fallback
+        +filename
+        +full_path
+        +img
+        +key
+        +surf
+        -__init__()
+        +debug_print()
+        +generate_fallback()
+        +get_image()
+        +load()
+    }
+    class ConfigGroup {
+        +caller_info
+        +default
+        +filename
+        +ignore_files
+        +missing
+        +val
+        -__init__()
+        +debug_print()
+        +get_val()
+    }
     class AssetLoader {
-        +_image_routers
+        -_image_routers
         +base_path
         +colours
         +database
@@ -41,8 +103,8 @@ classDiagram
         +text
         +tiles
         +tools
-        +__init__()
-        +_get_fallback_image()
+        -__init__()
+        -_get_fallback_image()
         +autotile()
         +clean_up()
         +colour()
@@ -60,23 +122,48 @@ classDiagram
         +shop()
         +sprite()
     }
-    class ColourGroup {
-        +col
-        +default
-        +__init__()
-        +get_colour()
-        +load()
-    }
-    class ConfigGroup {
-        +caller_info
-        +default
+    class SpriteGroup {
+        +SCALE_FACTOR
+        +TILE_SIZE
+        +bounds
         +filename
-        +ignore_files
-        +missing
-        +val
-        +__init__()
+        +loaded_sheets
+        +padded_strip
+        +row_h
+        +sheet
+        +sheet_files
+        +tight_strip
+        -__init__()
+        -_get_tight_strip()
+        -_iter_rows()
         +debug_print()
-        +get_val()
+        +get_sheet()
+    }
+    class SpriteSheet {
+        +colour
+        +cols
+        +image
+        +loaded_sheet
+        +name
+        +path
+        +rows
+        +scale
+        +sheet
+        +source_x
+        +source_y
+        +tiles
+        -__init__()
+        +extract_tiles_by_dimensions()
+        +get_image()
+    }
+    class ToolGroup {
+        +ITEM_SIZE
+        +layout
+        +mat_str
+        +materials
+        +sheet
+        +get()
+        +load()
     }
     class DatabaseGroup {
         +data
@@ -85,8 +172,8 @@ classDiagram
         +missing_ids
         +plants_cnt
         +shops_cnt
-        +__init__()
-        +_log_missing()
+        -__init__()
+        -_log_missing()
         +clean_up()
         +debug_print()
         +get_item()
@@ -105,13 +192,21 @@ classDiagram
         +get_sprite()
         +load()
     }
-    class FontGroup {
-        +key
-        +style_str
-        +styles
-        +__init__()
-        +debug_print()
-        +get_font()
+    class TileGroup {
+        +blit_pos
+        +detail_sheet
+        +dirt_tiles
+        +index
+        +marching_sets
+        +mask
+        +quads
+        +sheet
+        +storage_key
+        +sub_tile
+        +surface
+        +tiles
+        +tileset
+        +build_marching_tile()
         +load()
     }
     class FruitGroup {
@@ -137,26 +232,20 @@ classDiagram
         +supplies_sheet
         +trees
         +w
-        +__init__()
-        +_create_strip()
-        +_extract_supplies()
+        -__init__()
+        -_create_strip()
+        -_extract_supplies()
         +get()
         +get_seed()
         +load()
     }
-    class ImageGroup {
-        +col
-        +failures
-        +fallback
-        +filename
-        +full_path
-        +img
+    class FontGroup {
         +key
-        +surf
-        +__init__()
+        +style_str
+        +styles
+        -__init__()
         +debug_print()
-        +generate_fallback()
-        +get_image()
+        +get_font()
         +load()
     }
     class PlantGroup {
@@ -167,72 +256,7 @@ classDiagram
         +slices
         +tree_slices
         +trees_order
-        +_extract_plants()
-        +load()
-    }
-    class SpriteSheet {
-        +colour
-        +cols
-        +image
-        +loaded_sheet
-        +name
-        +path
-        +rows
-        +scale
-        +sheet
-        +source_x
-        +source_y
-        +tiles
-        +__init__()
-        +extract_tiles_by_dimensions()
-        +get_image()
-    }
-    class SpriteGroup {
-        +SCALE_FACTOR
-        +TILE_SIZE
-        +bounds
-        +filename
-        +loaded_sheets
-        +padded_strip
-        +row_h
-        +sheet
-        +sheet_files
-        +tight_strip
-        +__init__()
-        +_get_tight_strip()
-        +_iter_rows()
-        +debug_print()
-        +get_sheet()
-    }
-    class TextGroup {
-        +default
-        +get_config()
-        +load()
-    }
-    class TileGroup {
-        +blit_pos
-        +detail_sheet
-        +dirt_tiles
-        +index
-        +marching_sets
-        +mask
-        +quads
-        +sheet
-        +storage_key
-        +sub_tile
-        +surface
-        +tiles
-        +tileset
-        +build_marching_tile()
-        +load()
-    }
-    class ToolGroup {
-        +ITEM_SIZE
-        +layout
-        +mat_str
-        +materials
-        +sheet
-        +get()
+        -_extract_plants()
         +load()
     }
 ```

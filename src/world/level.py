@@ -8,11 +8,12 @@ import pygame
 # Runtime Imports
 from src.config import BLOCK_SIZE, DETAIL_CHANCE
 from src.core import ASSETS
-from src.entities.plant import Plant
+from src.entities.nature.plant import Plant
+from src.groups import MapTileGroup
 from src.utils import Log
 
 from .map_generator import MapGenerator
-from .tiles import MapTileGroup, Tile, create_tile
+from .tiles import Tile, create_tile
 
 # Type-Only Imports
 if TYPE_CHECKING:

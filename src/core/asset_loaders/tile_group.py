@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 import pygame
+
 from src.config import BLOCK_SIZE, QUAD_SIZE, MarchingLayout
+
 from .sprite_group import SpriteGroup
+
 
 class TileGroup(SpriteGroup):
     def load(self) -> None:

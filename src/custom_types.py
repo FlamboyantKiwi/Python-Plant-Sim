@@ -8,7 +8,7 @@ import pygame
 
 # Safe Runtime Imports 
 # Base classes that don't import anything else - safe to load at runtime.
-from src.entities.base_entity import Entity
+from src.entities.base.base_entity import Entity
 from src.types.generated_enums import FarmAnimalType, PlayerType
 from src.world.tiles.base_tile import Tile
 
@@ -28,23 +28,21 @@ if TYPE_CHECKING:
     from src.core.states import BaseUIState, GameState
 
     # Entities & Components
-    from src.entities import (
-        Animal,
-        Item,
-        MovingEntity,
-        Plant,
-        Player,
-        SeedItem,
-        ToolItem,
-    )
+    from src.entities import Animal, Item, MovingEntity, Plant, Player
     from src.entities.components import (
         AnimationController,
-        DragController,
         InteractionController,
+    )
+    from src.entities.inventory import (
+        DragController,
+        Inventory,
         InventoryController,
         InventoryManager,
     )
-    from src.entities.inventory_data import Inventory
+    from src.entities.items import (
+        SeedItem,
+        ToolItem,
+    )
 
     # Groups
     from src.groups import CameraGroup, PlantGroup, UIGroup

@@ -63,6 +63,6 @@ class Item:
 
     def copy_one(self) -> Item:
         """Creates a new instance with a count of 1 (Useful for UI dragging)."""
-        from .item_factory import create_item
-        return create_item(self.item_id, 1)
+        from .item_factory import ItemFactory
+        return ItemFactory.create(self.item_id, 1)
     

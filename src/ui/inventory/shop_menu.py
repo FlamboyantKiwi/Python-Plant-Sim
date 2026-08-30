@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import pygame
 
 from src.config import SHOP_GRID_OFFSET_Y, SHOP_MENU
-from src.entities import Item, create_item
-from src.entities.inventory_data import Inventory
+from src.entities.inventory.inventory_data import Inventory
+from src.entities.items import Item, ItemFactory
 
 from ..elements import UIElement
 from ..ui_factory import UIFactory
@@ -70,7 +70,7 @@ class ShopMenu(UIElement):
                 break
 
             # Create the item and insert it straight into the pure data list
-            new_item = create_item(item_id, count=1)
+            new_item = ItemFactory.create(item_id, count=1)
             self.inventory_data.items[i] = new_item
             
             self.ui_grid.slots[i].set_price(new_item.data.buy_price)

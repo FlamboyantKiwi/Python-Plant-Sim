@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .items import Item
+from ..items import Item
 
 
 class Inventory:

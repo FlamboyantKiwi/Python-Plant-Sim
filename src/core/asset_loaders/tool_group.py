@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 from enum import Enum
 
 import pygame
+
 from .sprite_group import SpriteGroup
+
 
 class ToolGroup(SpriteGroup):
     ITEM_SIZE: int = 36

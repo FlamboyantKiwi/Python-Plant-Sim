@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import pygame
+
 from .sprite_group import SpriteGroup
+
 
 class PlantGroup(SpriteGroup):
     def load(self) -> None:

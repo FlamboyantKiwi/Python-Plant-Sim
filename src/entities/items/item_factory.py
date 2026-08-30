@@ -7,7 +7,7 @@ from .food_item import FoodItem
 from .seed_item import SeedItem
 from .tool_item import ToolItem
 
-_LOGIC_MAP = {
+LOGIC_MAP = {
     ItemCategory.TOOL: ToolItem,
     ItemCategory.SEED: SeedItem,
     ItemCategory.FRUIT: FoodItem,
@@ -15,11 +15,13 @@ _LOGIC_MAP = {
     ItemCategory.MISC: Item,
 }
 
-def create_item(item_id: str, count: int = 1) -> Item:
-    """ The unified way to spawn items using the Database and Logic Mapping. """
-    data = ASSETS.item(item_id)
-    
-    # Use the Category from the Unified Enum to pick the class
-    target_class = _LOGIC_MAP.get(data.category, Item)
-    
-    return target_class(item_id, count, preloaded_data=data)
+class ItemFactory:
+    """The unified factory for spawning data-driven items."""
+    @classmethod
+    def create(cls, item_id: str, count: int = 1) -> Item:
+        data = ASSETS.item(item_id)
+        
+        # Use the Category from the Unified Enum to pick the class
+        target_class = LOGIC_MAP.get(data.category, Item)
+        
+        return target_class(item_id, count, preloaded_data=data)

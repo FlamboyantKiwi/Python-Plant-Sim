@@ -1,9 +1,7 @@
-from .animal import Animal
-from .base_entity import Entity
-from .inventory_data import Inventory
-from .items import FoodItem, Item, SeedItem, ToolItem, create_item
-from .moving_entity import MovingEntity
-from .plant import Plant
+from .base import Entity, MovingEntity
+from .inventory import Inventory
+from .items import Item, ItemFactory
+from .nature import Animal, Plant
 from .player import Player
 
 ## Componenets Files are Hidden:
@@ -14,12 +12,10 @@ from .player import Player
 __all__ = [
     "Animal",
     "Entity",
-    "FoodItem",
+    "Inventory",
     "Item",
+    "ItemFactory",
     "MovingEntity",
     "Plant",
     "Player",
-    "SeedItem",
-    "ToolItem",
-    "create_item"
 ]

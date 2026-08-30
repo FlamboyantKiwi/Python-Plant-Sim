@@ -11,15 +11,18 @@ from src.core import EntityCategory, PlayerType, ToolType
 from src.groups import CameraGroup
 from src.utils import Log
 
+from .base.moving_entity import MovingEntity
 from .components import (
     AnimationController,
     InputController,
     InteractionController,
     InteractionHandler,
+)
+from .inventory import (
     InventoryController,
     InventoryManager,
 )
-from .moving_entity import MovingEntity
+from .items import ItemFactory
 
 # Type-Only Imports (Prevents Circular Imports)
 if TYPE_CHECKING:
@@ -42,34 +45,33 @@ class Player(MovingEntity):
         super().__init__(initial_image, start_rect, start_hitbox, 200, group)
 
         self.camera_group: CameraGroup = cast(CameraGroup, group)
-        self.player_type = type
-        self.animator = AnimationController(EntityCategory.PLAYER, type) 
+        self.player_type:PlayerType = type
+        self.animator:AnimationController = AnimationController(EntityCategory.PLAYER, type) 
         
-        self.targeter = InteractionController(self, INTERACTION_DISTANCE)
-        self.interaction_handler = InteractionHandler(self, self.camera_group)
-        self.input_controller = InputController(self, base_speed=200, run_multiplier=1.5)
+        self.targeter:InteractionController = InteractionController(self, INTERACTION_DISTANCE)
+        self.interaction_handler:InteractionHandler = InteractionHandler(self, self.camera_group)
+        self.input_controller:InputController = InputController(self, base_speed=200, run_multiplier=1.5)
         
         #Inventory + Stats
-        self.money = 500
+        self.money:int = 500
         self.setup_inventory()
         
     def setup_inventory(self) -> None:
         """Initializes the InventoryController and the Drag/Drop Manager."""
-        from src.entities import create_item
         # Create the all-in-one Controller for the Player
-        self.inventory = InventoryController(
+        self.inventory:InventoryController = InventoryController(
             size=self.INV_SIZE, 
             slot_size=self.SLOT_SIZE, 
             padding=self.INV_PADDING
         )
         
         # Create the Manager and 'open' the player's hotbar permanently
-        self.inventory_manager = InventoryManager()
+        self.inventory_manager:InventoryManager = InventoryManager()
         self.inventory_manager.open_inventory(self.inventory)
         
         # Populate initial items into the data layer
         for item_id, count in PLAYER_START_INVENTORY:
-            self.inventory.data.add_item(create_item(item_id, count))
+            self.inventory.data.add_item(ItemFactory.create(item_id, count))
     
     @property
     def active_item(self) -> Item | None:
@@ -106,8 +108,7 @@ class Player(MovingEntity):
 
     def receive_item(self, item_id: str, count: int = 1) -> bool:
         """The Logic Middle Man: Instantiates an item and adds it to the inventory."""
-        from src.entities.items import create_item
-        new_item = create_item(item_id, count)
+        new_item = ItemFactory.create(item_id, count)
         
         if self.inventory.data.add_item(new_item):
             Log.success(f"Received {new_item.name}!")

@@ -8,7 +8,7 @@ from src.config import HEIGHT, WIDTH
 from src.ui import UIFactory, calc_pos_rect
 from src.utils import Log
 
-from ..inventory_data import Inventory
+from .inventory_data import Inventory
 
 if TYPE_CHECKING:
     from src.custom_types import Item, Pos

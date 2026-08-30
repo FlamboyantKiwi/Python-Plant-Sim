@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 import pygame
 
-from src.groups import UIGroup
-from src.config import WIDTH, HEIGHT
+from src.config import HEIGHT, WIDTH
 from src.core.asset_loaders import ASSETS
-from src.ui import UIFactory, UIElement
+from src.groups import UIGroup
+from src.ui import UIElement, UIFactory
+
 from .game_state import GameState
 
 # Type-Only Imports (Breaks circular loops)
@@ -71,9 +74,8 @@ class BaseUIState(GameState):
         self.key_binds[pygame.K_ESCAPE] = self.game.pop
 
     def on_left_click(self, pos: tuple[int, int]) -> None:
-        if self.click_exit and self.panel:
-            if not self.panel.rect.collidepoint(pos):
-                self.game.pop()
-                return
+        if self.click_exit and self.panel and not self.panel.rect.collidepoint(pos):
+            self.game.pop()
+            return
             
   

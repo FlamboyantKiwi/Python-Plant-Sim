@@ -79,7 +79,7 @@ class GroundTile(Tile):
     
     def plant(self, plant_name:str, camera_group:CameraGroup) -> Plant|None:
         """Validates the tile state, instantiates the plant, and links it."""
-        from src.entities.plant import Plant
+        from src.entities.nature.plant import Plant
         
         if not self.is_tilled or self.occupant:
             return None # Must be tilled and unoccupied
