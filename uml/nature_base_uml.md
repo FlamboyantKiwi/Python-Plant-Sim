@@ -1,25 +1,39 @@
 ```mermaid
 classDiagram
-    Entity <|-- MovingEntity
-    Sprite <|-- Entity
     Entity <|-- Plant
+    Sprite <|-- Entity
+    Entity <|-- MovingEntity
     Entity *-- Tile : contains
-    Plant *-- PlantData : contains
-    MovingEntity *-- EntityState : contains
-    MovingEntity *-- Num : contains
     MovingEntity *-- Direction : contains
-    PlantFactory ..> Plant : creates
+    Plant *-- PlantData : contains
+    MovingEntity *-- Num : contains
+    MovingEntity *-- EntityState : contains
     class Direction {
-        <<EXTERNAL>>
+        <<TYPE>>
+        +DOWN
+        +LEFT
+        +RIGHT
+        +UP
     }
     class EntityState {
-        <<EXTERNAL>>
+        <<TYPE>>
+        +IDLE
+        +RUN
+        +WALK
     }
     class Num {
         <<EXTERNAL>>
     }
     class PlantData {
-        <<EXTERNAL>>
+        <<TYPE>>
+        +grow_time
+        +harvest_item
+        +image_rect
+        +image_stages
+        +is_tree
+        +name
+        +regrows
+        +get_stage_index()
     }
     class Sprite {
         <<EXTERNAL>>
@@ -27,75 +41,59 @@ classDiagram
     class Tile {
         <<EXTERNAL>>
     }
-    class MovingEntity {
-        +base_speed
-        +current_speed
-        +direction
-        +facing
-        +is_solid
+    class Animal {
         +pos
-        +potential_hits
-        +screen_bounds
-        +state
-        +target_rect
-        -__init__(image, initial_rect, initial_hitbox, base_speed)
-        -_hitbox_collide(entity, obj)
-        +check_horizontal(collidable_objects)
-        +check_vertical(collidable_objects)
-        +finalize_movement()
-        +move(dt, collidable_objects)
+        +type
+        -__init__()
+    }
+    class Plant {
+        +age
+        +data
+        +days_old
+        +hitbox
+        +hitbox_scale
+        +image
+        +is_harvested
+        +obstructed
+        +plant_id
+        +rect
+        -__init__()
+        -_get_current_image()
+        +grow()
+        +harvest()
+        +is_dead()
+        +on_interact()
+        +till()
+        +update_visuals()
     }
     class PlantFactory {
-        +create(plant_id, grid_x, grid_y)
+        +create()
     }
     class Entity {
-        +draw_rect
-        +hb_height
-        +hb_width
         +hitbox
         +hitbox_offset
         +image
         +rect
         +tile
-        -__init__(image, initial_rect, initial_hitbox)
-        -_calculate_hitbox(scale)
-        +draw(surface, offset_x, offset_y)
-        +on_interact(player)
+        -__init__()
+        -_calculate_hitbox()
+        +draw()
+        +on_interact()
         +sync_rect_to_hitbox()
         +till()
     }
-    class Animal {
+    class MovingEntity {
+        +base_speed
+        +current_speed
+        +direction
+        +facing
         +pos
-        +type
-        -__init__(x, y, type)
-    }
-    class Plant {
-        +age
-        +bottom_anchor
-        +data
-        +days_old
-        +harvested_item_id
-        +hitbox
-        +hitbox_scale
-        +image
-        +image_key
-        +initial_image
-        +is_harvested
-        +new_image
-        +obstructed
-        +plant_id
-        +rect
-        +start_hitbox
-        +world_pixel_x
-        +world_pixel_y
-        +yielded_item_id
-        -__init__(plant_id, grid_x, grid_y)
-        -_get_current_image()
-        +grow(amount)
-        +harvest()
-        +is_dead()
-        +on_interact(player)
-        +till()
-        +update_visuals()
+        +state
+        -__init__()
+        -_hitbox_collide()
+        +check_horizontal()
+        +check_vertical()
+        +finalize_movement()
+        +move()
     }
 ```

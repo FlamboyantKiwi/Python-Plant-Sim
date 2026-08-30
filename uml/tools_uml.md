@@ -1,64 +1,19 @@
 ```mermaid
 classDiagram
-    NodeVisitor <|-- UMLVisitor
-    BaseScriptGenerator <|-- GhostGenerator
     BaseScriptGenerator <|-- EnumGenerator
+    BaseScriptGenerator <|-- GhostGenerator
+    NodeVisitor <|-- UMLVisitor
     EnumGenerator *-- EnumDefinition : contains
+    UMLCreator *-- UMLVisitor : contains
     BaseScriptGenerator *-- Path : contains
+    CropVisualData *-- SpriteRect : contains
     ProjectEnv *-- Path : contains
     SpriteSheetBuilder *-- SpriteRect : contains
-    CropVisualData *-- SpriteRect : contains
-    UMLCreator *-- UMLVisitor : contains
     class NodeVisitor {
         <<EXTERNAL>>
     }
     class Path {
         <<EXTERNAL>>
-    }
-    class UMLVisitor {
-        +aliases
-        +classes
-        +compositions
-        +dependencies
-        +relationships
-        -__init__()
-        -_extract_from_assignment()
-        +is_custom_class()
-        +visit_ClassDef()
-    }
-    class UMLCreator {
-        +alias_library
-        +type_library
-        +visitor
-        -__init__()
-        -_get_vis()
-        -_preload_types()
-        +generate_mermaid()
-        +parse_code()
-    }
-    class GhostGenerator {
-        +elements
-        +wrappers
-        -__init__()
-        +register_elements()
-        +register_wrappers()
-        +run()
-    }
-    class EnumDefinition {
-        +class_name
-        +docstring
-        +keys
-    }
-    class EnumGenerator {
-        -_definitions
-        +db_path
-        -__init__()
-        -_camel_to_screaming_snake()
-        -_compile_enum_string()
-        -_normalize_class_name()
-        +add_asset_directories()
-        +add_database_tables()
-        +run()
     }
     class BaseScriptGenerator {
         +output_path
@@ -68,15 +23,6 @@ classDiagram
         +generate_all()
         +write_if_changed()
         +write_timestamp_log()
-    }
-    class ProjectEnv {
-        +ASSETS_DIR
-        +DIAGRAMS_DIR
-        +ROOT_DIR
-        +SRC_DIR
-        +TOOLS_DIR
-        +UML_DIR
-        +get_python_files()
     }
     class SpriteRect {
         +h
@@ -103,5 +49,59 @@ classDiagram
         -_load_source()
         +build_group_sheet()
         +save_sheet()
+    }
+    class EnumDefinition {
+        +class_name
+        +docstring
+        +keys
+    }
+    class EnumGenerator {
+        -_definitions
+        +db_path
+        -__init__()
+        -_camel_to_screaming_snake()
+        -_compile_enum_string()
+        -_normalize_class_name()
+        +add_asset_directories()
+        +add_database_tables()
+        +run()
+    }
+    class GhostGenerator {
+        +elements
+        +wrappers
+        -__init__()
+        +register_elements()
+        +register_wrappers()
+        +run()
+    }
+    class UMLVisitor {
+        +aliases
+        +classes
+        +compositions
+        +dependencies
+        +relationships
+        -__init__()
+        -_extract_from_assignment()
+        +is_custom_class()
+        +visit_ClassDef()
+    }
+    class UMLCreator {
+        +alias_library
+        +type_library
+        +visitor
+        -__init__()
+        -_get_vis()
+        -_preload_types()
+        +generate_mermaid()
+        +parse_code()
+    }
+    class ProjectEnv {
+        +ASSETS_DIR
+        +DIAGRAMS_DIR
+        +ROOT_DIR
+        +SRC_DIR
+        +TOOLS_DIR
+        +UML_DIR
+        +get_python_files()
     }
 ```

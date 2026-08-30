@@ -3,45 +3,37 @@ classDiagram
     Item <|-- FoodItem
     Item <|-- SeedItem
     Item <|-- ToolItem
-    ItemFactory ..> Item : creates
     class Item {
         +count
         +data
         +image
         +item_id
         +max_water
-        +taken
-        +to_add
         +water_level
-        -__getattr__(attr_name)
-        -__init__(item_id, count, preloaded_data)
-        +add_to_stack(amount)
+        -__getattr__()
+        -__init__()
+        +add_to_stack()
         +copy_one()
         +max_stack()
-        +remove_from_stack(amount)
-        +use(player, target, interactables, group)
+        +remove_from_stack()
+        +use()
     }
     class FoodItem {
-        +use(player, target, interactables, group)
+        +use()
     }
     class ItemFactory {
-        +data
-        +target_class
-        +create(item_id, count)
+        +create()
     }
     class SeedItem {
-        +plant_id
-        +use(player, target, interactables, group)
+        +use()
     }
     class ToolItem {
         +max_water
-        +strategy_func
-        +t_type
         +water_level
-        -__init__(item_id, count, preloaded_data)
+        -__init__()
         +consume_water()
         +has_water()
         +refill()
-        +use(player, target, interactables, group)
+        +use()
     }
 ```

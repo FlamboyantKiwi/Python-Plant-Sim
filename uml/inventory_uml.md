@@ -2,11 +2,11 @@
 classDiagram
     UIElement <|-- InventoryUI
     UIElement <|-- ShopMenu
+    ShopMenu *-- UIElement : contains
+    InventoryUI *-- Slot : contains
     ShopMenu *-- Inventory : contains
     InventoryUI *-- Inventory : contains
-    InventoryUI *-- Slot : contains
     ShopMenu *-- ShopData : contains
-    ShopMenu *-- UIElement : contains
     class Inventory {
         <<EXTERNAL>>
     }

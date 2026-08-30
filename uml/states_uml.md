@@ -7,41 +7,66 @@ classDiagram
     GameState <|-- PlayingState
     BaseUIState <|-- SettingsState
     BaseUIState <|-- ShopState
+    PlayingState *-- HUD : contains
     BaseUIState *-- UIElement : contains
+    PlayingState *-- Level : contains
+    PlayingState *-- Player : contains
+    ShopState *-- ShopMenu : contains
+    PlayingState *-- PlantGroup : contains
+    PlayingState *-- CameraGroup : contains
+    BaseUIState *-- UIGroup : contains
     GameState ..> StateID : uses
-    class StateID {
+    class CameraGroup {
         <<EXTERNAL>>
     }
+    class Level {
+        <<EXTERNAL>>
+    }
+    class PlantGroup {
+        <<EXTERNAL>>
+    }
+    class Player {
+        <<EXTERNAL>>
+    }
+    class ShopMenu {
+        <<EXTERNAL>>
+    }
+    class StateID {
+        <<TYPE>>
+        +CHAR_SELECT
+        +HUD
+        +MENU
+        +PLAYING
+        +SETTINGS
+        +SHOP
+    }
     class UIElement {
+        <<EXTERNAL>>
+    }
+    class UIGroup {
         <<EXTERNAL>>
     }
     class BaseUIState {
         +back_button
         +background
-        +btn
         +click_exit
         +colour
         +draw_bg
-        +mouse_pos
         +panel
-        +rect
         +suppress_update
         +transparent
         +ui_group
-        -__init__(game, bg_colour, back_button, click_exit)
-        +add_back_button(x, y, width, height, text)
-        +draw(screen)
-        +handle_event(event)
-        +on_left_click(pos)
-        +update(dt, is_paused)
+        -__init__()
+        +add_back_button()
+        +draw()
+        +handle_event()
+        +on_left_click()
+        +update()
     }
     class CharacterSelectState {
-        +btns
-        +char_data
         +state_id
-        +title_rect
-        -__init__(game)
-        +select_character(character_type)
+        -__init__()
+        +select_character()
     }
     class GameState {
         <<ABSTRACT>>
@@ -52,80 +77,67 @@ classDiagram
         +state_id
         +suppress_update
         +transparent
-        -__init__(game)
+        -__init__()
         -__init_subclass__()
-        +draw(screen)
+        +draw()
         +enter_state()
         +exit_state()
-        +handle_event(event)
-        +on_left_click(pos)
-        +on_middle_click(pos)
-        +on_right_click(pos)
-        +update(dt, is_paused)
+        +handle_event()
+        +on_left_click()
+        +on_middle_click()
+        +on_right_click()
+        +update()
     }
     class HUD {
-        +button_data
-        +hud_buttons
-        +mouse_pos
         +player
-        +shop_data
         +state_id
         +suppress_update
         +transparent
-        -__init__(game, player)
-        +draw(screen)
+        -__init__()
+        +draw()
         +escape()
-        +handle_event(event)
+        +handle_event()
         +open_settings()
         +player_open_shop()
-        +update(dt, is_paused)
+        +update()
     }
     class MenuState {
-        +btns
         +menu_actions
         +state_id
         +suppress_update
-        +title_rect
-        -__init__(game)
+        -__init__()
     }
     class PlayingState {
         +all_sprites
-        +collidables
         +hud
-        +interactables
         +key_binds
         +level
         +plant_group
         +player
-        +shop_data
         +state_id
         +suppress_update
         +transparent
-        -__init__(game, character_type)
-        +draw(screen)
-        +handle_event(event)
-        +on_left_click(pos)
-        +on_right_click(pos)
-        +open_shop(shop_id)
-        +update(dt, is_paused)
+        -__init__()
+        +draw()
+        +handle_event()
+        +on_left_click()
+        +on_right_click()
+        +open_shop()
+        +update()
     }
     class SettingsState {
         +panel
-        +placeholder_rect
         +state_id
         +suppress_update
-        +title_rect
-        -__init__(game)
+        -__init__()
     }
     class ShopState {
-        +cost
         +panel
         +player
-        +player_item
         +shop_menu
         +state_id
-        -__init__(game, player, shop_data)
-        -_handle_purchase(item)
-        +on_right_click(pos)
+        -__init__()
+        -_handle_purchase()
+        +on_right_click()
     }
 ```

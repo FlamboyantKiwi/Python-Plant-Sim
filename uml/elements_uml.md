@@ -1,96 +1,86 @@
 ```mermaid
 classDiagram
-    UIElement <|-- TextBox
     Sprite <|-- UIElement
-    UIElement <|-- StateElement
-    Button <|-- Slot
-    UIElement <|-- ProgressBar
     StateElement <|-- Button
+    UIElement <|-- ProgressBar
+    Button <|-- Slot
+    UIElement <|-- StateElement
+    UIElement <|-- TextBox
     Slot *-- Item : contains
+    Slot *-- TextBox : contains
     class Item {
         <<EXTERNAL>>
     }
     class Sprite {
         <<EXTERNAL>>
     }
-    class TextBox {
-        -_text
-        +align
-        +anchor_point
-        +config
-        +current_val
-        +is_visible
-        +new_text
-        +text_getter
-        +text_rect
-        +text_surf
-        -__init__(rect, text, text_getter, config, align, surface)
-        -_render_text()
-        +draw(screen)
-        +set_text(new_text)
-        +update(mouse_pos)
-    }
     class UIElement {
         +image
         +is_visible
         +rect
-        -__init__(rect, surface)
+        -__init__()
         +copy_image()
-        +draw(screen)
+        +draw()
         +handle_click()
-        +is_click(mouse_pos)
-        +update(mouse_pos)
+        +is_click()
+        +update()
     }
-    class StateElement {
-        +image
-        +is_active
-        +is_hovered
-        -__init__(rect, base_visual)
-        +update(mouse_pos)
-    }
-    class Slot {
-        +current_count
-        +index
-        +info_text
-        +item
-        +item_rect
-        +last_count
-        +price
-        -__init__(rect, index, base_visual)
-        -_update_text()
-        +draw(screen)
-        +set_item(item)
-        +set_price(price)
-        +update(mouse_pos)
+    class Button {
+        +content
+        +function
+        -__getattr__()
+        -__init__()
+        +draw()
+        +handle_click()
+        +is_click()
+        +update()
     }
     class ProgressBar {
         -_cached_size
         -_fill_surface_base
         +alignment
-        +anchor_point
         +bg_element
-        +dynamic_size
         +fill_element
         +is_horizontal
-        +new_h
-        +new_w
         +percentage
-        +ratio
-        +val
         +value_getter
-        -__init__(rect, bg_element, fill_element, percentage, value_getter, alignment, is_horizontal)
+        -__init__()
         -_update_fill_rect()
-        +draw(screen)
-        +update(mouse_pos)
+        +draw()
+        +update()
     }
-    class Button {
-        +content
-        +function
-        -__getattr__(attr)
-        -__init__(rect, function, base_visual, content)
-        +draw(screen)
-        +handle_click()
-        +is_click(mouse_pos)
-        +update(mouse_pos)
+    class Slot {
+        +index
+        +info_text
+        +item
+        +last_count
+        +price
+        -__init__()
+        -_update_text()
+        +draw()
+        +set_item()
+        +set_price()
+        +update()
+    }
+    class StateElement {
+        +image
+        +is_active
+        +is_hovered
+        -__init__()
+        +update()
+    }
+    class TextBox {
+        -_text
+        +align
+        +config
+        +is_visible
+        +text_getter
+        +text_rect
+        +text_surf
+        -__init__()
+        -_render_text()
+        +draw()
+        +set_text()
+        +update()
     }
 ```
