@@ -5,10 +5,10 @@ from src.utils import Log
 
 WIKI_MAPPINGS = {
     # --- World & Architecture ---
-    "world_uml": ["world.py"],
+    "world_uml": ["world"],
     "asset_loaders_uml": ["core/asset_loaders"], 
-    "database_database_group_uml": ["core/database.py", "core/asset_loaders/database_group"],
-    "groups_uml": ["core/groups"],
+    "database_database_group_uml": ["core/database.py", "core/asset_loaders/database_group.py"],
+    "groups_uml": ["groups"],
     "states_uml": ["core/states"],
 
     # --- UI System ---
@@ -44,24 +44,28 @@ def build_wiki_umls() -> None:
         for path_str in paths:
             try:
                 for file_path in ProjectEnv.get_python_files(path_str):
-                    creator.parse_code(file_path.read_text(encoding='utf-8'))
+                    try:
+                        creator.parse_code(file_path.read_text(encoding='utf-8'))
+                    except (SyntaxError, UnicodeDecodeError) as e:
+                        Log.error(f"Skipping '{file_path.name}' due to parsing error: {e}")
+                        valid = False
             except FileNotFoundError as e:
                 Log.error(str(e))
                 valid = False
-                break
                 
         if not valid:
+            Log.error(f"Failed to build '{target_name}.md' due to previous errors.\n")
             continue
             
         mermaid_content = creator.generate_mermaid()
         out_file = ProjectEnv.UML_DIR / f"{target_name}.md"
         
-        # SMART CACHING CHECK: Compare existing string contents against new compilation buffer
+        # SMART CACHING CHECK
         if out_file.exists() and out_file.read_text(encoding='utf-8') == mermaid_content:
             Log.info(f"No adjustments detected for '{out_file.name}'. Skipping file write.")
         else:
             out_file.write_text(mermaid_content, encoding='utf-8')
             Log.success(f"Baked updates to '{out_file.name}'.")
-
+            
 if __name__ == "__main__":
     build_wiki_umls()

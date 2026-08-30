@@ -3,12 +3,12 @@ classDiagram
     BaseScriptGenerator <|-- EnumGenerator
     BaseScriptGenerator <|-- GhostGenerator
     NodeVisitor <|-- UMLVisitor
+    ProjectEnv *-- Path : contains
+    SpriteSheetBuilder *-- SpriteRect : contains
     EnumGenerator *-- EnumDefinition : contains
     UMLCreator *-- UMLVisitor : contains
     BaseScriptGenerator *-- Path : contains
     CropVisualData *-- SpriteRect : contains
-    ProjectEnv *-- Path : contains
-    SpriteSheetBuilder *-- SpriteRect : contains
     class NodeVisitor {
         <<EXTERNAL>>
     }

@@ -1,13 +1,13 @@
 ```mermaid
 classDiagram
-    Tile <|-- GroundTile
     Sprite <|-- Tile
+    Tile <|-- GroundTile
     Tile <|-- WaterTile
-    GroundTile *-- Plant : contains
-    Tile *-- Level : contains
+    Level *-- Tile : contains
     Tile *-- Entity : contains
     Level *-- MapTileGroup : contains
-    Level *-- Tile : contains
+    Tile *-- Level : contains
+    GroundTile *-- Plant : contains
     class Entity {
         <<EXTERNAL>>
     }
@@ -20,17 +20,24 @@ classDiagram
     class Sprite {
         <<EXTERNAL>>
     }
-    class GroundTile {
-        +base_image
-        +image
-        +is_tilled
-        +tillable
-        +watered
+    class Level {
+        +MAP_HEIGHT
+        +MAP_WIDTH
+        +all_tiles
+        +node_map
+        +plant_group
+        +player_sprite
+        +tile_grid
         -__init__()
-        +plant()
-        +refresh_terrain()
-        +till()
-        +water()
+        -_get_node_status()
+        -_get_tile_assets()
+        +draw()
+        +generate_level()
+        +get_tile()
+        +spawn_plant()
+        +tile_list()
+        +till_map_node()
+        +update()
     }
     class MapGenerator {
         +DIRT_NODE
@@ -60,6 +67,18 @@ classDiagram
         +till()
         +water()
     }
+    class GroundTile {
+        +base_image
+        +image
+        +is_tilled
+        +tillable
+        +watered
+        -__init__()
+        +plant()
+        +refresh_terrain()
+        +till()
+        +water()
+    }
     class WaterTile {
         -_base_obstructed
         +base_image
@@ -67,24 +86,5 @@ classDiagram
         -__init__()
         +refresh_terrain()
         +water()
-    }
-    class Level {
-        +MAP_HEIGHT
-        +MAP_WIDTH
-        +all_tiles
-        +node_map
-        +plant_group
-        +player_sprite
-        +tile_grid
-        -__init__()
-        -_get_node_status()
-        -_get_tile_assets()
-        +draw()
-        +generate_level()
-        +get_tile()
-        +spawn_plant()
-        +tile_list()
-        +till_map_node()
-        +update()
     }
 ```

@@ -3,11 +3,11 @@ classDiagram
     Entity <|-- Plant
     Sprite <|-- Entity
     Entity <|-- MovingEntity
-    Entity *-- Tile : contains
+    MovingEntity *-- EntityState : contains
     MovingEntity *-- Direction : contains
     Plant *-- PlantData : contains
+    Entity *-- Tile : contains
     MovingEntity *-- Num : contains
-    MovingEntity *-- EntityState : contains
     class Direction {
         <<TYPE>>
         +DOWN

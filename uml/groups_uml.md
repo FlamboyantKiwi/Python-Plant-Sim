@@ -1,15 +1,23 @@
 ```mermaid
 classDiagram
-    Group <|-- UIGroup
-    Group <|-- PlantGroup
     Group <|-- CameraGroup
     Group <|-- MapTileGroup
-    class Group
-    class UIGroup {
-        +draw()
-        +elements()
-        +handle_event()
-        +update()
+    Group <|-- PlantGroup
+    Group <|-- UIGroup
+    class Group {
+        <<EXTERNAL>>
+    }
+    class CameraGroup {
+        +display_surface
+        +offset
+        -__init__()
+        +custom_draw()
+        +entities()
+    }
+    class MapTileGroup {
+        +display_surface
+        -__init__()
+        +custom_draw()
     }
     class PlantGroup {
         -__init__()
@@ -18,20 +26,10 @@ classDiagram
         +grow_all()
         +plants()
     }
-    class CameraGroup {
-        +display_surface
-        +offset
-        +offset_x
-        +offset_y
-        -__init__()
-        +custom_draw()
-        +entities()
-    }
-    class MapTileGroup {
-        +display_surface
-        +offset_x
-        +offset_y
-        -__init__()
-        +custom_draw()
+    class UIGroup {
+        +draw()
+        +elements()
+        +handle_event()
+        +update()
     }
 ```

@@ -12,21 +12,21 @@ classDiagram
     ConfigGroup <|-- TextGroup
     SpriteGroup <|-- TileGroup
     SpriteGroup <|-- ToolGroup
-    DatabaseGroup *-- DatabaseManager : component
-    AssetLoader *-- ColourGroup : contains
-    AssetLoader *-- FruitGroup : contains
-    EntityGroup *-- SpriteSheet : contains
-    AssetLoader *-- FontGroup : contains
-    AssetLoader *-- ItemCategory : contains
     AssetLoader *-- TileGroup : contains
+    AssetLoader *-- ItemCategory : contains
+    AssetLoader *-- PlantGroup : contains
+    DatabaseGroup *-- DatabaseManager : component
+    AssetLoader *-- AssetGroup : contains
+    AssetLoader *-- FontGroup : contains
+    EntityGroup *-- SpriteSheet : contains
+    AssetLoader *-- EntityGroup : contains
+    AssetLoader *-- FruitGroup : contains
     AssetLoader *-- ImageGroup : contains
     AssetLoader *-- ToolGroup : contains
-    AssetLoader *-- DatabaseGroup : contains
     SpriteGroup *-- SpriteSheet : contains
+    AssetLoader *-- ColourGroup : contains
     AssetLoader *-- TextGroup : contains
-    AssetLoader *-- AssetGroup : contains
-    AssetLoader *-- PlantGroup : contains
-    AssetLoader *-- EntityGroup : contains
+    AssetLoader *-- DatabaseGroup : contains
     class DatabaseManager {
         <<EXTERNAL>>
     }
