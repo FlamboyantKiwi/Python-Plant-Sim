@@ -3,8 +3,11 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'uml/**'
-      - 'tools/update_wiki.py'
+      - 'src/**/*.py'                     # Trigger when source code changes
+      - 'tools/generate_uml.py'           # Trigger when the UML parser changes
+      - 'tools/generate_wiki_umls.py'     # Trigger when UML mappings change
+      - 'tools/update_wiki.py'            # Trigger when the injector changes
+      - 'uml/**'                          # Trigger on manual UML file edits
   workflow_dispatch: 
 
 jobs:
@@ -34,6 +37,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install pygame
           if [ -f main_repo/requirements.txt ]; then pip install -r main_repo/requirements.txt; fi
+
+      - name: Generate UMLs from Source
+        env:
+          PYTHONPATH: main_repo
+        run: |
+          python main_repo/tools/generate_wiki_umls.py
           
       - name: Run Python Injector
         env:
