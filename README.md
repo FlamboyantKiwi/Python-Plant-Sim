@@ -1,4 +1,4 @@
-# Python Plant Sim 🌱
+# Python Plant Sim 
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
 ![Pygame](https://img.shields.io/badge/Pygame-2.6.1-green.svg)
@@ -8,72 +8,16 @@ A robust, data-driven 2D farming and exploration game built entirely from scratc
 
 Rather than relying on hardcoded game loops, this project was developed as a technical sandbox to implement advanced software engineering concepts, including procedural map generation, SQLite database integration, custom UI component factories, a strict State Machine architecture, and decoupled interaction controllers.
 
+## Documentation & Architecture
+Because of the project's scale and the focus on clean software architecture, all technical documentation, system deep-dives, diagrams, and future roadmaps are hosted in the project's Wiki.
+
+**[Explore the Python Plant Sim Wiki here](https://github.com/FlamboyantKiwi/Python-Plant-Sim/wiki)**
+
 ## 🎮 Gameplay Features
 * **Dynamic Farming:** Till soil, plant seeds, water crops, and harvest produce based on real-time database growth stages.
 * **Interactive Hotbar:** fully functional drag-and-drop inventory system that supports item stacking, splitting, swapping, and intelligent snap-to-slot mechanics.
 * **In-Game Economy:** Buy and sell items through a dynamic shop interface synchronized with the player's wallet.
 * **Procedural Environments:** Explore uniquely generated maps on every load.
-
-## 🚀 Core Systems & Architecture
-
-### 🗄️ Data-Driven Item & Plant System (SQLite)
-Game data is entirely decoupled from the codebase. Items, plants, and shops are stored in a relational `gamedata.db` SQLite database.
-* **Smart Proxying:** Python `dataclasses` (e.g., `ItemData`, `PlantData`) act as proxies, fetching attributes like `buy_price`, `max_stack`, and `energy_gain` dynamically.
-* **Auto-Generated Enums:** Includes a custom build tool (`tools/generate_enums.py`) that reads the database tables and asset folders to automatically generate strict Python `Enums`, ensuring complete type safety across the codebase and preventing missing-key crashes.
-
-### 🗺️ Procedural Terrain (Marching Squares)
-The environment uses a dynamic Node Map that calculates terrain borders on the fly.
-* Utilizes a **9-node neighborhood check** (Marching Squares algorithm) to perfectly blend grass, tilled soil, and water textures (`world.level` and `world.tile`).
-* Automatically resolves corner cases, diagonals, and inner corners for seamless organic environments.
-
-### 📦 Robust Asset Pipeline & Caching
-Assets are managed by a centralized `AssetLoader` to optimize memory and prevent disk-read bottlenecks.
-* **Smart Caching:** Sprite sheets, fonts, and individual images are loaded into memory exactly once.
-* **Dynamic Fallbacks:** If a texture or file is missing, the engine catches the error and generates a visible "fallback" texture (e.g., a colored bounding box or a "Glitch Item") at runtime, preventing hard crashes.
-
-### 🖼️ Advanced UI Framework & Wrappers
-A custom, modular UI generation system built from the ground up (`ui.ui_factory`).
-* **Composition over Inheritance:** UI elements use dynamic Wrappers (`BorderWrapper`, `ShadowWrapper`, `Tooltip`, `FlashWrapper`) to add behaviors to standard buttons and slots. Wrappers utilize intelligent `__getattr__` and `__setattr__` routing to seamlessly pass visual states and variables downward without breaking inheritance.
-* **Decoupled Drag-and-Drop:** Interaction logic is strictly split between a `DragController` (managing mouse lifecycle events, floating UI tracking, and proximity snapping) and an `InventoryManager` (acting as a pure data broker for executing the math behind stacking and swapping).
-
-### ⚙️ State Machine & Entity Components
-* **State Stack Pattern:** The game loop is governed by a `StateStack` (`core/states/base.py`) which allows for seamless layering. Menus, HUD, Shops, and Gameplay can pause, suppress, or draw over one another flawlessly.
-* **Component-Based Entities:** Entity logic is split into modular components (`AnimationController`, `InteractionController`, `InventoryController`) to avoid deep, messy inheritance trees.
-* **Decoupled Physics:** Custom collision detection uses axis-separated resolution and dedicated hitboxes that are independent of the sprite's visual bounds.
-* **Custom Terminal Logger:** A globally accessible, color-coded debug logger dynamically generates formatted tags (e.g., `[Info]`, `[Success]`, `[Error]`) to provide immediate, highly scannable visual feedback during playtesting. Codebase-wide implementation strongly follows Pythonic EAFP (Easier to Ask for Forgiveness than Permission) principles using safe `getattr` fallbacks.
-
-
-## Project Structure
-
-```text
-src/
-├── config/                 # Game settings, input key bindings and game configs
-├── core/                   # Engine core, asset loaders, database & game states
-│   ├── asset_loaders/      # Modular asset groups (sprites, fonts, database, audio)
-│   ├── states/             # Game state machine stack (Menu, Playing, Shop, etc.)
-│   └── types/              # Dataclasses, enums, geometries, and type hubs
-├── entities/               # Living world actors, items, and inventory logic
-│   ├── components/         # Reusable behaviors (animation, input, interaction, movement)
-│   └── items/              # Item system and strategy pattern execution
-├── groups/                 # Specialized Pygame sprite groups (Camera, UI, Plants)
-├── ui/                     # User interface elements, builders, and decorators
-│   ├── elements/           # Atomic UI visual components (Buttons, Slots, Textboxes)
-│   ├── inventory/          # Inventory grid and shop menu controllers
-│   └── wrappers/           # Decorator wrappers (Borders, Shadows, Tooltips)
-├── world/                  # Map generation, level management, and tile subclasses
-│   └── tiles/              # Tile hierarchy and marching squares terrain rendering
-└── custom_types.py         # Centralized type hubs and forward-reference aliases
-```
-
-### ⌨️ Controls
-* W, A, S, D or Arrow Keys: Move character
-* Left Shift: Sprint
-* Spacebar: Interact / Use Item (Tills soil, plants seeds, etc.)
-* 1 - 8: Select Inventory Hotbar Slot
-* P: Open Shop Menu
-* ESC: Close Menus / Back
-* Left Click: Drag and drop inventory items, click UI buttons.
-* Right Click: Print a full asset loader debug report to the terminal.
 
 ## 🛠️ Getting Started
 
@@ -82,52 +26,10 @@ You only need Python 3 installed. The only external dependency is Pygame.
 
 ```bash
 pip install pygame
-```
-
-### Running the Game
-
-1. Clone the repository:
-```bash
-git clone https://github.com/FlamboyantKiwi/Python-Plant-Sim.git
-```
-2. Navigate to the directory:
-```bash
+git clone [https://github.com/FlamboyantKiwi/Python-Plant-Sim.git](https://github.com/FlamboyantKiwi/Python-Plant-Sim.git)
 cd Python-Plant-Sim
-```
-3. Run the main executable:
-```bash
 python main.py
 ```
-
-## 🔮 Future Roadmap
-
-**Systems & Architecture**
-* *Introduce save-state functionality via SQLite serialization.*
-* *Settings & Customization Menu:* Implement a fully interactive settings UI to manage master volume, audio sliders, and custom keybinding/rebind options.
-* *Crafting Architecture:* Build a data-driven crafting and recipe system utilizing the existing SQLite database structure.
-* *Audio Engine:* Integrate a centralized audio manager for background music fading and spatial sound effects.
-* *Gamepad Support:* Expand the `controls.py` module to dynamically map and support controllers alongside keyboard inputs.
-
-**Gameplay & Entities**
-* *Resource Generation & Harvesting:* Spawn interactable trees, boulders, and ore veins (copper, iron, gold) that players can break down for raw materials.
-* *Shipping & Monetization:* Introduce a shipping bin or direct-sell merchant mechanic to convert harvested crops and crafted goods into currency.
-* *Livestock Integration:* Activate the existing farm animal framework and assets (Bull, Calf, Chick, Lamb, Piglet, Rooster, Sheep, Turkey) with dedicated AI state machines.
-* *Implement A\* Pathfinding for NPC and Farm Animal behavior.*
-* *Expanded Tool Interactions:* Implement distinct mechanics and targeted hitboxes for gathering and combat tools (Sword, Bow & Arrow, Dagger, Fishing Rod, Hammer, Pickaxe, Scythe, Shovel, Staff, Watering Can).
-* *Dynamic Economy:* Update the general store to feature all seed types and implement a rotating daily stock system.
-* *Skill Progression:* Implement an RPG-style leveling system for activities like Farming, Mining, and Combat to unlock new crafting recipes and increase efficiency.
-* *Farm Automation:* Allow players to craft mid-to-late game items like sprinklers and auto-feeders to scale up their agricultural output.
-
-**World & Environment**
-* *Day/Night Cycle:* Introduce an ambient lighting system and time-based environmental states.
-* *Seasonal Cycles:* Create dynamic seasons that alter the visual palette, change weather patterns, and dictate which crops can be successfully grown.
-* *Advanced Terrain:* Add new procedural tile types, expanded biomes, and unique map generation noise.
-
-**Exploration & Survival**
-* *Procedural Dungeons:* Generate endless, randomized cave systems and dungeon levels for deeper exploration.
-* *Survival Mechanics:* Implement comprehensive Health and Stamina systems to manage player energy and gate continuous actions.
-* *Hostile Mobs:* Introduce monster encounters and combat states specifically within the cave and dungeon environments.
-* *Death & Respawn:* Create penalty mechanics and a respawn system tied to the new health and combat loops.
 
 ---
 <div align="center">
