@@ -26,7 +26,7 @@ You only need Python 3 installed. The only external dependency is Pygame.
 
 ```bash
 pip install pygame
-git clone [https://github.com/FlamboyantKiwi/Python-Plant-Sim.git](https://github.com/FlamboyantKiwi/Python-Plant-Sim.git)
+git clone https://github.com/FlamboyantKiwi/Python-Plant-Sim.git
 cd Python-Plant-Sim
 python main.py
 ```
