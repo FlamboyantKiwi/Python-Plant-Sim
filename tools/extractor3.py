@@ -234,7 +234,7 @@ class SpriteSheetBuilder:
 
 
 # ==========================================
-# 3. MAIN EXECUTION PIPELINE
+# MAIN EXECUTION PIPELINE
 # ==========================================
 
 def main():

@@ -1,11 +1,10 @@
-import os
 import re
 import sqlite3
 from dataclasses import dataclass
+from pathlib import Path
 
-from base_generator import BaseScriptGenerator
-
-from src.utils import Log
+from base_generator import BaseScriptGenerator, Log
+from project_environment import ProjectEnv
 
 
 @dataclass
@@ -18,7 +17,7 @@ class EnumDefinition:
 class EnumGenerator(BaseScriptGenerator):
     """An extensible engine that collects data sources to auto-generate Python Enums."""
     
-    def __init__(self, db_path: str, output_path: str) -> None:
+    def __init__(self, db_path: Path, output_path: Path) -> None:
         super().__init__(output_path)
         self.db_path = db_path
         self._definitions: list[EnumDefinition] = []
@@ -50,13 +49,22 @@ class EnumGenerator(BaseScriptGenerator):
             Log.error(f"Database Error: {e}")
         return self
 
-    def add_asset_directories(self, *directory_paths: str, suffix: str = "Type") -> "EnumGenerator":
+    def add_asset_directories(self, *directory_paths: Path, suffix: str = "Type") -> "EnumGenerator":
+        """Scans directories using modern pathlib resolution."""
         for path in directory_paths:
-            if not os.path.exists(path):
+            path_obj = Path(path)
+            
+            if not path_obj.exists() or not path_obj.is_dir():
                 continue
-            names = {os.path.splitext(item)[0] for item in os.listdir(path) if not item.startswith(".")}
+                
+            # Safely grab the file names without their extensions (.png, etc.)
+            names = {
+                item.stem for item in path_obj.iterdir() 
+                if not item.name.startswith(".") and item.is_file()
+            }
+            
             if names:
-                folder_name = os.path.basename(os.path.normpath(path))
+                folder_name = path_obj.name
                 self._definitions.append(EnumDefinition(
                     class_name=self._normalize_class_name(folder_name, suffix),
                     keys=sorted(names),
@@ -83,22 +91,26 @@ class EnumGenerator(BaseScriptGenerator):
 
         Log.info("Compiling game databases and asset directories...")
         
-        body_buffer = "from enum import Enum\n\n"
+        body_buffer = "from enum import Enum\n \n"
         for definition in self._definitions:
             body_buffer += self._compile_enum_string(definition)
             
-        # Safely pipes to your standard write_if_changed logic
-        self.write_if_changed(body_buffer, os.path.basename(__file__))
+        # Write the file and check if modifications occurred        
+        if self.write_if_changed(body_buffer, Path(__file__).name):
+            # Extract and sort the generated enum names to update the init files
+            enum_names = sorted([d.class_name for d in self._definitions])
+            self.sync_init_files(enum_names, ProjectEnv.TYPES_DIR, "GENERATED_ENUMS")
+            
 
         
 if __name__ == "__main__":
-    DB_PATH = os.path.join("assets", "data", "gamedata.db")
-    OUTPUT_PATH = os.path.join("core", "types", "generated_enums.py")
+    DB_PATH = ProjectEnv.ASSETS_DIR / "data" / "gamedata.db"
+    OUTPUT_PATH = ProjectEnv.TYPES_DIR / "generated_enums.py"
     
     (EnumGenerator(db_path=DB_PATH, output_path=OUTPUT_PATH)
         .add_database_tables("items", "shops")
         .add_asset_directories(
-            os.path.join("assets", "player"),
-            os.path.join("assets", "farm_animals")
+            ProjectEnv.ASSETS_DIR / "player",
+            ProjectEnv.ASSETS_DIR / "farm_animals"
         )
         .run())

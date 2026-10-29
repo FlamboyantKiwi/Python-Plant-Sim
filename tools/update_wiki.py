@@ -16,7 +16,8 @@ def inject_diagrams(wiki_dir: Path):
 
     def replacer(match):
         start_tag, uml_name, _, end_tag = match.groups()
-        uml_path = uml_dir / f"{uml_name}.md"
+        clean_name = uml_name.replace(".md", "")
+        uml_path = uml_dir / f"{clean_name}.md"
         
         if uml_path.exists():
             mermaid_content = uml_path.read_text(encoding="utf-8").strip()

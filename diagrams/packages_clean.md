@@ -1,3 +1,4 @@
+```mermaid
 flowchart TB
     direction TB
 
@@ -7,10 +8,7 @@ flowchart TB
         settings
     end
     subgraph core [Core Package]
-        subgraph core_files [Core Modules]
-            database
-            debug_logger
-        end
+        database
         subgraph asset_loaders [Asset_loaders Package]
             asset_group
             asset_loader
@@ -38,29 +36,23 @@ flowchart TB
             settings_state
             shop_state
         end
-        subgraph types [Types Package]
-            data_models
-            enums
-            generated_enums
-            geometry
-        end
     end
     subgraph entities [Entities Package]
-        subgraph entities_files [Entities Modules]
-            animal
+        player
+        subgraph base [Base Package]
             base_entity
-            inventory_data
             moving_entity
-            plant
-            player
         end
         subgraph components [Components Package]
             animation
-            drag_controller
             input_controller
             interaction_controller
             interaction_handler
+        end
+        subgraph inventory [Inventory Package]
+            drag_controller
             inventory_controller
+            inventory_data
             inventory_manager
         end
         subgraph items [Items Package]
@@ -70,18 +62,30 @@ flowchart TB
             seed_item
             tool_item
         end
+        subgraph nature [Nature Package]
+            animal
+            plant
+            plant_factory
+        end
     end
     subgraph groups [Groups Package]
         camera
+        map_group
         plant_sprites
         ui_sprites
+    end
+    subgraph types [Types Package]
+        data_models
+        enums
+        generated_enums
+        geometry
     end
     subgraph ui [Ui Package]
         subgraph ui_files [Ui Modules]
             timer
             ui_factory
             ui_ghosts
-            utils
+            ui_utils
         end
         subgraph elements [Elements Package]
             base_element
@@ -104,6 +108,9 @@ flowchart TB
             tooltip_wrapper
         end
     end
+    subgraph utils [Utils Package]
+        debug_logger
+    end
     subgraph world [World Package]
         subgraph world_files [World Modules]
             level
@@ -112,17 +119,12 @@ flowchart TB
         subgraph tiles [Tiles Package]
             base_tile
             ground_tile
-            map_group
             tile_factory
             water_tile
         end
     end
 
     %% Package Dependency Links
-    config --> core
-    core --> config
-    ui --> entities
-    world --> entities
     asset_loader --> asset_group
     asset_loader --> colour_group
     asset_loader --> database_group
@@ -142,36 +144,32 @@ flowchart TB
     character_select_state --> base_ui_state
     colour_group --> config_group
     config_group --> asset_group
-    controls --> debug_logger
     data_models --> enums
     data_models --> geometry
     database_group --> asset_group
-    debug_logger --> settings
     entity_group --> sprite_group
     entity_group --> spritesheet
     flash_wrapper --> base_wrapper
-    flash_wrapper --> timer
     font_group --> asset_group
     food_item --> base_item
     fruit_group --> sprite_group
     fruit_group --> spritesheet
     geometry --> enums
     ground_tile --> base_tile
-    ground_tile --> plant
     hud_state --> base_ui_state
     image_group --> asset_group
     image_swap_wrapper --> base_wrapper
+    inventory_controller --> inventory_data
     inventory_manager --> drag_controller
     item_factory --> base_item
     item_factory --> food_item
     item_factory --> seed_item
     item_factory --> tool_item
     level --> map_generator
-    level --> plant
     menu_state --> base_ui_state
     menu_state --> settings_state
     moving_entity --> base_entity
-    plant --> base_entity
+    plant_factory --> plant
     plant_group --> sprite_group
     player --> moving_entity
     playing_state --> base_ui_state
@@ -180,7 +178,6 @@ flowchart TB
     seed_item --> base_item
     settings_state --> base_ui_state
     shadow_wrapper --> base_wrapper
-    shop_menu --> inventory_data
     shop_state --> base_ui_state
     slot --> button
     slot --> textbox
@@ -196,5 +193,6 @@ flowchart TB
     tool_group --> sprite_group
     tool_item --> base_item
     tooltip_wrapper --> base_wrapper
-    ui_factory --> utils
+    ui_factory --> ui_utils
     water_tile --> base_tile
+```

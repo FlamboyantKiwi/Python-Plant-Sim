@@ -1,3 +1,4 @@
+```mermaid
 flowchart TB
     direction TB
 
@@ -6,10 +7,6 @@ flowchart TB
         controls
         settings
     end
-    subgraph core [Core Package]
-        debug_logger
-    end
 
     %% Structural & Dependency Links
-    controls --> debug_logger
-    debug_logger --> settings
+```

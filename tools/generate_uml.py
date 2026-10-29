@@ -2,6 +2,7 @@ import ast
 from pathlib import Path
 from typing import Any
 
+from base_generator import BaseScriptGenerator
 from project_environment import ProjectEnv
 
 from src.utils import Log
@@ -30,7 +31,6 @@ def extract_type_names(node: ast.AST | None) -> set[str]:
     elif isinstance(node, ast.Constant) and isinstance(node.value, str):
         names.add(node.value.strip("'\""))
     return names
-
 
 class UMLVisitor(ast.NodeVisitor):
     """Visits the AST to extract class names, attributes, methods, and relationships."""
@@ -146,13 +146,13 @@ class UMLCreator:
                 try:
                     code = file_path.read_text(encoding='utf-8')
                     type_visitor.visit(ast.parse(code))
-                except Exception:
+                except (SyntaxError, OSError, UnicodeDecodeError):
                     pass # Skip unparseable files
             
             # Store the resulting data dictionary!
             self.type_library = type_visitor.classes
             self.alias_library = type_visitor.aliases
-        except Exception:
+        except (FileNotFoundError, OSError):
             pass # Fail silently if the types folder doesn't exist yet
 
     @staticmethod
@@ -247,61 +247,44 @@ class UMLCreator:
         mermaid_output.append("```")
         return "\n".join(mermaid_output)
     
-def run_generator(user_inputs: list[str]) -> None:
-    uml_creator: UMLCreator = UMLCreator()
-    all_py_files: set[Path] = set()
-    try:
-        # Gather Files
-        for path_str in user_inputs:
-            py_files = ProjectEnv.get_python_files(path_str)
-            all_py_files.update(py_files)
+class UMLGenerator(BaseScriptGenerator):
+    def __init__(self, user_inputs: list[str]) -> None:
+        file_stem = "_".join([Path(p).stem for p in user_inputs])
+        output_path = ProjectEnv.UML_DIR / f"{file_stem}_uml.md"
+        super().__init__(output_path)
+        self.user_inputs = user_inputs
+        self.uml_creator = UMLCreator()
+    def run(self) -> None:
+        all_py_files: set[Path] = set()
+        try:
+            for path_str in self.user_inputs:
+                py_files = ProjectEnv.get_python_files(path_str)
+                all_py_files.update(py_files)
+
+            if not all_py_files:
+                Log.error("No Python files found in the provided paths.")
+                return
+
+            for file_path in all_py_files:
+                try:
+                    code_content = file_path.read_text(encoding='utf-8')
+                    self.uml_creator.parse_code(code_content)
+                except (SyntaxError, OSError, UnicodeDecodeError) as e:
+                    Log.error(f"Skipping {file_path.name} due to parsing error: {e}")
+
+            mermaid_content: str = self.uml_creator.generate_mermaid()
             
-        if not all_py_files:
-            Log.error("No Python files found in the provided paths.")
-            return
-        
-        # Parse Files
-        for file_path in all_py_files:
-            try:
-                code_content = file_path.read_text(encoding='utf-8')
-                uml_creator.parse_code(code_content)
-            except (SyntaxError, OSError, UnicodeDecodeError) as e:
-                Log.error(f"Skipping {file_path.name} due to parsing error: {e}")
-       
-        # Generate mermaid text
-        mermaid_content: str = uml_creator.generate_mermaid()
-        
-        # Dynamic Naming: Join the stems of all provided paths
-        stems = [Path(p).stem for p in user_inputs]
-        file_stem = "_".join(stems)
-        
-        # Save straight to the central UML directory
-        ProjectEnv.UML_DIR.mkdir(exist_ok=True)
-        output_file = ProjectEnv.UML_DIR / f"{file_stem}_uml.md"
-        output_file.write_text(mermaid_content, encoding='utf-8')
-        
-        Log.success(f"Generated UML diagram saved to: {output_file}")
+            # Smart caching write without Python comment headers
+            self.write_if_changed(mermaid_content, Path(__file__).name, add_header=False)
 
-    except FileNotFoundError as e:
-        Log.error(str(e))
-    except Exception as e: # noqa: BLE001
-        Log.error(f"An unexpected error occurred: {e}")
-
+        except FileNotFoundError as e:
+            Log.error(str(e))
+        except Exception as e: # noqa: BLE001
+            Log.error(f"An unexpected error occurred: {e}")
 
 if __name__ == "__main__":
-    print("--- Python Plant Sim UML Generator ---")
-    print("Enter a file or folder path inside 'src'")
-    print("Examples: 'core/asset_loaders' or 'entities/player.py, ui/inventory'")
-    
-    while True:
-        user_input: str = input("\n> Path (or 'q' to quit): ").strip()
-        
-        if user_input.lower() == 'q':
-            print("Exiting generator.")
-            break
-        elif user_input:
-            paths = [p.strip() for p in user_input.split(',') if p.strip()]
-            if paths:
-                run_generator(paths)
-        else:
-            print("No input provided.")
+    BaseScriptGenerator.run_with_cli(
+        tool_name="UML",
+        examples="'core/asset_loaders' or 'entities/player.py, ui/inventory'",
+        generator_callback=lambda paths: UMLGenerator(paths).run()
+    )

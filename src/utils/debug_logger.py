@@ -10,19 +10,17 @@ COLORS = {
     }
 
 class Log: 
-    _debug_enabled: bool | None = None
+    _debug_enabled: bool = True
+    
     @classmethod
-    def _is_debug(cls) -> bool:
-        """Imports and caches the debug text setting."""
-        if cls._debug_enabled is None:
-            from src.config.settings import DEBUG_TEXT
-            cls._debug_enabled = DEBUG_TEXT
-        return cls._debug_enabled
+    def set_debug(cls, enabled: bool) -> None:
+        """Allows the application to toggle logging on or off globally."""
+        cls._debug_enabled = enabled
     
     @staticmethod
     def _print(color_key: str, message: str, label: str | None = None) -> None:
         """Internal helper to check DEBUG_TEXT and handle formatting once."""
-        if not Log._is_debug():
+        if not Log._debug_enabled:
             return
         color = COLORS.get(color_key, COLORS["INFO"])
         label = color_key.replace("_", " ").title()
@@ -60,6 +58,6 @@ class Log:
     @staticmethod
     def divider(length: int = 30, char = "-") -> None:
         """Prints a customizable dash or symbol divider line."""
-        if not Log._is_debug():
+        if not Log._debug_enabled:
             return
         print(f"{COLORS['INFO']} {char * length} {COLORS['RESET']}")

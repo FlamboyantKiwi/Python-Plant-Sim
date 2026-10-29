@@ -11,10 +11,14 @@ class ProjectEnv:
     # Anchors the paths relative to this exact file, preventing execution-location bugs
     TOOLS_DIR: Path = Path(__file__).resolve().parent
     ROOT_DIR: Path = TOOLS_DIR.parent
+    # ROOT DIRECTORIES
     SRC_DIR: Path = ROOT_DIR / "src"
     ASSETS_DIR: Path = ROOT_DIR / "assets"
-    UML_DIR: Path = ROOT_DIR / "uml"
     DIAGRAMS_DIR: Path = ROOT_DIR / "diagrams"
+    UML_DIR: Path = DIAGRAMS_DIR / "uml"
+    # SRC DIRECTORIES
+    UI_DIR: Path = SRC_DIR / "ui"
+    TYPES_DIR: Path = SRC_DIR / "types"
 
     @classmethod
     def get_python_files(cls, target_rel_path: str | Path) -> list[Path]:

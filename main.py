@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from src.config import FPS, HEIGHT, WIDTH
+from src.config import DEBUG_TEXT, FPS, HEIGHT, WIDTH
 from src.core import ASSETS, StateID, StateStack
 from src.core.states import (
     STATE_REGISTRY,
@@ -19,6 +19,8 @@ from src.utils import Log
 
 if TYPE_CHECKING:
     from src.custom_types import ShopData
+    
+Log.set_debug(DEBUG_TEXT)
 
 class Game:
     def __init__(self) -> None:
