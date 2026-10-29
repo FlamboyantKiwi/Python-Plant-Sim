@@ -1,4 +1,5 @@
 @echo off
+TITLE Update Diagrams
 :: ========================================================
 :: Plant Sim Diagram Automation Script
 :: This batch file acts as a shortcut wrapper to run the 
