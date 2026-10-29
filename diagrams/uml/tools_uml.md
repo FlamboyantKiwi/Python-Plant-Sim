@@ -5,15 +5,16 @@ classDiagram
     BaseScriptGenerator <|-- GhostGenerator
     NodeVisitor <|-- UMLVisitor
     BaseScriptGenerator <|-- UMLGenerator
-    UMLCreator *-- UMLVisitor : contains
+    DiagramGenerator *-- DiagramBuilder : contains
     ProjectEnv *-- Path : contains
-    SpriteSheetBuilder *-- SpriteRect : contains
-    EnumGenerator *-- Path : contains
-    BaseScriptGenerator *-- Path : contains
     UMLGenerator *-- Path : contains
-    CropVisualData *-- SpriteRect : contains
     UMLGenerator *-- UMLCreator : contains
+    UMLCreator *-- UMLVisitor : contains
     EnumGenerator *-- EnumDefinition : contains
+    EnumGenerator *-- Path : contains
+    SpriteSheetBuilder *-- SpriteRect : contains
+    CropVisualData *-- SpriteRect : contains
+    BaseScriptGenerator *-- Path : contains
     class NodeVisitor {
         <<EXTERNAL>>
     }
@@ -33,6 +34,17 @@ classDiagram
         +sync_init_files()
         +write_if_changed()
         +write_timestamp_log()
+    }
+    class DiagramBuilder {
+        +target_paths
+        -__init__()
+        -_get_directory_tree()
+        -_wrap_mermaid()
+        +build_focus_diagram()
+        +build_overview_diagram()
+        +extract_mod_name()
+        +generate_subgraphs_and_links()
+        +parse_relations()
     }
     class SpriteRect {
         +h
@@ -61,11 +73,9 @@ classDiagram
         +save_sheet()
     }
     class DiagramGenerator {
+        +output_path
         +target_paths
         -__init__()
-        +extract_mod_name()
-        +generate_subgraphs_and_links()
-        +get_directory_tree()
         +run()
         +run_pyreverse()
     }

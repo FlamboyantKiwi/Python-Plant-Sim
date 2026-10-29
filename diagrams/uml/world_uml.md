@@ -4,10 +4,10 @@ classDiagram
     Tile <|-- GroundTile
     Tile <|-- WaterTile
     Level *-- MapTileGroup : contains
-    Tile *-- Entity : contains
     Tile *-- Level : contains
-    Level *-- Tile : contains
     GroundTile *-- Plant : contains
+    Level *-- Tile : contains
+    Tile *-- Entity : contains
     class Entity {
         <<EXTERNAL>>
     }

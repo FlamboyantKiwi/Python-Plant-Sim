@@ -170,7 +170,7 @@ class BaseScriptGenerator:
             Log.divider(40)
             
             # Run the file using the exact same python execution environment
-            result = subprocess.run([sys.executable, str(script)], check=False)
+            result = subprocess.run([sys.executable, str(script), "."], check=False)
             Log.divider(40)
             if result.returncode == 0:
                 Log.success(f"-> Completed: {script} Successfully.\n")

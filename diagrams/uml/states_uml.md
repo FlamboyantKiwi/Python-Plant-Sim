@@ -7,14 +7,14 @@ classDiagram
     GameState <|-- PlayingState
     BaseUIState <|-- SettingsState
     BaseUIState <|-- ShopState
-    PlayingState *-- Level : contains
-    BaseUIState *-- UIGroup : contains
-    BaseUIState *-- UIElement : contains
-    PlayingState *-- PlantGroup : contains
-    PlayingState *-- HUD : contains
-    PlayingState *-- Player : contains
     ShopState *-- ShopMenu : contains
+    PlayingState *-- HUD : contains
     PlayingState *-- CameraGroup : contains
+    PlayingState *-- Level : contains
+    PlayingState *-- PlantGroup : contains
+    BaseUIState *-- UIGroup : contains
+    PlayingState *-- Player : contains
+    BaseUIState *-- UIElement : contains
     GameState ..> StateID : uses
     class CameraGroup {
         <<EXTERNAL>>

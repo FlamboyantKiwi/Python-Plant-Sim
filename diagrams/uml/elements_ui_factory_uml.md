@@ -6,12 +6,12 @@ classDiagram
     Button <|-- Slot
     UIElement <|-- StateElement
     UIElement <|-- TextBox
-    Slot *-- TextBox : contains
-    UIFactory *-- TextBox : contains
     Slot *-- Item : contains
-    UIFactory *-- InventoryUI : contains
-    UIFactory *-- FlashWrapper : contains
     UIFactory *-- Button : contains
+    UIFactory *-- TextBox : contains
+    UIFactory *-- InventoryUI : contains
+    Slot *-- TextBox : contains
+    UIFactory *-- FlashWrapper : contains
     class FlashWrapper {
         <<EXTERNAL>>
     }

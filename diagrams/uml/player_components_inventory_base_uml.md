@@ -3,25 +3,25 @@ classDiagram
     MovingEntity <|-- Player
     Sprite <|-- Entity
     Entity <|-- MovingEntity
-    Player *-- AnimationController : component
-    Player *-- InventoryController : component
-    MovingEntity *-- Num : contains
-    Player *-- InteractionController : component
-    InventoryManager *-- InventoryController : component
-    DragController *-- Item : contains
-    Player *-- PlayerType : contains
-    Player *-- InteractionHandler : component
-    Player *-- InventoryManager : component
     Player *-- CameraGroup : contains
-    InventoryController *-- Inventory : contains
-    Inventory *-- Item : contains
+    MovingEntity *-- EntityState : contains
     InventoryManager *-- DragController : component
     DragController *-- InventoryController : component
-    InteractionController *-- Direction : contains
-    MovingEntity *-- EntityState : contains
     Player *-- InputController : component
+    Player *-- AnimationController : component
     MovingEntity *-- Direction : contains
+    Inventory *-- Item : contains
+    InteractionController *-- Direction : contains
+    Player *-- InteractionController : component
+    InventoryController *-- Inventory : contains
     Entity *-- Tile : contains
+    MovingEntity *-- Num : contains
+    Player *-- InteractionHandler : component
+    Player *-- PlayerType : contains
+    Player *-- InventoryController : component
+    DragController *-- Item : contains
+    InventoryManager *-- InventoryController : component
+    Player *-- InventoryManager : component
     class CameraGroup {
         <<EXTERNAL>>
     }

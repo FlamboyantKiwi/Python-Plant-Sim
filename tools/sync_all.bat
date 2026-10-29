@@ -1,15 +1,15 @@
 @echo off
 TITLE Master Project Sync
-echo [1/3] Running Base Generators (Enums, Ghosts, UML)...
+
+:: Force the terminal to the project root, regardless of where this is clicked from
+cd /d "%~dp0.."
+
+echo [1/2] Running Master Build Pipeline (Enums, Ghosts, UMLs, and Diagrams)...
 python tools\base_generator.py
 
 echo.
-echo [2/3] Generating Architecture Diagrams...
-call tools\update_diagrams.bat
-
-echo.
-echo [3/3] Syncing to Wiki...
-call tools\update_wiki.bat
+echo [2/2] Syncing to Wiki...
+python tools\update_wiki.py ..\Python-Plant-Sim.wiki
 
 echo.
 echo ==========================================

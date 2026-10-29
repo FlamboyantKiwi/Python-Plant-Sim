@@ -1,13 +1,13 @@
 ```mermaid
 classDiagram
     NamedTuple <|-- EntityConfig
+    EntityConfig *-- AnimationGrid : contains
     PlantData *-- SpriteRect : contains
     StateStack *-- T : contains
     TextConfig *-- Colour : contains
+    ItemData *-- ToolType : contains
     ItemData *-- ItemCategory : contains
     EntityConfig *-- EntityState : contains
-    ItemData *-- ToolType : contains
-    EntityConfig *-- AnimationGrid : contains
     class AnimationGrid {
         <<TYPE>>
         -__init__()

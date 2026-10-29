@@ -1,9 +1,9 @@
 ```mermaid
 classDiagram
-    UIFactory *-- TextBox : contains
-    UIFactory *-- FlashWrapper : contains
     UIFactory *-- InventoryUI : contains
     UIFactory *-- Button : contains
+    UIFactory *-- TextBox : contains
+    UIFactory *-- FlashWrapper : contains
     class Button {
         <<EXTERNAL>>
     }

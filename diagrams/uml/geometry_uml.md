@@ -1,8 +1,8 @@
 ```mermaid
 classDiagram
     SpriteRect <|-- ScaleRect
-    RectPair *-- SpriteRect : contains
     AnimationGrid *-- SpriteRect : contains
+    RectPair *-- SpriteRect : contains
     class SpriteRect {
         +h
         +w
